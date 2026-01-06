@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Calendar, User, Clock, CheckCircle2, AlertCircle, Eye, Filter } from "lucide-react";
+import { ArrowLeft, Calendar, User, Clock, CheckCircle2, AlertCircle, Eye, Filter, Plus, ClipboardList, TrendingUp, FileText } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { format, subDays, isAfter, parseISO } from "date-fns";
+import { format, subDays, parseISO, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,21 @@ const ClienteHistorico = () => {
         .select("*")
         .eq("cliente_id", id)
         .gte("data", dataLimite)
+        .order("data", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  const { data: allChecklists } = useQuery({
+    queryKey: ["all-checklists", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("checklists")
+        .select("*")
+        .eq("cliente_id", id)
         .order("data", { ascending: false });
 
       if (error) throw error;
@@ -92,6 +107,22 @@ const ClienteHistorico = () => {
     return dateStr === format(new Date(), "yyyy-MM-dd");
   };
 
+  // Calculate KPIs
+  const totalRelatorios = allChecklists?.length || 0;
+  const now = new Date();
+  const mesAtual = allChecklists?.filter((c) => {
+    const data = parseISO(c.data);
+    return data >= startOfMonth(now) && data <= endOfMonth(now);
+  }).length || 0;
+
+  const ultimoRelatorio = allChecklists?.[0];
+  const ultimoProgress = ultimoRelatorio ? calculateProgress(ultimoRelatorio) : 0;
+  
+  const totalPendentes = allChecklists?.reduce((acc, c) => acc + getPendentesCount(c), 0) || 0;
+  const mediaProgress = allChecklists?.length 
+    ? Math.round(allChecklists.reduce((acc, c) => acc + calculateProgress(c), 0) / allChecklists.length)
+    : 0;
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -131,12 +162,20 @@ const ClienteHistorico = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <VCDLogo size="sm" />
+          <div className="flex-1" />
+          <Button
+            onClick={() => navigate(`/cliente/${id}`)}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground vcd-button-glow"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Criar Novo Relatório
+          </Button>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           {/* Client Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -155,25 +194,82 @@ const ClienteHistorico = () => {
                   </span>
                   <span className="text-muted-foreground text-sm flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    Histórico de Relatórios
+                    Dashboard do Cliente
                   </span>
                 </div>
               </div>
+            </div>
+          </motion.div>
 
-              <div className="flex items-center gap-3">
-                <Filter className="w-4 h-4 text-muted-foreground" />
-                <Select value={periodoFiltro} onValueChange={setPeriodoFiltro}>
-                  <SelectTrigger className="w-[160px] bg-secondary border-border">
-                    <SelectValue placeholder="Período" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card border-border">
-                    <SelectItem value="7">Últimos 7 dias</SelectItem>
-                    <SelectItem value="15">Últimos 15 dias</SelectItem>
-                    <SelectItem value="30">Últimos 30 dias</SelectItem>
-                    <SelectItem value="90">Últimos 90 dias</SelectItem>
-                  </SelectContent>
-                </Select>
+          {/* KPI Cards */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+          >
+            <div className="vcd-card p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-primary" />
+                </div>
               </div>
+              <p className="text-2xl font-bold text-foreground">{totalRelatorios}</p>
+              <p className="text-sm text-muted-foreground">Total Relatórios</p>
+            </div>
+
+            <div className="vcd-card p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <ClipboardList className="w-5 h-5 text-primary" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-foreground">{mesAtual}</p>
+              <p className="text-sm text-muted-foreground">Este Mês</p>
+            </div>
+
+            <div className="vcd-card p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-foreground">{mediaProgress}%</p>
+              <p className="text-sm text-muted-foreground">Média Progresso</p>
+            </div>
+
+            <div className="vcd-card p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
+                  <AlertCircle className="w-5 h-5 text-red-500" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-foreground">{ultimoProgress}%</p>
+              <p className="text-sm text-muted-foreground">Último Relatório</p>
+            </div>
+          </motion.div>
+
+          {/* Timeline Filter */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex items-center justify-between mb-6"
+          >
+            <h2 className="text-lg font-semibold text-foreground">Histórico de Relatórios</h2>
+            <div className="flex items-center gap-3">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <Select value={periodoFiltro} onValueChange={setPeriodoFiltro}>
+                <SelectTrigger className="w-[160px] bg-secondary border-border">
+                  <SelectValue placeholder="Período" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="7">Últimos 7 dias</SelectItem>
+                  <SelectItem value="15">Últimos 15 dias</SelectItem>
+                  <SelectItem value="30">Últimos 30 dias</SelectItem>
+                  <SelectItem value="90">Últimos 90 dias</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </motion.div>
 
@@ -289,21 +385,6 @@ const ClienteHistorico = () => {
             )}
           </motion.div>
 
-          {/* Actions */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mt-8 flex justify-center"
-          >
-            <Button
-              onClick={() => navigate(`/cliente/${id}`)}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              <Calendar className="w-4 h-4 mr-2" />
-              Ir para Checklist Atual
-            </Button>
-          </motion.div>
         </div>
       </main>
     </div>
