@@ -1,14 +1,27 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState, useEffect } from "react";
+import PasswordGate from "@/components/PasswordGate";
+import Dashboard from "@/components/Dashboard";
 
 const Index = () => {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
+  const [isUnlocked, setIsUnlocked] = useState(false);
+
+  useEffect(() => {
+    const unlocked = sessionStorage.getItem("vcd_unlocked");
+    if (unlocked === "true") {
+      setIsUnlocked(true);
+    }
+  }, []);
+
+  const handleUnlock = () => {
+    sessionStorage.setItem("vcd_unlocked", "true");
+    setIsUnlocked(true);
+  };
+
+  if (!isUnlocked) {
+    return <PasswordGate onUnlock={handleUnlock} />;
+  }
+
+  return <Dashboard />;
 };
 
 export default Index;
