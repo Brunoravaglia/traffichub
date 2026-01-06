@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Plus, Users, BarChart3 } from "lucide-react";
+import { Plus, Users, BarChart3, UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import VCDLogo from "./VCDLogo";
 
@@ -55,7 +55,7 @@ const Dashboard = () => {
           </motion.div>
 
           {/* Action Cards */}
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Create Client Card */}
             <motion.button
               variants={itemVariants}
@@ -120,6 +120,29 @@ const Dashboard = () => {
                   </h2>
                   <p className="text-muted-foreground text-sm">
                     Visão executiva de gestores e pendências
+                  </p>
+                </div>
+              </div>
+            </motion.button>
+
+            {/* New Gestor Card */}
+            <motion.button
+              variants={itemVariants}
+              whileHover={{ y: -6, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate("/novo-gestor")}
+              className="vcd-card-hover group text-left p-8"
+            >
+              <div className="flex flex-col items-start gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
+                  <UserPlus className="w-7 h-7 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">
+                    Novo Gestor
+                  </h2>
+                  <p className="text-muted-foreground text-sm">
+                    Cadastre um novo gestor de tráfego
                   </p>
                 </div>
               </div>
