@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Plus, Users } from "lucide-react";
+import { Plus, Users, BarChart3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import VCDLogo from "./VCDLogo";
 
@@ -42,7 +42,7 @@ const Dashboard = () => {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="max-w-3xl mx-auto"
+          className="max-w-4xl mx-auto"
         >
           {/* Title Section */}
           <motion.div variants={itemVariants} className="text-center mb-16">
@@ -55,7 +55,7 @@ const Dashboard = () => {
           </motion.div>
 
           {/* Action Cards */}
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-3 gap-6">
             {/* Create Client Card */}
             <motion.button
               variants={itemVariants}
@@ -64,16 +64,16 @@ const Dashboard = () => {
               onClick={() => navigate("/novo-cliente")}
               className="vcd-card-hover group text-left p-8"
             >
-              <div className="flex items-start gap-5">
+              <div className="flex flex-col items-start gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
                   <Plus className="w-7 h-7 text-primary" />
                 </div>
-                <div className="flex-1">
+                <div>
                   <h2 className="text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">
                     Criar novo cliente
                   </h2>
                   <p className="text-muted-foreground text-sm">
-                    Cadastre um novo cliente e inicie o checklist de tráfego
+                    Cadastre um novo cliente e inicie o checklist
                   </p>
                 </div>
               </div>
@@ -87,16 +87,39 @@ const Dashboard = () => {
               onClick={() => navigate("/clientes")}
               className="vcd-card-hover group text-left p-8"
             >
-              <div className="flex items-start gap-5">
+              <div className="flex flex-col items-start gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
                   <Users className="w-7 h-7 text-primary" />
                 </div>
-                <div className="flex-1">
+                <div>
                   <h2 className="text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">
-                    Ver clientes cadastrados
+                    Ver clientes
                   </h2>
                   <p className="text-muted-foreground text-sm">
                     Acesse os checklists dos clientes existentes
+                  </p>
+                </div>
+              </div>
+            </motion.button>
+
+            {/* Dashboard Card */}
+            <motion.button
+              variants={itemVariants}
+              whileHover={{ y: -6, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate("/dashboard")}
+              className="vcd-card-hover group text-left p-8"
+            >
+              <div className="flex flex-col items-start gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
+                  <BarChart3 className="w-7 h-7 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">
+                    Dashboard Gerencial
+                  </h2>
+                  <p className="text-muted-foreground text-sm">
+                    Visão executiva de gestores e pendências
                   </p>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, User, Calendar, Plus } from "lucide-react";
+import { ArrowLeft, ArrowRight, User, Calendar, Plus, History } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -142,19 +142,20 @@ const ClientList = () => {
               {clientes.map((cliente) => {
                 const latestChecklist = cliente.checklists?.[0];
                 const progress = calculateProgress(latestChecklist);
+                const totalChecklists = cliente.checklists?.length || 0;
 
                 return (
-                  <motion.button
+                  <motion.div
                     key={cliente.id}
                     variants={itemVariants}
-                    whileHover={{ x: 4, scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={() => navigate(`/cliente/${cliente.id}`)}
-                    className="w-full vcd-card-hover p-6 text-left group"
+                    className="vcd-card-hover p-6 group"
                   >
                     <div className="flex items-center gap-6">
                       {/* Client Info */}
-                      <div className="flex-1 min-w-0">
+                      <div 
+                        className="flex-1 min-w-0 cursor-pointer"
+                        onClick={() => navigate(`/cliente/${cliente.id}`)}
+                      >
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-lg font-semibold text-foreground truncate group-hover:text-primary transition-colors">
                             {cliente.nome}
@@ -168,6 +169,11 @@ const ClientList = () => {
                             <Calendar className="w-4 h-4" />
                             {format(new Date(cliente.data_inicio), "dd/MM/yyyy")}
                           </span>
+                          {totalChecklists > 0 && (
+                            <span className="text-xs">
+                              {totalChecklists} relatório{totalChecklists > 1 ? 's' : ''}
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -176,10 +182,29 @@ const ClientList = () => {
                         <ProgressBar progress={progress} size="sm" />
                       </div>
 
+                      {/* History Button */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/cliente/${cliente.id}/historico`);
+                        }}
+                        className="hover:bg-primary/10 hover:text-primary"
+                        title="Ver histórico"
+                      >
+                        <History className="w-5 h-5" />
+                      </Button>
+
                       {/* Arrow */}
-                      <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                      <button
+                        onClick={() => navigate(`/cliente/${cliente.id}`)}
+                        className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
+                      >
+                        <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                      </button>
                     </div>
-                  </motion.button>
+                  </motion.div>
                 );
               })}
             </motion.div>

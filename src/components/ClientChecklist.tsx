@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Calendar, CreditCard, BarChart3, Palette, User } from "lucide-react";
+import { ArrowLeft, Calendar, CreditCard, BarChart3, Palette, User, History } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -164,6 +164,16 @@ const ClientChecklist = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <VCDLogo size="sm" />
+          <div className="flex-1" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/cliente/${id}/historico`)}
+            className="border-border hover:bg-primary/10 hover:text-primary"
+          >
+            <History className="w-4 h-4 mr-2" />
+            Histórico
+          </Button>
         </div>
       </header>
 
