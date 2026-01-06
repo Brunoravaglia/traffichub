@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Calendar, CreditCard, BarChart3, Palette, User, History } from "lucide-react";
+import { ArrowLeft, Calendar, CreditCard, BarChart3, Palette, User, History, Save, Check } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, parseISO, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { toast } from "@/hooks/use-toast";
 import VCDLogo from "./VCDLogo";
 import ProgressBar from "./ProgressBar";
 import ChecklistCard from "./ChecklistCard";
 import PendenciasCard from "./PendenciasCard";
+import ReportCalendar from "./ReportCalendar";
 import { cn } from "@/lib/utils";
 
 interface ChecklistData {
@@ -37,6 +39,9 @@ const ClientChecklist = () => {
   const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [checklist, setChecklist] = useState<ChecklistData | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
 
   const { data: cliente } = useQuery({
     queryKey: ["cliente", id],
@@ -70,9 +75,31 @@ const ClientChecklist = () => {
     enabled: !!id,
   });
 
+  // Query to get all filled dates for the calendar
+  const { data: filledDatesData } = useQuery({
+    queryKey: ["filledDates", id, format(calendarMonth, "yyyy-MM")],
+    queryFn: async () => {
+      const monthStart = format(startOfMonth(calendarMonth), "yyyy-MM-dd");
+      const monthEnd = format(endOfMonth(calendarMonth), "yyyy-MM-dd");
+      
+      const { data, error } = await supabase
+        .from("checklists")
+        .select("data")
+        .eq("cliente_id", id)
+        .gte("data", monthStart)
+        .lte("data", monthEnd);
+
+      if (error) throw error;
+      return data?.map(d => parseISO(d.data)) || [];
+    },
+    enabled: !!id,
+  });
+
   useEffect(() => {
     if (checklistData) {
       setChecklist(checklistData);
+      setHasUnsavedChanges(false);
+      setIsSaved(true);
     } else if (id) {
       setChecklist({
         cliente_id: id,
@@ -88,10 +115,12 @@ const ClientChecklist = () => {
         teste_ab_ativo: false,
         pendencias: "",
       });
+      setHasUnsavedChanges(false);
+      setIsSaved(false);
     }
   }, [checklistData, id, selectedDate]);
 
-  const updateChecklistMutation = useMutation({
+  const saveChecklistMutation = useMutation({
     mutationFn: async (data: Partial<ChecklistData>) => {
       const dateStr = format(selectedDate, "yyyy-MM-dd");
       const { error } = await supabase
@@ -110,6 +139,20 @@ const ClientChecklist = () => {
     onSuccess: () => {
       refetchChecklist();
       queryClient.invalidateQueries({ queryKey: ["clientes"] });
+      queryClient.invalidateQueries({ queryKey: ["filledDates", id] });
+      setHasUnsavedChanges(false);
+      setIsSaved(true);
+      toast({
+        title: "Relatório salvo!",
+        description: `Checklist de ${format(selectedDate, "dd/MM/yyyy")} salvo com sucesso.`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erro ao salvar",
+        description: "Tente novamente.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -118,9 +161,68 @@ const ClientChecklist = () => {
 
     const updatedChecklist = { ...checklist, [field]: value };
     setChecklist(updatedChecklist);
+    setHasUnsavedChanges(true);
+    setIsSaved(false);
+  };
 
-    const { id: _, ...dataToSave } = updatedChecklist;
-    updateChecklistMutation.mutate(dataToSave);
+  const handleSave = () => {
+    if (!checklist) return;
+    const { id: _, ...dataToSave } = checklist;
+    saveChecklistMutation.mutate(dataToSave);
+  };
+
+  const handleExport = () => {
+    if (!cliente || !checklist) return;
+
+    const content = `
+RELATÓRIO DE CHECKLIST
+======================
+
+Cliente: ${cliente.nome}
+Gestor: ${cliente.gestores?.nome}
+Data: ${format(selectedDate, "dd/MM/yyyy")}
+
+FATURAMENTO
+-----------
+• Pagamento OK: ${checklist.pagamento_ok ? "✓" : "✗"}
+• Conta sem bloqueios: ${checklist.conta_sem_bloqueios ? "✓" : "✗"}
+• Saldo suficiente: ${checklist.saldo_suficiente ? "✓" : "✗"}
+
+RASTREAMENTO
+------------
+• Pixel/Tag instalados: ${checklist.pixel_tag_instalados ? "✓" : "✗"}
+• Conversões configuradas: ${checklist.conversoes_configuradas ? "✓" : "✗"}
+• Integração CRM: ${checklist.integracao_crm ? "✓" : "✗"}
+
+CRIATIVOS
+---------
+• Criativos atualizados: ${checklist.criativos_atualizados ? "✓" : "✗"}
+• CTA claro: ${checklist.cta_claro ? "✓" : "✗"}
+• Teste A/B ativo: ${checklist.teste_ab_ativo ? "✓" : "✗"}
+
+PENDÊNCIAS
+----------
+${checklist.pendencias || "Nenhuma pendência registrada."}
+
+---
+Gerado em: ${format(new Date(), "dd/MM/yyyy HH:mm")}
+Você Digital - Checklist do Gestor de Tráfego
+    `.trim();
+
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `relatorio-${cliente.nome.toLowerCase().replace(/\s+/g, "-")}-${format(selectedDate, "yyyy-MM-dd")}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Relatório exportado!",
+      description: "O arquivo foi baixado com sucesso.",
+    });
   };
 
   const calculateProgress = () => {
@@ -179,7 +281,7 @@ const ClientChecklist = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           {/* Client Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -227,91 +329,137 @@ const ClientChecklist = () => {
             </div>
           </motion.div>
 
-          {/* Checklist Cards */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <ChecklistCard
-              title="Faturamento"
-              icon={CreditCard}
-              delay={0.1}
-              items={[
-                {
-                  id: "pagamento_ok",
-                  label: "Pagamento OK",
-                  checked: checklist.pagamento_ok,
-                  onChange: (v) => handleChecklistChange("pagamento_ok", v),
-                },
-                {
-                  id: "conta_sem_bloqueios",
-                  label: "Conta sem bloqueios",
-                  checked: checklist.conta_sem_bloqueios,
-                  onChange: (v) => handleChecklistChange("conta_sem_bloqueios", v),
-                },
-                {
-                  id: "saldo_suficiente",
-                  label: "Saldo suficiente",
-                  checked: checklist.saldo_suficiente,
-                  onChange: (v) => handleChecklistChange("saldo_suficiente", v),
-                },
-              ]}
-            />
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Checklist Cards */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <ChecklistCard
+                  title="Faturamento"
+                  icon={CreditCard}
+                  delay={0.1}
+                  items={[
+                    {
+                      id: "pagamento_ok",
+                      label: "Pagamento OK",
+                      checked: checklist.pagamento_ok,
+                      onChange: (v) => handleChecklistChange("pagamento_ok", v),
+                    },
+                    {
+                      id: "conta_sem_bloqueios",
+                      label: "Conta sem bloqueios",
+                      checked: checklist.conta_sem_bloqueios,
+                      onChange: (v) => handleChecklistChange("conta_sem_bloqueios", v),
+                    },
+                    {
+                      id: "saldo_suficiente",
+                      label: "Saldo suficiente",
+                      checked: checklist.saldo_suficiente,
+                      onChange: (v) => handleChecklistChange("saldo_suficiente", v),
+                    },
+                  ]}
+                />
 
-            <ChecklistCard
-              title="Rastreamento"
-              icon={BarChart3}
-              delay={0.2}
-              items={[
-                {
-                  id: "pixel_tag_instalados",
-                  label: "Pixel / Tag instalados",
-                  checked: checklist.pixel_tag_instalados,
-                  onChange: (v) => handleChecklistChange("pixel_tag_instalados", v),
-                },
-                {
-                  id: "conversoes_configuradas",
-                  label: "Conversões configuradas",
-                  checked: checklist.conversoes_configuradas,
-                  onChange: (v) => handleChecklistChange("conversoes_configuradas", v),
-                },
-                {
-                  id: "integracao_crm",
-                  label: "Integração com CRM funcionando",
-                  checked: checklist.integracao_crm,
-                  onChange: (v) => handleChecklistChange("integracao_crm", v),
-                },
-              ]}
-            />
+                <ChecklistCard
+                  title="Rastreamento"
+                  icon={BarChart3}
+                  delay={0.2}
+                  items={[
+                    {
+                      id: "pixel_tag_instalados",
+                      label: "Pixel / Tag instalados",
+                      checked: checklist.pixel_tag_instalados,
+                      onChange: (v) => handleChecklistChange("pixel_tag_instalados", v),
+                    },
+                    {
+                      id: "conversoes_configuradas",
+                      label: "Conversões configuradas",
+                      checked: checklist.conversoes_configuradas,
+                      onChange: (v) => handleChecklistChange("conversoes_configuradas", v),
+                    },
+                    {
+                      id: "integracao_crm",
+                      label: "Integração com CRM funcionando",
+                      checked: checklist.integracao_crm,
+                      onChange: (v) => handleChecklistChange("integracao_crm", v),
+                    },
+                  ]}
+                />
 
-            <ChecklistCard
-              title="Criativos"
-              icon={Palette}
-              delay={0.3}
-              items={[
-                {
-                  id: "criativos_atualizados",
-                  label: "Criativos atualizados",
-                  checked: checklist.criativos_atualizados,
-                  onChange: (v) => handleChecklistChange("criativos_atualizados", v),
-                },
-                {
-                  id: "cta_claro",
-                  label: "CTA claro",
-                  checked: checklist.cta_claro,
-                  onChange: (v) => handleChecklistChange("cta_claro", v),
-                },
-                {
-                  id: "teste_ab_ativo",
-                  label: "Teste A/B ativo",
-                  checked: checklist.teste_ab_ativo,
-                  onChange: (v) => handleChecklistChange("teste_ab_ativo", v),
-                },
-              ]}
-            />
+                <ChecklistCard
+                  title="Criativos"
+                  icon={Palette}
+                  delay={0.3}
+                  items={[
+                    {
+                      id: "criativos_atualizados",
+                      label: "Criativos atualizados",
+                      checked: checklist.criativos_atualizados,
+                      onChange: (v) => handleChecklistChange("criativos_atualizados", v),
+                    },
+                    {
+                      id: "cta_claro",
+                      label: "CTA claro",
+                      checked: checklist.cta_claro,
+                      onChange: (v) => handleChecklistChange("cta_claro", v),
+                    },
+                    {
+                      id: "teste_ab_ativo",
+                      label: "Teste A/B ativo",
+                      checked: checklist.teste_ab_ativo,
+                      onChange: (v) => handleChecklistChange("teste_ab_ativo", v),
+                    },
+                  ]}
+                />
 
-            <PendenciasCard
-              value={checklist.pendencias}
-              onChange={(v) => handleChecklistChange("pendencias", v)}
-              delay={0.4}
-            />
+                <PendenciasCard
+                  value={checklist.pendencias}
+                  onChange={(v) => handleChecklistChange("pendencias", v)}
+                  delay={0.4}
+                />
+              </div>
+
+              {/* Save Button */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <Button
+                  onClick={handleSave}
+                  disabled={saveChecklistMutation.isPending || (!hasUnsavedChanges && isSaved)}
+                  className={cn(
+                    "w-full h-14 text-lg font-semibold transition-all duration-200",
+                    isSaved && !hasUnsavedChanges
+                      ? "bg-green-600 hover:bg-green-600 text-white"
+                      : "bg-primary hover:bg-primary/90 text-primary-foreground vcd-button-glow hover:scale-[1.02]"
+                  )}
+                >
+                  {saveChecklistMutation.isPending ? (
+                    <div className="w-6 h-6 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  ) : isSaved && !hasUnsavedChanges ? (
+                    <>
+                      <Check className="w-5 h-5 mr-2" />
+                      Salvo
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-5 h-5 mr-2" />
+                      Salvar Relatório
+                    </>
+                  )}
+                </Button>
+              </motion.div>
+            </div>
+
+            {/* Calendar Sidebar */}
+            <div className="lg:col-span-1">
+              <ReportCalendar
+                currentMonth={calendarMonth}
+                onMonthChange={setCalendarMonth}
+                filledDates={filledDatesData || []}
+                onExport={handleExport}
+              />
+            </div>
           </div>
         </div>
       </main>

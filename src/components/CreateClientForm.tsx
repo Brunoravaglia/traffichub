@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Calendar, Briefcase } from "lucide-react";
+import { ArrowLeft, User, Calendar, Briefcase, DollarSign, Target, Share2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -12,8 +12,20 @@ import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import VCDLogo from "./VCDLogo";
 import { cn } from "@/lib/utils";
+
+const REDES_SOCIAIS = [
+  { id: "meta", label: "Meta Ads (Facebook/Instagram)" },
+  { id: "google", label: "Google Ads" },
+  { id: "tiktok", label: "TikTok Ads" },
+  { id: "linkedin", label: "LinkedIn Ads" },
+  { id: "youtube", label: "YouTube Ads" },
+  { id: "twitter", label: "Twitter/X Ads" },
+  { id: "pinterest", label: "Pinterest Ads" },
+];
 
 const CreateClientForm = () => {
   const navigate = useNavigate();
@@ -21,6 +33,9 @@ const CreateClientForm = () => {
   const [nome, setNome] = useState("");
   const [gestorId, setGestorId] = useState("");
   const [dataInicio, setDataInicio] = useState<Date>(new Date());
+  const [redesSociais, setRedesSociais] = useState<string[]>([]);
+  const [investimentoMensal, setInvestimentoMensal] = useState("");
+  const [expectativaResultados, setExpectativaResultados] = useState("");
 
   const { data: gestores } = useQuery({
     queryKey: ["gestores"],
@@ -31,6 +46,12 @@ const CreateClientForm = () => {
     },
   });
 
+  const toggleRedeSocial = (id: string) => {
+    setRedesSociais(prev => 
+      prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]
+    );
+  };
+
   const createClientMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase
@@ -39,6 +60,9 @@ const CreateClientForm = () => {
           nome,
           gestor_id: gestorId,
           data_inicio: format(dataInicio, "yyyy-MM-dd"),
+          redes_sociais: redesSociais,
+          investimento_mensal: investimentoMensal ? parseFloat(investimentoMensal) : 0,
+          expectativa_resultados: expectativaResultados,
         })
         .select()
         .single();
@@ -68,7 +92,7 @@ const CreateClientForm = () => {
     if (!nome || !gestorId) {
       toast({
         title: "Campos obrigatórios",
-        description: "Preencha todos os campos.",
+        description: "Preencha o nome e gestor.",
         variant: "destructive",
       });
       return;
@@ -99,7 +123,7 @@ const CreateClientForm = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-          className="max-w-xl mx-auto"
+          className="max-w-2xl mx-auto"
         >
           <div className="text-center mb-10">
             <h1 className="text-3xl font-bold text-foreground mb-2">
@@ -177,6 +201,63 @@ const CreateClientForm = () => {
                   />
                 </PopoverContent>
               </Popover>
+            </div>
+
+            {/* Redes Sociais */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <Share2 className="w-4 h-4 text-primary" />
+                Redes Sociais que Anuncia
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                {REDES_SOCIAIS.map((rede) => (
+                  <div
+                    key={rede.id}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
+                      redesSociais.includes(rede.id)
+                        ? "bg-primary/10 border-primary"
+                        : "bg-secondary border-border hover:border-primary/50"
+                    )}
+                    onClick={() => toggleRedeSocial(rede.id)}
+                  >
+                    <Checkbox
+                      checked={redesSociais.includes(rede.id)}
+                      className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    />
+                    <span className="text-sm text-foreground">{rede.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Investimento Mensal */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-primary" />
+                Investimento Mensal (R$)
+              </label>
+              <Input
+                type="number"
+                placeholder="Ex: 5000"
+                value={investimentoMensal}
+                onChange={(e) => setInvestimentoMensal(e.target.value)}
+                className="h-12 bg-secondary border-border focus:border-primary"
+              />
+            </div>
+
+            {/* Expectativa de Resultados */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <Target className="w-4 h-4 text-primary" />
+                Expectativa de Resultados
+              </label>
+              <Textarea
+                placeholder="Descreva as expectativas do cliente..."
+                value={expectativaResultados}
+                onChange={(e) => setExpectativaResultados(e.target.value)}
+                className="min-h-[100px] bg-secondary border-border focus:border-primary resize-none"
+              />
             </div>
 
             {/* Submit Button */}
