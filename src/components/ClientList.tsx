@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, User, Calendar, Plus, History } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft, ArrowRight, User, Calendar, Plus, History, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -11,11 +11,28 @@ import ProgressBar from "./ProgressBar";
 
 const ClientList = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const gestorFilter = searchParams.get("gestor");
+
+  const { data: gestorInfo } = useQuery({
+    queryKey: ["gestor", gestorFilter],
+    queryFn: async () => {
+      if (!gestorFilter) return null;
+      const { data, error } = await supabase
+        .from("gestores")
+        .select("*")
+        .eq("id", gestorFilter)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!gestorFilter,
+  });
 
   const { data: clientes, isLoading } = useQuery({
-    queryKey: ["clientes"],
+    queryKey: ["clientes", gestorFilter],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("clientes")
         .select(`
           *,
@@ -24,10 +41,19 @@ const ClientList = () => {
         `)
         .order("updated_at", { ascending: false });
 
+      if (gestorFilter) {
+        query = query.eq("gestor_id", gestorFilter);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
   });
+
+  const clearFilter = () => {
+    setSearchParams({});
+  };
 
   const calculateProgress = (checklist: any) => {
     if (!checklist) return 0;
@@ -98,11 +124,24 @@ const ClientList = () => {
         >
           <div className="text-center mb-10">
             <h1 className="text-3xl font-bold text-foreground mb-2">
-              Clientes Cadastrados
+              {gestorFilter && gestorInfo 
+                ? `Clientes de ${gestorInfo.nome}` 
+                : "Clientes Cadastrados"}
             </h1>
             <p className="text-muted-foreground">
               Selecione um cliente para gerenciar o checklist
             </p>
+            {gestorFilter && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilter}
+                className="mt-4 border-border hover:bg-primary/10 hover:text-primary"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Limpar filtro
+              </Button>
+            )}
           </div>
 
           {isLoading ? (
