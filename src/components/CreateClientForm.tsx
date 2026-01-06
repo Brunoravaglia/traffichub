@@ -211,22 +211,24 @@ const CreateClientForm = () => {
               </label>
               <div className="grid grid-cols-2 gap-3">
                 {REDES_SOCIAIS.map((rede) => (
-                  <div
+                  <label
                     key={rede.id}
+                    htmlFor={`rede-${rede.id}`}
                     className={cn(
                       "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
                       redesSociais.includes(rede.id)
                         ? "bg-primary/10 border-primary"
                         : "bg-secondary border-border hover:border-primary/50"
                     )}
-                    onClick={() => toggleRedeSocial(rede.id)}
                   >
                     <Checkbox
+                      id={`rede-${rede.id}`}
                       checked={redesSociais.includes(rede.id)}
+                      onCheckedChange={() => toggleRedeSocial(rede.id)}
                       className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                     />
                     <span className="text-sm text-foreground">{rede.label}</span>
-                  </div>
+                  </label>
                 ))}
               </div>
             </div>
