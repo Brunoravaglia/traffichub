@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Calendar, CreditCard, BarChart3, Palette, User, History, Save, Check } from "lucide-react";
+import { ArrowLeft, Calendar, CreditCard, BarChart3, Palette, User, History, Save, Check, FileText } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -267,6 +267,15 @@ Você Digital - Checklist do Gestor de Tráfego
           </Button>
           <VCDLogo size="sm" />
           <div className="flex-1" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/cliente/${id}/novo-relatorio`)}
+            className="border-border hover:bg-primary/10 hover:text-primary mr-2"
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            Novo Relatório
+          </Button>
           <Button
             variant="outline"
             size="sm"
