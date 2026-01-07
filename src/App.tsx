@@ -11,7 +11,6 @@ import ClienteChecklist from "./pages/ClienteChecklist";
 import DashboardGerencial from "./pages/DashboardGerencial";
 import Historico from "./pages/Historico";
 import Relatorio from "./pages/Relatorio";
-import NovoRelatorio from "./pages/NovoRelatorio";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,7 +29,6 @@ const App = () => (
           <Route path="/cliente/:id" element={<ClienteChecklist />} />
           <Route path="/cliente/:id/historico" element={<Historico />} />
           <Route path="/cliente/:id/relatorio/:data" element={<Relatorio />} />
-          <Route path="/cliente/:id/novo-relatorio" element={<NovoRelatorio />} />
           <Route path="/dashboard" element={<DashboardGerencial />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
