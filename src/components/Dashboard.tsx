@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Plus, Users, BarChart3, UserPlus, FileText } from "lucide-react";
+import { Plus, Users, BarChart3, UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import VCDLogo from "./VCDLogo";
 
