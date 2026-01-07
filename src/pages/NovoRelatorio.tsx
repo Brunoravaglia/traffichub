@@ -1,0 +1,422 @@
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, Search, DollarSign, Eye, MousePointer, Target, TrendingUp, Award, Save } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { toast } from "@/hooks/use-toast";
+import VCDLogo from "@/components/VCDLogo";
+import RelatorioPDFExport from "@/components/RelatorioPDFExport";
+import { cn } from "@/lib/utils";
+import { Calendar as CalendarIcon } from "lucide-react";
+
+const NovoRelatorio = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [showPreview, setShowPreview] = useState(false);
+
+  // Google Ads metrics
+  const [investimentoGoogle, setInvestimentoGoogle] = useState("");
+  const [impressoesGoogle, setImpressoesGoogle] = useState("");
+  const [cliquesGoogle, setCliquesGoogle] = useState("");
+  const [conversoesGoogle, setConversoesGoogle] = useState("");
+  const [topoPesquisas, setTopoPesquisas] = useState("");
+  const [taxaSuperacao, setTaxaSuperacao] = useState("");
+  const [palavrasChaves, setPalavrasChaves] = useState("");
+
+  // Facebook/Meta metrics
+  const [investimentoFacebook, setInvestimentoFacebook] = useState("");
+  const [impressoesFacebook, setImpressoesFacebook] = useState("");
+  const [cliquesFacebook, setCliquesFacebook] = useState("");
+  const [conversoesFacebook, setConversoesFacebook] = useState("");
+  const [alcanceFacebook, setAlcanceFacebook] = useState("");
+
+  const { data: cliente } = useQuery({
+    queryKey: ["cliente", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("clientes")
+        .select("*, gestores(nome)")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  const saveRelatorioMutation = useMutation({
+    mutationFn: async () => {
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
+      const palavrasArray = palavrasChaves
+        .split(",")
+        .map((p) => p.trim())
+        .filter((p) => p.length > 0);
+
+      const { error } = await supabase.from("relatorios").upsert(
+        {
+          cliente_id: id,
+          data: dateStr,
+          investimento_google: parseFloat(investimentoGoogle) || 0,
+          impressoes_google: parseInt(impressoesGoogle) || 0,
+          cliques_google: parseInt(cliquesGoogle) || 0,
+          conversoes_google: parseInt(conversoesGoogle) || 0,
+          topo_pesquisas: parseFloat(topoPesquisas) || 0,
+          taxa_superacao: parseFloat(taxaSuperacao) || 0,
+          top_palavras_chaves: palavrasArray,
+          investimento_facebook: parseFloat(investimentoFacebook) || 0,
+          impressoes_facebook: parseInt(impressoesFacebook) || 0,
+          cliques_facebook: parseInt(cliquesFacebook) || 0,
+          conversoes_facebook: parseInt(conversoesFacebook) || 0,
+          alcance_facebook: parseInt(alcanceFacebook) || 0,
+        },
+        { onConflict: "cliente_id,data" }
+      );
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["relatorios"] });
+      toast({
+        title: "Relatório salvo!",
+        description: "As métricas foram salvas com sucesso.",
+      });
+      setShowPreview(true);
+    },
+    onError: () => {
+      toast({
+        title: "Erro ao salvar",
+        description: "Tente novamente.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveRelatorioMutation.mutate();
+  };
+
+  if (!cliente) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const relatorioData = {
+    data: format(selectedDate, "yyyy-MM-dd"),
+    investimento_google: parseFloat(investimentoGoogle) || 0,
+    impressoes_google: parseInt(impressoesGoogle) || 0,
+    cliques_google: parseInt(cliquesGoogle) || 0,
+    conversoes_google: parseInt(conversoesGoogle) || 0,
+    topo_pesquisas: parseFloat(topoPesquisas) || 0,
+    taxa_superacao: parseFloat(taxaSuperacao) || 0,
+    top_palavras_chaves: palavrasChaves
+      .split(",")
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0),
+    investimento_facebook: parseFloat(investimentoFacebook) || 0,
+    impressoes_facebook: parseInt(impressoesFacebook) || 0,
+    cliques_facebook: parseInt(cliquesFacebook) || 0,
+    conversoes_facebook: parseInt(conversoesFacebook) || 0,
+    alcance_facebook: parseInt(alcanceFacebook) || 0,
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border/50 glassmorphism sticky top-0 z-50">
+        <div className="container mx-auto px-6 py-4 flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(`/cliente/${id}`)}
+            className="hover:bg-secondary"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <VCDLogo size="sm" />
+        </div>
+      </header>
+
+      <main className="container mx-auto px-6 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-4xl mx-auto"
+        >
+          <div className="text-center mb-10">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Novo Relatório de Métricas
+            </h1>
+            <p className="text-muted-foreground">
+              {cliente.nome} - Preencha os dados de performance
+            </p>
+          </div>
+
+          {showPreview ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <Button
+                variant="outline"
+                className="mb-6"
+                onClick={() => setShowPreview(false)}
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Voltar ao Formulário
+              </Button>
+              <RelatorioPDFExport cliente={cliente} relatorio={relatorioData} />
+            </motion.div>
+          ) : (
+            <motion.form
+              onSubmit={handleSave}
+              className="space-y-8"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              {/* Date Selector */}
+              <div className="vcd-card">
+                <div className="flex items-center gap-3 mb-4">
+                  <CalendarIcon className="w-5 h-5 text-primary" />
+                  <h2 className="text-lg font-semibold text-foreground">
+                    Período do Relatório
+                  </h2>
+                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full md:w-auto h-12 justify-start text-left font-normal bg-secondary border-border hover:bg-secondary/80"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                      {format(selectedDate, "dd 'de' MMMM 'de' yyyy", {
+                        locale: ptBR,
+                      })}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-auto p-0 bg-card border-border"
+                    align="start"
+                  >
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => date && setSelectedDate(date)}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Google Ads Section */}
+              <div className="vcd-card">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-[#4285f4]/20 flex items-center justify-center">
+                    <Search className="w-5 h-5 text-[#4285f4]" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-foreground">
+                    Google Ads
+                  </h2>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-4 mb-4">
+                  <InputField
+                    icon={<DollarSign className="w-4 h-4" />}
+                    label="Investimento (R$)"
+                    value={investimentoGoogle}
+                    onChange={setInvestimentoGoogle}
+                    type="number"
+                    placeholder="0.00"
+                  />
+                  <InputField
+                    icon={<Eye className="w-4 h-4" />}
+                    label="Impressões"
+                    value={impressoesGoogle}
+                    onChange={setImpressoesGoogle}
+                    type="number"
+                    placeholder="0"
+                  />
+                  <InputField
+                    icon={<MousePointer className="w-4 h-4" />}
+                    label="Cliques"
+                    value={cliquesGoogle}
+                    onChange={setCliquesGoogle}
+                    type="number"
+                    placeholder="0"
+                  />
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-4 mb-4">
+                  <InputField
+                    icon={<Target className="w-4 h-4" />}
+                    label="Conversões"
+                    value={conversoesGoogle}
+                    onChange={setConversoesGoogle}
+                    type="number"
+                    placeholder="0"
+                  />
+                  <InputField
+                    icon={<TrendingUp className="w-4 h-4" />}
+                    label="Topo das Pesquisas (%)"
+                    value={topoPesquisas}
+                    onChange={setTopoPesquisas}
+                    type="number"
+                    placeholder="0"
+                  />
+                  <InputField
+                    icon={<Award className="w-4 h-4" />}
+                    label="Taxa de Superação (%)"
+                    value={taxaSuperacao}
+                    onChange={setTaxaSuperacao}
+                    type="number"
+                    placeholder="0"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Top 3 Palavras-Chave (separadas por vírgula)
+                  </label>
+                  <Input
+                    value={palavrasChaves}
+                    onChange={(e) => setPalavrasChaves(e.target.value)}
+                    placeholder="Ex: palavra1, palavra2, palavra3"
+                    className="h-12 bg-secondary border-border focus:border-primary"
+                  />
+                </div>
+              </div>
+
+              {/* Facebook/Meta Section */}
+              <div className="vcd-card">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-[#1877f2]/20 flex items-center justify-center">
+                    <svg
+                      className="w-5 h-5 text-[#1877f2]"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-lg font-semibold text-foreground">
+                    Meta Ads (Facebook/Instagram)
+                  </h2>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-4 mb-4">
+                  <InputField
+                    icon={<DollarSign className="w-4 h-4" />}
+                    label="Investimento (R$)"
+                    value={investimentoFacebook}
+                    onChange={setInvestimentoFacebook}
+                    type="number"
+                    placeholder="0.00"
+                  />
+                  <InputField
+                    icon={<Eye className="w-4 h-4" />}
+                    label="Impressões"
+                    value={impressoesFacebook}
+                    onChange={setImpressoesFacebook}
+                    type="number"
+                    placeholder="0"
+                  />
+                  <InputField
+                    icon={<MousePointer className="w-4 h-4" />}
+                    label="Cliques"
+                    value={cliquesFacebook}
+                    onChange={setCliquesFacebook}
+                    type="number"
+                    placeholder="0"
+                  />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <InputField
+                    icon={<Target className="w-4 h-4" />}
+                    label="Conversões"
+                    value={conversoesFacebook}
+                    onChange={setConversoesFacebook}
+                    type="number"
+                    placeholder="0"
+                  />
+                  <InputField
+                    icon={<TrendingUp className="w-4 h-4" />}
+                    label="Alcance"
+                    value={alcanceFacebook}
+                    onChange={setAlcanceFacebook}
+                    type="number"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={saveRelatorioMutation.isPending}
+                className="w-full h-14 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground vcd-button-glow transition-all duration-200 hover:scale-[1.02]"
+              >
+                {saveRelatorioMutation.isPending ? (
+                  <div className="w-6 h-6 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <Save className="w-5 h-5 mr-2" />
+                    Salvar e Visualizar Relatório
+                  </>
+                )}
+              </Button>
+            </motion.form>
+          )}
+        </motion.div>
+      </main>
+    </div>
+  );
+};
+
+interface InputFieldProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  placeholder?: string;
+}
+
+const InputField = ({
+  icon,
+  label,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+}: InputFieldProps) => (
+  <div className="space-y-2">
+    <label className="text-sm font-medium text-foreground flex items-center gap-2">
+      <span className="text-primary">{icon}</span>
+      {label}
+    </label>
+    <Input
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="h-12 bg-secondary border-border focus:border-primary"
+    />
+  </div>
+);
+
+export default NovoRelatorio;

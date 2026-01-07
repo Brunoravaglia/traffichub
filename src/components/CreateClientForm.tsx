@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Calendar, Briefcase, DollarSign, Target, Share2 } from "lucide-react";
+import { ArrowLeft, User, Calendar, Briefcase, DollarSign, Target, Share2, Upload, X, Image as ImageIcon } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import VCDLogo from "./VCDLogo";
 import { cn } from "@/lib/utils";
-
+import { useRef } from "react";
 const REDES_SOCIAIS = [
   { id: "meta", label: "Meta Ads (Facebook/Instagram)" },
   { id: "google", label: "Google Ads" },
@@ -36,6 +36,43 @@ const CreateClientForm = () => {
   const [redesSociais, setRedesSociais] = useState<string[]>([]);
   const [investimentoMensal, setInvestimentoMensal] = useState("");
   const [expectativaResultados, setExpectativaResultados] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Arquivo inválido",
+        description: "Por favor, selecione uma imagem.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "O tamanho máximo é 2MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  };
+
+  const removeLogo = () => {
+    setLogoFile(null);
+    setLogoPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const { data: gestores } = useQuery({
     queryKey: ["gestores"],
@@ -54,7 +91,8 @@ const CreateClientForm = () => {
 
   const createClientMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase
+      // First create the client
+      const { data: clientData, error: clientError } = await supabase
         .from("clientes")
         .insert({
           nome,
@@ -67,8 +105,32 @@ const CreateClientForm = () => {
         .select()
         .single();
 
-      if (error) throw error;
-      return data;
+      if (clientError) throw clientError;
+
+      // Upload logo if provided
+      if (logoFile && clientData) {
+        const fileExt = logoFile.name.split(".").pop();
+        const fileName = `${clientData.id}-${Date.now()}.${fileExt}`;
+        const filePath = `logos/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("client-logos")
+          .upload(filePath, logoFile);
+
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage
+            .from("client-logos")
+            .getPublicUrl(filePath);
+
+          // Update client with logo URL
+          await supabase
+            .from("clientes")
+            .update({ logo_url: publicUrl })
+            .eq("id", clientData.id);
+        }
+      }
+
+      return clientData;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["clientes"] });
@@ -230,6 +292,65 @@ const CreateClientForm = () => {
                     <span className="text-sm text-foreground">{rede.label}</span>
                   </label>
                 ))}
+              </div>
+            </div>
+
+            {/* Logo do Cliente */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-primary" />
+                Logo do Cliente
+              </label>
+              <div className="flex items-center gap-4">
+                {logoPreview ? (
+                  <div className="relative">
+                    <div className="w-24 h-24 rounded-xl border border-border overflow-hidden bg-secondary">
+                      <img
+                        src={logoPreview}
+                        alt="Preview do logo"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={removeLogo}
+                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:bg-destructive/90 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-24 h-24 rounded-xl border-2 border-dashed border-border hover:border-primary/50 bg-secondary/50 flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <Upload className="w-6 h-6 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Upload</span>
+                  </div>
+                )}
+
+                <div className="flex-1">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoChange}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="mb-2"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    {logoPreview ? "Trocar Logo" : "Selecionar Logo"}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    PNG, JPG ou SVG. Máximo 2MB.
+                  </p>
+                </div>
               </div>
             </div>
 
