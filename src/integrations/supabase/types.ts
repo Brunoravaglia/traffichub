@@ -138,6 +138,74 @@ export type Database = {
         }
         Relationships: []
       }
+      relatorios: {
+        Row: {
+          alcance_facebook: number | null
+          cliente_id: string
+          cliques_facebook: number | null
+          cliques_google: number | null
+          conversoes_facebook: number | null
+          conversoes_google: number | null
+          created_at: string
+          data: string
+          id: string
+          impressoes_facebook: number | null
+          impressoes_google: number | null
+          investimento_facebook: number | null
+          investimento_google: number | null
+          taxa_superacao: number | null
+          top_palavras_chaves: string[] | null
+          topo_pesquisas: number | null
+          updated_at: string
+        }
+        Insert: {
+          alcance_facebook?: number | null
+          cliente_id: string
+          cliques_facebook?: number | null
+          cliques_google?: number | null
+          conversoes_facebook?: number | null
+          conversoes_google?: number | null
+          created_at?: string
+          data?: string
+          id?: string
+          impressoes_facebook?: number | null
+          impressoes_google?: number | null
+          investimento_facebook?: number | null
+          investimento_google?: number | null
+          taxa_superacao?: number | null
+          top_palavras_chaves?: string[] | null
+          topo_pesquisas?: number | null
+          updated_at?: string
+        }
+        Update: {
+          alcance_facebook?: number | null
+          cliente_id?: string
+          cliques_facebook?: number | null
+          cliques_google?: number | null
+          conversoes_facebook?: number | null
+          conversoes_google?: number | null
+          created_at?: string
+          data?: string
+          id?: string
+          impressoes_facebook?: number | null
+          impressoes_google?: number | null
+          investimento_facebook?: number | null
+          investimento_google?: number | null
+          taxa_superacao?: number | null
+          top_palavras_chaves?: string[] | null
+          topo_pesquisas?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relatorios_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
