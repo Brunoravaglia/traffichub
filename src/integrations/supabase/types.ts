@@ -84,6 +84,7 @@ export type Database = {
           gestor_id: string
           id: string
           investimento_mensal: number | null
+          logo_url: string | null
           nome: string
           redes_sociais: string[] | null
           updated_at: string
@@ -95,6 +96,7 @@ export type Database = {
           gestor_id: string
           id?: string
           investimento_mensal?: number | null
+          logo_url?: string | null
           nome: string
           redes_sociais?: string[] | null
           updated_at?: string
@@ -106,6 +108,7 @@ export type Database = {
           gestor_id?: string
           id?: string
           investimento_mensal?: number | null
+          logo_url?: string | null
           nome?: string
           redes_sociais?: string[] | null
           updated_at?: string
