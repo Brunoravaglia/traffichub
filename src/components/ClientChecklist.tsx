@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Calendar, CreditCard, BarChart3, Palette, User, History, Save, Check, FileText } from "lucide-react";
+import { ArrowLeft, Calendar, CreditCard, BarChart3, Palette, User, History, Save, Check, FileText, Settings } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import EditClientForm from "./EditClientForm";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -267,6 +269,30 @@ Você Digital - Checklist do Gestor de Tráfego
           </Button>
           <VCDLogo size="sm" />
           <div className="flex-1" />
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-border hover:bg-primary/10 hover:text-primary mr-2"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Editar Cliente
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-border">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold text-foreground">
+                  Editar Cliente
+                </DialogTitle>
+              </DialogHeader>
+              <EditClientForm
+                clienteId={id!}
+                onClose={() => {}}
+                onSuccess={() => queryClient.invalidateQueries({ queryKey: ["cliente", id] })}
+              />
+            </DialogContent>
+          </Dialog>
           <Button
             variant="outline"
             size="sm"

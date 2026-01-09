@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, User, Calendar, Plus, History, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, User, Calendar, Plus, History, X, Building2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import VCDLogo from "./VCDLogo";
 import ProgressBar from "./ProgressBar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const ClientList = () => {
   const navigate = useNavigate();
@@ -189,7 +190,15 @@ const ClientList = () => {
                     variants={itemVariants}
                     className="vcd-card-hover p-6 group"
                   >
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-4">
+                      {/* Client Logo */}
+                      <Avatar className="w-14 h-14 border-2 border-border">
+                        <AvatarImage src={cliente.logo_url || undefined} alt={cliente.nome} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
+                          {cliente.nome.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+
                       {/* Client Info */}
                       <div 
                         className="flex-1 min-w-0 cursor-pointer"
