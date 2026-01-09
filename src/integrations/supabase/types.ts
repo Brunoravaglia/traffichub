@@ -87,6 +87,7 @@ export type Database = {
           logo_url: string | null
           nome: string
           redes_sociais: string[] | null
+          telefone_contato: string | null
           updated_at: string
         }
         Insert: {
@@ -99,6 +100,7 @@ export type Database = {
           logo_url?: string | null
           nome: string
           redes_sociais?: string[] | null
+          telefone_contato?: string | null
           updated_at?: string
         }
         Update: {
@@ -111,6 +113,7 @@ export type Database = {
           logo_url?: string | null
           nome?: string
           redes_sociais?: string[] | null
+          telefone_contato?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -126,18 +129,27 @@ export type Database = {
       gestores: {
         Row: {
           created_at: string
+          foto_url: string | null
           id: string
+          links: Json | null
           nome: string
+          telefone: string | null
         }
         Insert: {
           created_at?: string
+          foto_url?: string | null
           id?: string
+          links?: Json | null
           nome: string
+          telefone?: string | null
         }
         Update: {
           created_at?: string
+          foto_url?: string | null
           id?: string
+          links?: Json | null
           nome?: string
+          telefone?: string | null
         }
         Relationships: []
       }

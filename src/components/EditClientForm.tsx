@@ -1,0 +1,433 @@
+import { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
+import { User, Calendar, Briefcase, DollarSign, Target, Share2, Upload, X, Image as ImageIcon, Phone, Save } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+
+const REDES_SOCIAIS = [
+  { id: "meta", label: "Meta Ads (Facebook/Instagram)" },
+  { id: "google", label: "Google Ads" },
+  { id: "tiktok", label: "TikTok Ads" },
+  { id: "linkedin", label: "LinkedIn Ads" },
+  { id: "youtube", label: "YouTube Ads" },
+  { id: "twitter", label: "Twitter/X Ads" },
+  { id: "pinterest", label: "Pinterest Ads" },
+];
+
+interface EditClientFormProps {
+  clienteId: string;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+const EditClientForm = ({ clienteId, onClose, onSuccess }: EditClientFormProps) => {
+  const queryClient = useQueryClient();
+  const [nome, setNome] = useState("");
+  const [gestorId, setGestorId] = useState("");
+  const [dataInicio, setDataInicio] = useState<Date>(new Date());
+  const [redesSociais, setRedesSociais] = useState<string[]>([]);
+  const [investimentoMensal, setInvestimentoMensal] = useState("");
+  const [expectativaResultados, setExpectativaResultados] = useState("");
+  const [telefoneContato, setTelefoneContato] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [existingLogoUrl, setExistingLogoUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: cliente, isLoading: isLoadingCliente } = useQuery({
+    queryKey: ["cliente-edit", clienteId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("clientes")
+        .select("*")
+        .eq("id", clienteId)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: gestores } = useQuery({
+    queryKey: ["gestores"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("gestores").select("*").order("nome");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    if (cliente) {
+      setNome(cliente.nome || "");
+      setGestorId(cliente.gestor_id || "");
+      setDataInicio(new Date(cliente.data_inicio));
+      setRedesSociais(cliente.redes_sociais || []);
+      setInvestimentoMensal(cliente.investimento_mensal?.toString() || "");
+      setExpectativaResultados(cliente.expectativa_resultados || "");
+      setTelefoneContato(cliente.telefone_contato || "");
+      setExistingLogoUrl(cliente.logo_url || null);
+      setLogoPreview(cliente.logo_url || null);
+    }
+  }, [cliente]);
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Arquivo inválido",
+        description: "Por favor, selecione uma imagem.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "O tamanho máximo é 2MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  };
+
+  const removeLogo = () => {
+    setLogoFile(null);
+    setLogoPreview(null);
+    setExistingLogoUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const toggleRedeSocial = (id: string) => {
+    setRedesSociais(prev =>
+      prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]
+    );
+  };
+
+  const updateClientMutation = useMutation({
+    mutationFn: async () => {
+      let logoUrl = existingLogoUrl;
+
+      // Upload new logo if provided
+      if (logoFile) {
+        const fileExt = logoFile.name.split(".").pop();
+        const fileName = `${clienteId}-${Date.now()}.${fileExt}`;
+        const filePath = `logos/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("client-logos")
+          .upload(filePath, logoFile);
+
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage
+            .from("client-logos")
+            .getPublicUrl(filePath);
+          logoUrl = publicUrl;
+        }
+      }
+
+      const { error } = await supabase
+        .from("clientes")
+        .update({
+          nome,
+          gestor_id: gestorId,
+          data_inicio: format(dataInicio, "yyyy-MM-dd"),
+          redes_sociais: redesSociais,
+          investimento_mensal: investimentoMensal ? parseFloat(investimentoMensal) : 0,
+          expectativa_resultados: expectativaResultados,
+          telefone_contato: telefoneContato || null,
+          logo_url: logoUrl,
+        })
+        .eq("id", clienteId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clientes"] });
+      queryClient.invalidateQueries({ queryKey: ["cliente", clienteId] });
+      toast({
+        title: "Cliente atualizado!",
+        description: `${nome} foi atualizado com sucesso.`,
+      });
+      onSuccess?.();
+      onClose();
+    },
+    onError: () => {
+      toast({
+        title: "Erro ao atualizar cliente",
+        description: "Tente novamente.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nome || !gestorId) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha o nome e gestor.",
+        variant: "destructive",
+      });
+      return;
+    }
+    updateClientMutation.mutate();
+  };
+
+  if (isLoadingCliente) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <motion.form
+      onSubmit={handleSubmit}
+      className="space-y-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
+      {/* Nome do Cliente */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+          <User className="w-4 h-4 text-primary" />
+          Nome do Cliente
+        </label>
+        <Input
+          placeholder="Ex: Empresa XYZ"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          className="h-12 bg-secondary border-border focus:border-primary"
+        />
+      </div>
+
+      {/* Telefone de Contato */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+          <Phone className="w-4 h-4 text-primary" />
+          Telefone de Contato
+        </label>
+        <Input
+          placeholder="Ex: (11) 99999-9999"
+          value={telefoneContato}
+          onChange={(e) => setTelefoneContato(e.target.value)}
+          className="h-12 bg-secondary border-border focus:border-primary"
+        />
+      </div>
+
+      {/* Gestor Responsável */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+          <Briefcase className="w-4 h-4 text-primary" />
+          Gestor Responsável
+        </label>
+        <Select value={gestorId} onValueChange={setGestorId}>
+          <SelectTrigger className="h-12 bg-secondary border-border focus:border-primary">
+            <SelectValue placeholder="Selecione o gestor" />
+          </SelectTrigger>
+          <SelectContent className="bg-card border-border">
+            {gestores?.map((gestor) => (
+              <SelectItem key={gestor.id} value={gestor.id}>
+                {gestor.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Data de Início */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+          <Calendar className="w-4 h-4 text-primary" />
+          Data de Início
+        </label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full h-12 justify-start text-left font-normal bg-secondary border-border hover:bg-secondary/80"
+            >
+              <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+              {format(dataInicio, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0 bg-card border-border" align="start">
+            <CalendarComponent
+              mode="single"
+              selected={dataInicio}
+              onSelect={(date) => date && setDataInicio(date)}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      {/* Logo do Cliente */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+          <ImageIcon className="w-4 h-4 text-primary" />
+          Logo do Cliente
+        </label>
+        <div className="flex items-center gap-4">
+          {logoPreview ? (
+            <div className="relative">
+              <div className="w-24 h-24 rounded-xl border border-border overflow-hidden bg-secondary">
+                <img
+                  src={logoPreview}
+                  alt="Preview do logo"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={removeLogo}
+                className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:bg-destructive/90 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="w-24 h-24 rounded-xl border-2 border-dashed border-border hover:border-primary/50 bg-secondary/50 flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors"
+            >
+              <Upload className="w-6 h-6 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Upload</span>
+            </div>
+          )}
+
+          <div className="flex-1">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleLogoChange}
+              className="hidden"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              className="mb-2"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              {logoPreview ? "Trocar Logo" : "Selecionar Logo"}
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              PNG, JPG ou SVG. Máximo 2MB.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Redes Sociais */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+          <Share2 className="w-4 h-4 text-primary" />
+          Redes Sociais que Anuncia
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          {REDES_SOCIAIS.map((rede) => (
+            <label
+              key={rede.id}
+              htmlFor={`edit-rede-${rede.id}`}
+              className={cn(
+                "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
+                redesSociais.includes(rede.id)
+                  ? "bg-primary/10 border-primary"
+                  : "bg-secondary border-border hover:border-primary/50"
+              )}
+            >
+              <Checkbox
+                id={`edit-rede-${rede.id}`}
+                checked={redesSociais.includes(rede.id)}
+                onCheckedChange={() => toggleRedeSocial(rede.id)}
+                className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+              />
+              <span className="text-sm text-foreground">{rede.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Investimento Mensal */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+          <DollarSign className="w-4 h-4 text-primary" />
+          Investimento Mensal (R$)
+        </label>
+        <Input
+          type="number"
+          placeholder="Ex: 5000"
+          value={investimentoMensal}
+          onChange={(e) => setInvestimentoMensal(e.target.value)}
+          className="h-12 bg-secondary border-border focus:border-primary"
+        />
+      </div>
+
+      {/* Expectativa de Resultados */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+          <Target className="w-4 h-4 text-primary" />
+          Expectativa de Resultados
+        </label>
+        <Textarea
+          placeholder="Descreva as expectativas do cliente..."
+          value={expectativaResultados}
+          onChange={(e) => setExpectativaResultados(e.target.value)}
+          className="min-h-[100px] bg-secondary border-border focus:border-primary resize-none"
+        />
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-3 pt-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onClose}
+          className="flex-1"
+        >
+          Cancelar
+        </Button>
+        <Button
+          type="submit"
+          disabled={updateClientMutation.isPending}
+          className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+        >
+          {updateClientMutation.isPending ? (
+            <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+          ) : (
+            <>
+              <Save className="w-4 h-4 mr-2" />
+              Salvar Alterações
+            </>
+          )}
+        </Button>
+      </div>
+    </motion.form>
+  );
+};
+
+export default EditClientForm;

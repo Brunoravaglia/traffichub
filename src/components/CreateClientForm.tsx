@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Calendar, Briefcase, DollarSign, Target, Share2, Upload, X, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, User, Calendar, Briefcase, DollarSign, Target, Share2, Upload, X, Image as ImageIcon, Phone } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import VCDLogo from "./VCDLogo";
 import { cn } from "@/lib/utils";
-import { useRef } from "react";
+
 const REDES_SOCIAIS = [
   { id: "meta", label: "Meta Ads (Facebook/Instagram)" },
   { id: "google", label: "Google Ads" },
@@ -36,6 +36,7 @@ const CreateClientForm = () => {
   const [redesSociais, setRedesSociais] = useState<string[]>([]);
   const [investimentoMensal, setInvestimentoMensal] = useState("");
   const [expectativaResultados, setExpectativaResultados] = useState("");
+  const [telefoneContato, setTelefoneContato] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -101,6 +102,7 @@ const CreateClientForm = () => {
           redes_sociais: redesSociais,
           investimento_mensal: investimentoMensal ? parseFloat(investimentoMensal) : 0,
           expectativa_resultados: expectativaResultados,
+          telefone_contato: telefoneContato || null,
         })
         .select()
         .single();
@@ -213,6 +215,20 @@ const CreateClientForm = () => {
                 placeholder="Ex: Empresa XYZ"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
+                className="h-12 bg-secondary border-border focus:border-primary"
+              />
+            </div>
+
+            {/* Telefone de Contato */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <Phone className="w-4 h-4 text-primary" />
+                Telefone de Contato
+              </label>
+              <Input
+                placeholder="Ex: (11) 99999-9999"
+                value={telefoneContato}
+                onChange={(e) => setTelefoneContato(e.target.value)}
                 className="h-12 bg-secondary border-border focus:border-primary"
               />
             </div>
