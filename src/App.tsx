@@ -12,6 +12,7 @@ import DashboardGerencial from "./pages/DashboardGerencial";
 import Historico from "./pages/Historico";
 import Relatorio from "./pages/Relatorio";
 import NovoRelatorio from "./pages/NovoRelatorio";
+import Gestores from "./pages/Gestores";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/cliente/:id/relatorio/:data" element={<Relatorio />} />
           <Route path="/cliente/:id/novo-relatorio" element={<NovoRelatorio />} />
           <Route path="/dashboard" element={<DashboardGerencial />} />
+          <Route path="/gestores" element={<Gestores />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

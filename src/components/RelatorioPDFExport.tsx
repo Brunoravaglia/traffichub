@@ -3,7 +3,7 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { Download, TrendingUp, MousePointer, Eye, Target, Award, Search, DollarSign } from "lucide-react";
+import { Download, TrendingUp, MousePointer, Eye, Target, Award, Search, DollarSign, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 
@@ -27,11 +27,14 @@ interface RelatorioPDFExportProps {
     cliques_facebook?: number | null;
     conversoes_facebook?: number | null;
     alcance_facebook?: number | null;
+    edited_at?: string | null;
+    edit_count?: number | null;
   };
 }
 
 const RelatorioPDFExport = ({ cliente, relatorio }: RelatorioPDFExportProps) => {
   const pdfRef = useRef<HTMLDivElement>(null);
+  const isEdited = relatorio.edit_count && relatorio.edit_count > 0;
 
   const formatCurrency = (value: number | null | undefined) => {
     if (!value) return "R$ 0,00";
@@ -112,6 +115,25 @@ const RelatorioPDFExport = ({ cliente, relatorio }: RelatorioPDFExportProps) => 
         className="bg-[#0a0a0a] p-8 rounded-2xl"
         style={{ minWidth: "800px" }}
       >
+        {/* Audit Warning Banner */}
+        {isEdited && (
+          <div className="mb-6 p-4 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0" />
+            <div>
+              <p className="text-orange-500 font-semibold text-sm">
+                Documento Editado - Registro de Auditoria
+              </p>
+              <p className="text-orange-400/80 text-xs mt-1">
+                Este relatório foi editado {relatorio.edit_count} vez(es). 
+                Última edição em: {relatorio.edited_at 
+                  ? format(new Date(relatorio.edited_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
+                  : "N/A"
+                }
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/10">
           <div className="flex items-center gap-6">
@@ -273,9 +295,16 @@ const RelatorioPDFExport = ({ cliente, relatorio }: RelatorioPDFExportProps) => 
             </div>
             <span className="text-white/40 text-sm">VCD Performance</span>
           </div>
-          <p className="text-white/40 text-sm">
-            Gerado em {format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-          </p>
+          <div className="text-right">
+            <p className="text-white/40 text-sm">
+              Gerado em {format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+            </p>
+            {isEdited && (
+              <p className="text-orange-400/60 text-xs mt-1">
+                Versão editada #{relatorio.edit_count}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>
