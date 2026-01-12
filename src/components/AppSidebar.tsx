@@ -45,7 +45,8 @@ const AppSidebar = () => {
 
   const menuItems = {
     main: [
-      { title: "Dashboard", icon: Home, path: "/" },
+      { title: "Dashboard", icon: Home, path: "/dashboard" },
+      { title: "Gerencial", icon: BarChart3, path: "/gerencial" },
     ],
     clientes: [
       { title: "Ver Clientes", icon: Users, path: "/clientes" },
@@ -55,8 +56,8 @@ const AppSidebar = () => {
       { title: "Ver Gestores", icon: Briefcase, path: "/gestores" },
       { title: "Novo Gestor", icon: UserPlus, path: "/novo-gestor" },
     ],
-    analise: [
-      { title: "Dashboard Gerencial", icon: BarChart3, path: "/dashboard" },
+    config: [
+      { title: "Configurações", icon: Settings, path: "/configuracoes" },
     ],
   };
 
@@ -174,54 +175,28 @@ const AppSidebar = () => {
           </Collapsible>
         </SidebarGroup>
 
-        {/* Análise */}
-        <SidebarGroup>
-          <Collapsible defaultOpen className="group/collapsible">
-            <SidebarGroupLabel
-              asChild
-              className={cn("cursor-pointer", isCollapsed && "sr-only")}
-            >
-              <CollapsibleTrigger className="flex w-full items-center justify-between">
-                <span>Análise</span>
-                <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-              </CollapsibleTrigger>
-            </SidebarGroupLabel>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {menuItems.analise.map((item) => (
-                    <SidebarMenuItem key={item.path}>
-                      <SidebarMenuButton
-                        onClick={() => navigate(item.path)}
-                        isActive={isActive(item.path)}
-                        tooltip={item.title}
-                        className={cn(
-                          "transition-all duration-200",
-                          isActive(item.path) &&
-                            "bg-primary/10 text-primary border-l-2 border-primary"
-                        )}
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </Collapsible>
-        </SidebarGroup>
       </SidebarContent>
 
-      {/* Footer */}
+      {/* Footer - Configurações */}
       <SidebarFooter className="border-t border-border/50 p-2">
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Você Digital" className="opacity-60">
-              <Settings className="h-4 w-4" />
-              <span className="text-xs">VCD Performance</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {menuItems.config.map((item) => (
+            <SidebarMenuItem key={item.path}>
+              <SidebarMenuButton
+                onClick={() => navigate(item.path)}
+                isActive={isActive(item.path)}
+                tooltip={item.title}
+                className={cn(
+                  "transition-all duration-200",
+                  isActive(item.path) &&
+                    "bg-primary/10 text-primary border-l-2 border-primary"
+                )}
+              >
+                <item.icon className="h-4 w-4" />
+                <span>{item.title}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
