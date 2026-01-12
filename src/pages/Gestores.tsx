@@ -1,11 +1,10 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, UserPlus, Phone, Link as LinkIcon, Edit2 } from "lucide-react";
+import { UserPlus, Phone, Link as LinkIcon, Edit2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import VCDLogo from "@/components/VCDLogo";
 import EditGestorForm from "@/components/EditGestorForm";
 
 interface GestorLink {
@@ -48,20 +47,21 @@ const Gestores = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border/50 glassmorphism sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4 flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/")}
-            className="hover:bg-secondary"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <VCDLogo size="sm" />
-          <div className="flex-1" />
+    <div className="min-h-full bg-background p-6">
+      <div className="max-w-5xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between mb-8"
+        >
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Gestores de Tráfego
+            </h1>
+            <p className="text-muted-foreground">
+              Gerencie sua equipe de gestores
+            </p>
+          </div>
           <Button
             onClick={() => navigate("/novo-gestor")}
             className="bg-primary hover:bg-primary/90 text-primary-foreground vcd-button-glow"
@@ -69,21 +69,6 @@ const Gestores = () => {
             <UserPlus className="w-4 h-4 mr-2" />
             Novo Gestor
           </Button>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-6 py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-4xl font-bold text-foreground mb-4">
-            Gestores de Tráfego
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            Gerencie sua equipe de gestores
-          </p>
         </motion.div>
 
         {isLoading ? (
@@ -95,7 +80,7 @@ const Gestores = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto"
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {gestores.map((gestor) => {
               const links = (gestor.links as unknown as GestorLink[] | null) || [];
@@ -201,7 +186,7 @@ const Gestores = () => {
             </Button>
           </motion.div>
         )}
-      </main>
+      </div>
     </div>
   );
 };

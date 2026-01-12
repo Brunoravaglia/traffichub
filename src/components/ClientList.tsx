@@ -91,39 +91,15 @@ const ClientList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border/50 glassmorphism sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4 flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/")}
-            className="hover:bg-secondary"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <VCDLogo size="sm" />
-          <div className="flex-1" />
-          <Button
-            onClick={() => navigate("/novo-cliente")}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Cliente
-          </Button>
-        </div>
-      </header>
-
+    <div className="min-h-full bg-background p-6">
       {/* Main Content */}
-      <main className="container mx-auto px-6 py-12">
+      <div className="max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="max-w-4xl mx-auto"
+          className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
         >
-          <div className="text-center mb-10">
+          <div>
             <h1 className="text-3xl font-bold text-foreground mb-2">
               {gestorFilter && gestorInfo 
                 ? `Clientes de ${gestorInfo.nome}` 
@@ -132,18 +108,28 @@ const ClientList = () => {
             <p className="text-muted-foreground">
               Selecione um cliente para gerenciar o checklist
             </p>
+          </div>
+          <div className="flex gap-2">
             {gestorFilter && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={clearFilter}
-                className="mt-4 border-border hover:bg-primary/10 hover:text-primary"
+                className="border-border hover:bg-primary/10 hover:text-primary"
               >
                 <X className="w-4 h-4 mr-2" />
                 Limpar filtro
               </Button>
             )}
+            <Button
+              onClick={() => navigate("/novo-cliente")}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Cliente
+            </Button>
           </div>
+        </motion.div>
 
           {isLoading ? (
             <div className="flex justify-center py-20">
@@ -256,9 +242,8 @@ const ClientList = () => {
                 );
               })}
             </motion.div>
-          )}
-        </motion.div>
-      </main>
+        )}
+      </div>
     </div>
   );
 };

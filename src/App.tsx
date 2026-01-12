@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import AppLayout from "./components/AppLayout";
 import Index from "./pages/Index";
 import NovoCliente from "./pages/NovoCliente";
 import NovoGestor from "./pages/NovoGestor";
@@ -24,16 +25,16 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/novo-cliente" element={<NovoCliente />} />
-          <Route path="/novo-gestor" element={<NovoGestor />} />
-          <Route path="/clientes" element={<Clientes />} />
-          <Route path="/cliente/:id" element={<ClienteChecklist />} />
-          <Route path="/cliente/:id/historico" element={<Historico />} />
-          <Route path="/cliente/:id/relatorio/:data" element={<Relatorio />} />
-          <Route path="/cliente/:id/novo-relatorio" element={<NovoRelatorio />} />
-          <Route path="/dashboard" element={<DashboardGerencial />} />
-          <Route path="/gestores" element={<Gestores />} />
+          <Route path="/" element={<AppLayout><Index /></AppLayout>} />
+          <Route path="/novo-cliente" element={<AppLayout><NovoCliente /></AppLayout>} />
+          <Route path="/novo-gestor" element={<AppLayout><NovoGestor /></AppLayout>} />
+          <Route path="/clientes" element={<AppLayout><Clientes /></AppLayout>} />
+          <Route path="/cliente/:id" element={<AppLayout><ClienteChecklist /></AppLayout>} />
+          <Route path="/cliente/:id/historico" element={<AppLayout><Historico /></AppLayout>} />
+          <Route path="/cliente/:id/relatorio/:data" element={<AppLayout><Relatorio /></AppLayout>} />
+          <Route path="/cliente/:id/novo-relatorio" element={<AppLayout><NovoRelatorio /></AppLayout>} />
+          <Route path="/dashboard" element={<AppLayout><DashboardGerencial /></AppLayout>} />
+          <Route path="/gestores" element={<AppLayout><Gestores /></AppLayout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
