@@ -76,6 +76,58 @@ export type Database = {
           },
         ]
       }
+      client_time_tracking: {
+        Row: {
+          cliente_id: string
+          closed_at: string | null
+          duration_seconds: number | null
+          gestor_id: string
+          id: string
+          opened_at: string
+          session_id: string | null
+        }
+        Insert: {
+          cliente_id: string
+          closed_at?: string | null
+          duration_seconds?: number | null
+          gestor_id: string
+          id?: string
+          opened_at?: string
+          session_id?: string | null
+        }
+        Update: {
+          cliente_id?: string
+          closed_at?: string | null
+          duration_seconds?: number | null
+          gestor_id?: string
+          id?: string
+          opened_at?: string
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_time_tracking_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_time_tracking_gestor_id_fkey"
+            columns: ["gestor_id"]
+            isOneToOne: false
+            referencedRelation: "gestores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_time_tracking_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "gestor_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           created_at: string
@@ -126,29 +178,73 @@ export type Database = {
           },
         ]
       }
+      gestor_sessions: {
+        Row: {
+          duration_seconds: number | null
+          gestor_id: string
+          id: string
+          login_at: string
+          logout_at: string | null
+        }
+        Insert: {
+          duration_seconds?: number | null
+          gestor_id: string
+          id?: string
+          login_at?: string
+          logout_at?: string | null
+        }
+        Update: {
+          duration_seconds?: number | null
+          gestor_id?: string
+          id?: string
+          login_at?: string
+          logout_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gestor_sessions_gestor_id_fkey"
+            columns: ["gestor_id"]
+            isOneToOne: false
+            referencedRelation: "gestores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gestores: {
         Row: {
           created_at: string
+          dados_completos: boolean
+          foto_preenchida: boolean
           foto_url: string | null
           id: string
           links: Json | null
           nome: string
+          onboarding_completo: boolean
+          senha: string
           telefone: string | null
         }
         Insert: {
           created_at?: string
+          dados_completos?: boolean
+          foto_preenchida?: boolean
           foto_url?: string | null
           id?: string
           links?: Json | null
           nome: string
+          onboarding_completo?: boolean
+          senha?: string
           telefone?: string | null
         }
         Update: {
           created_at?: string
+          dados_completos?: boolean
+          foto_preenchida?: boolean
           foto_url?: string | null
           id?: string
           links?: Json | null
           nome?: string
+          onboarding_completo?: boolean
+          senha?: string
           telefone?: string | null
         }
         Relationships: []
