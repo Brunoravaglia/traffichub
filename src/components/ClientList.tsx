@@ -1,19 +1,67 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, User, Calendar, Plus, History, X, Building2 } from "lucide-react";
+import { ArrowRight, User, Calendar, Plus, History, Building2, Filter, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import VCDLogo from "./VCDLogo";
 import ProgressBar from "./ProgressBar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useGestor } from "@/contexts/GestorContext";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const ClientList = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const gestorFilter = searchParams.get("gestor");
+  const { gestor: loggedGestor, isLoggedIn } = useGestor();
+  
+  // Initialize filter with logged gestor's ID
+  const [selectedGestorId, setSelectedGestorId] = useState<string>("all");
+  
+  // Set the filter to the logged gestor when they first load the page
+  useEffect(() => {
+    if (isLoggedIn && loggedGestor?.id && selectedGestorId === "all") {
+      // Check if there's already a URL filter
+      const urlGestor = searchParams.get("gestor");
+      if (urlGestor) {
+        setSelectedGestorId(urlGestor);
+      } else {
+        setSelectedGestorId(loggedGestor.id);
+      }
+    }
+  }, [isLoggedIn, loggedGestor?.id]);
+
+  // Update URL when filter changes
+  useEffect(() => {
+    if (selectedGestorId && selectedGestorId !== "all") {
+      setSearchParams({ gestor: selectedGestorId });
+    } else if (selectedGestorId === "all") {
+      setSearchParams({});
+    }
+  }, [selectedGestorId]);
+
+  const gestorFilter = selectedGestorId !== "all" ? selectedGestorId : null;
+
+  // Fetch all gestores for the filter dropdown
+  const { data: allGestores } = useQuery({
+    queryKey: ["gestores-filter"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("gestores")
+        .select("id, nome, foto_url")
+        .order("nome");
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: gestorInfo } = useQuery({
     queryKey: ["gestor", gestorFilter],
@@ -51,10 +99,6 @@ const ClientList = () => {
       return data;
     },
   });
-
-  const clearFilter = () => {
-    setSearchParams({});
-  };
 
   const calculateProgress = (checklist: any) => {
     if (!checklist) return 0;
@@ -97,30 +141,20 @@ const ClientList = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
+          className="flex flex-col gap-4 mb-8"
         >
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              {gestorFilter && gestorInfo 
-                ? `Clientes de ${gestorInfo.nome}` 
-                : "Clientes Cadastrados"}
-            </h1>
-            <p className="text-muted-foreground">
-              Selecione um cliente para gerenciar o checklist
-            </p>
-          </div>
-          <div className="flex gap-2">
-            {gestorFilter && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={clearFilter}
-                className="border-border hover:bg-primary/10 hover:text-primary"
-              >
-                <X className="w-4 h-4 mr-2" />
-                Limpar filtro
-              </Button>
-            )}
+          {/* Header Row */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground mb-2">
+                {gestorFilter && gestorInfo 
+                  ? `Clientes de ${gestorInfo.nome}` 
+                  : "Todos os Clientes"}
+              </h1>
+              <p className="text-muted-foreground">
+                Selecione um cliente para gerenciar o checklist
+              </p>
+            </div>
             <Button
               onClick={() => navigate("/novo-cliente")}
               className="bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -128,6 +162,54 @@ const ClientList = () => {
               <Plus className="w-4 h-4 mr-2" />
               Novo Cliente
             </Button>
+          </div>
+
+          {/* Filter Row */}
+          <div className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border">
+            <Filter className="w-5 h-5 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">Filtrar por gestor:</span>
+            <Select
+              value={selectedGestorId}
+              onValueChange={setSelectedGestorId}
+            >
+              <SelectTrigger className="w-[280px] bg-background">
+                <SelectValue placeholder="Selecione um gestor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    <span>Todos os gestores</span>
+                  </div>
+                </SelectItem>
+                {allGestores?.map((g) => (
+                  <SelectItem key={g.id} value={g.id}>
+                    <div className="flex items-center gap-2">
+                      <Avatar className="w-5 h-5">
+                        <AvatarImage src={g.foto_url || undefined} />
+                        <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                          {g.nome.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{g.nome}</span>
+                      {g.id === loggedGestor?.id && (
+                        <span className="text-xs text-muted-foreground">(você)</span>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {gestorFilter && gestorFilter !== loggedGestor?.id && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedGestorId(loggedGestor?.id || "all")}
+                className="text-muted-foreground hover:text-primary"
+              >
+                Ver meus clientes
+              </Button>
+            )}
           </div>
         </motion.div>
 
