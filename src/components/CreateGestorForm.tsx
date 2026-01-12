@@ -126,41 +126,24 @@ const CreateGestorForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border/50 glassmorphism sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/")}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <VCDLogo size="sm" />
+    <div className="min-h-full bg-background p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-md mx-auto"
+      >
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <UserPlus className="w-8 h-8 text-primary" />
           </div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            Novo Gestor
+          </h1>
+          <p className="text-muted-foreground">
+            Cadastre um novo gestor de tráfego
+          </p>
         </div>
-      </header>
-
-      <main className="container mx-auto px-6 py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="max-w-md mx-auto"
-        >
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <UserPlus className="w-8 h-8 text-primary" />
-            </div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Novo Gestor
-            </h1>
-            <p className="text-muted-foreground">
-              Cadastre um novo gestor de tráfego
-            </p>
-          </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="vcd-card p-6">
@@ -301,9 +284,8 @@ const CreateGestorForm = () => {
                 </>
               )}
             </Button>
-          </form>
-        </motion.div>
-      </main>
+        </form>
+      </motion.div>
     </div>
   );
 };

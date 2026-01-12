@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 interface VCDLogoProps {
   size?: "sm" | "md" | "lg";
   className?: string;
+  showText?: boolean;
 }
 
 const sizeMap = {
@@ -11,7 +12,7 @@ const sizeMap = {
   lg: { container: 64, text: "text-2xl" },
 };
 
-const VCDLogo = ({ size = "md", className = "" }: VCDLogoProps) => {
+const VCDLogo = ({ size = "md", className = "", showText = false }: VCDLogoProps) => {
   const dimensions = sizeMap[size];
 
   return (
@@ -23,7 +24,7 @@ const VCDLogo = ({ size = "md", className = "" }: VCDLogoProps) => {
     >
       {/* Speech Bubble Logo */}
       <div
-        className="relative flex items-center justify-center"
+        className="relative flex items-center justify-center flex-shrink-0"
         style={{ width: dimensions.container, height: dimensions.container }}
       >
         {/* Bubble shape */}
@@ -46,6 +47,13 @@ const VCDLogo = ({ size = "md", className = "" }: VCDLogoProps) => {
           V
         </span>
       </div>
+
+      {showText && (
+        <div className="flex flex-col">
+          <span className="font-bold text-foreground text-sm leading-tight">Você Digital</span>
+          <span className="text-xs text-muted-foreground leading-tight">Performance</span>
+        </div>
+      )}
     </motion.div>
   );
 };

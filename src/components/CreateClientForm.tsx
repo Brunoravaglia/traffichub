@@ -165,38 +165,21 @@ const CreateClientForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border/50 glassmorphism sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4 flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/")}
-            className="hover:bg-secondary"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <VCDLogo size="sm" />
+    <div className="min-h-full bg-background p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+        className="max-w-2xl mx-auto"
+      >
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            Criar Novo Cliente
+          </h1>
+          <p className="text-muted-foreground">
+            Preencha os dados para iniciar o checklist
+          </p>
         </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-6 py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-          className="max-w-2xl mx-auto"
-        >
-          <div className="text-center mb-10">
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Criar Novo Cliente
-            </h1>
-            <p className="text-muted-foreground">
-              Preencha os dados para iniciar o checklist
-            </p>
-          </div>
 
           <motion.form
             onSubmit={handleSubmit}
@@ -413,9 +396,8 @@ const CreateClientForm = () => {
             </Button>
           </motion.form>
         </motion.div>
-      </main>
-    </div>
-  );
+      </div>
+    );
 };
 
 export default CreateClientForm;
