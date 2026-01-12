@@ -1,12 +1,13 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { UserPlus, Phone, Link as LinkIcon, Edit2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import EditGestorForm from "@/components/EditGestorForm";
-
+import { useGestor } from "@/contexts/GestorContext";
 interface GestorLink {
   nome: string;
   url: string;
@@ -14,6 +15,9 @@ interface GestorLink {
 
 const Gestores = () => {
   const navigate = useNavigate();
+  const { gestor: currentGestor, refreshGestor } = useGestor();
+  const queryClient = useQueryClient();
+  const [editingGestorId, setEditingGestorId] = useState<string | null>(null);
 
   const { data: gestores, isLoading } = useQuery({
     queryKey: ["gestores"],
@@ -140,7 +144,10 @@ const Gestores = () => {
                     </div>
 
                     {/* Edit Button */}
-                    <Dialog>
+                    <Dialog 
+                      open={editingGestorId === gestor.id} 
+                      onOpenChange={(open) => setEditingGestorId(open ? gestor.id : null)}
+                    >
                       <DialogTrigger asChild>
                         <Button
                           variant="ghost"
@@ -154,7 +161,17 @@ const Gestores = () => {
                         <DialogHeader>
                           <DialogTitle>Editar Gestor</DialogTitle>
                         </DialogHeader>
-                        <EditGestorForm gestorId={gestor.id} onClose={() => {}} />
+                        <EditGestorForm 
+                          gestorId={gestor.id} 
+                          onClose={() => setEditingGestorId(null)} 
+                          onSuccess={async () => {
+                            // If editing the current logged-in gestor, refresh their data
+                            if (currentGestor?.id === gestor.id) {
+                              await refreshGestor();
+                            }
+                            queryClient.invalidateQueries({ queryKey: ["gestores"] });
+                          }}
+                        />
                       </DialogContent>
                     </Dialog>
                   </div>
