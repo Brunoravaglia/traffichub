@@ -163,6 +163,8 @@ export type Database = {
           conversoes_google: number | null
           created_at: string
           data: string
+          edit_count: number | null
+          edited_at: string | null
           id: string
           impressoes_facebook: number | null
           impressoes_google: number | null
@@ -182,6 +184,8 @@ export type Database = {
           conversoes_google?: number | null
           created_at?: string
           data?: string
+          edit_count?: number | null
+          edited_at?: string | null
           id?: string
           impressoes_facebook?: number | null
           impressoes_google?: number | null
@@ -201,6 +205,8 @@ export type Database = {
           conversoes_google?: number | null
           created_at?: string
           data?: string
+          edit_count?: number | null
+          edited_at?: string | null
           id?: string
           impressoes_facebook?: number | null
           impressoes_google?: number | null

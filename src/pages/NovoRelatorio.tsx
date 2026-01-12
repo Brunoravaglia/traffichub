@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Search, DollarSign, Eye, MousePointer, Target, TrendingUp, Award, Save } from "lucide-react";
+import { ArrowLeft, Search, DollarSign, Eye, MousePointer, Target, TrendingUp, Award, Save, Edit3 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 import VCDLogo from "@/components/VCDLogo";
 import RelatorioPDFExport from "@/components/RelatorioPDFExport";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,9 @@ const NovoRelatorio = () => {
   const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showPreview, setShowPreview] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [existingReportId, setExistingReportId] = useState<string | null>(null);
+  const [editCount, setEditCount] = useState(0);
 
   // Google Ads metrics
   const [investimentoGoogle, setInvestimentoGoogle] = useState("");
@@ -54,6 +58,62 @@ const NovoRelatorio = () => {
     enabled: !!id,
   });
 
+  // Check for existing report on date change
+  const { data: existingReport } = useQuery({
+    queryKey: ["relatorio", id, format(selectedDate, "yyyy-MM-dd")],
+    queryFn: async () => {
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
+      const { data, error } = await supabase
+        .from("relatorios")
+        .select("*")
+        .eq("cliente_id", id)
+        .eq("data", dateStr)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  // Load existing report data when found
+  useEffect(() => {
+    if (existingReport) {
+      setIsEditing(true);
+      setExistingReportId(existingReport.id);
+      setEditCount(existingReport.edit_count || 0);
+      setInvestimentoGoogle(existingReport.investimento_google?.toString() || "");
+      setImpressoesGoogle(existingReport.impressoes_google?.toString() || "");
+      setCliquesGoogle(existingReport.cliques_google?.toString() || "");
+      setConversoesGoogle(existingReport.conversoes_google?.toString() || "");
+      setTopoPesquisas(existingReport.topo_pesquisas?.toString() || "");
+      setTaxaSuperacao(existingReport.taxa_superacao?.toString() || "");
+      setPalavrasChaves(existingReport.top_palavras_chaves?.join(", ") || "");
+      setInvestimentoFacebook(existingReport.investimento_facebook?.toString() || "");
+      setImpressoesFacebook(existingReport.impressoes_facebook?.toString() || "");
+      setCliquesFacebook(existingReport.cliques_facebook?.toString() || "");
+      setConversoesFacebook(existingReport.conversoes_facebook?.toString() || "");
+      setAlcanceFacebook(existingReport.alcance_facebook?.toString() || "");
+    } else {
+      setIsEditing(false);
+      setExistingReportId(null);
+      setEditCount(0);
+      // Reset form
+      setInvestimentoGoogle("");
+      setImpressoesGoogle("");
+      setCliquesGoogle("");
+      setConversoesGoogle("");
+      setTopoPesquisas("");
+      setTaxaSuperacao("");
+      setPalavrasChaves("");
+      setInvestimentoFacebook("");
+      setImpressoesFacebook("");
+      setCliquesFacebook("");
+      setConversoesFacebook("");
+      setAlcanceFacebook("");
+    }
+  }, [existingReport]);
+
   const saveRelatorioMutation = useMutation({
     mutationFn: async () => {
       const dateStr = format(selectedDate, "yyyy-MM-dd");
@@ -62,35 +122,53 @@ const NovoRelatorio = () => {
         .map((p) => p.trim())
         .filter((p) => p.length > 0);
 
-      const { error } = await supabase.from("relatorios").upsert(
-        {
-          cliente_id: id,
-          data: dateStr,
-          investimento_google: parseFloat(investimentoGoogle) || 0,
-          impressoes_google: parseInt(impressoesGoogle) || 0,
-          cliques_google: parseInt(cliquesGoogle) || 0,
-          conversoes_google: parseInt(conversoesGoogle) || 0,
-          topo_pesquisas: parseFloat(topoPesquisas) || 0,
-          taxa_superacao: parseFloat(taxaSuperacao) || 0,
-          top_palavras_chaves: palavrasArray,
-          investimento_facebook: parseFloat(investimentoFacebook) || 0,
-          impressoes_facebook: parseInt(impressoesFacebook) || 0,
-          cliques_facebook: parseInt(cliquesFacebook) || 0,
-          conversoes_facebook: parseInt(conversoesFacebook) || 0,
-          alcance_facebook: parseInt(alcanceFacebook) || 0,
-        },
-        { onConflict: "cliente_id,data" }
-      );
+      const reportData = {
+        cliente_id: id,
+        data: dateStr,
+        investimento_google: parseFloat(investimentoGoogle) || 0,
+        impressoes_google: parseInt(impressoesGoogle) || 0,
+        cliques_google: parseInt(cliquesGoogle) || 0,
+        conversoes_google: parseInt(conversoesGoogle) || 0,
+        topo_pesquisas: parseFloat(topoPesquisas) || 0,
+        taxa_superacao: parseFloat(taxaSuperacao) || 0,
+        top_palavras_chaves: palavrasArray,
+        investimento_facebook: parseFloat(investimentoFacebook) || 0,
+        impressoes_facebook: parseInt(impressoesFacebook) || 0,
+        cliques_facebook: parseInt(cliquesFacebook) || 0,
+        conversoes_facebook: parseInt(conversoesFacebook) || 0,
+        alcance_facebook: parseInt(alcanceFacebook) || 0,
+        ...(isEditing && {
+          edited_at: new Date().toISOString(),
+          edit_count: editCount + 1,
+        }),
+      };
 
-      if (error) throw error;
+      if (existingReportId) {
+        const { error } = await supabase
+          .from("relatorios")
+          .update(reportData)
+          .eq("id", existingReportId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("relatorios")
+          .insert(reportData);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["relatorios"] });
+      queryClient.invalidateQueries({ queryKey: ["relatorio", id] });
       toast({
-        title: "Relatório salvo!",
-        description: "As métricas foram salvas com sucesso.",
+        title: isEditing ? "Relatório atualizado!" : "Relatório salvo!",
+        description: isEditing 
+          ? `Edição #${editCount + 1} registrada para auditoria.`
+          : "As métricas foram salvas com sucesso.",
       });
       setShowPreview(true);
+      if (isEditing) {
+        setEditCount(editCount + 1);
+      }
     },
     onError: () => {
       toast({
@@ -131,6 +209,8 @@ const NovoRelatorio = () => {
     cliques_facebook: parseInt(cliquesFacebook) || 0,
     conversoes_facebook: parseInt(conversoesFacebook) || 0,
     alcance_facebook: parseInt(alcanceFacebook) || 0,
+    edited_at: isEditing ? new Date().toISOString() : null,
+    edit_count: isEditing ? editCount + 1 : 0,
   };
 
   return (
@@ -147,6 +227,12 @@ const NovoRelatorio = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <VCDLogo size="sm" />
+          {isEditing && (
+            <Badge variant="outline" className="ml-4 border-orange-500/50 text-orange-500 flex items-center gap-1">
+              <Edit3 className="w-3 h-3" />
+              Modo Edição
+            </Badge>
+          )}
         </div>
       </header>
 
@@ -158,11 +244,16 @@ const NovoRelatorio = () => {
         >
           <div className="text-center mb-10">
             <h1 className="text-3xl font-bold text-foreground mb-2">
-              Novo Relatório de Métricas
+              {isEditing ? "Editar Relatório de Métricas" : "Novo Relatório de Métricas"}
             </h1>
             <p className="text-muted-foreground">
               {cliente.nome} - Preencha os dados de performance
             </p>
+            {isEditing && editCount > 0 && (
+              <p className="text-sm text-orange-500 mt-2">
+                Este relatório já foi editado {editCount} vez(es)
+              </p>
+            )}
           </div>
 
           {showPreview ? (
@@ -194,6 +285,11 @@ const NovoRelatorio = () => {
                   <h2 className="text-lg font-semibold text-foreground">
                     Período do Relatório
                   </h2>
+                  {isEditing && (
+                    <Badge variant="secondary" className="ml-auto">
+                      Relatório existente
+                    </Badge>
+                  )}
                 </div>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -368,14 +464,19 @@ const NovoRelatorio = () => {
               <Button
                 type="submit"
                 disabled={saveRelatorioMutation.isPending}
-                className="w-full h-14 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground vcd-button-glow transition-all duration-200 hover:scale-[1.02]"
+                className={cn(
+                  "w-full h-14 text-lg font-semibold transition-all duration-200 hover:scale-[1.02]",
+                  isEditing 
+                    ? "bg-orange-500 hover:bg-orange-600 text-white" 
+                    : "bg-primary hover:bg-primary/90 text-primary-foreground vcd-button-glow"
+                )}
               >
                 {saveRelatorioMutation.isPending ? (
-                  <div className="w-6 h-6 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
-                    <Save className="w-5 h-5 mr-2" />
-                    Salvar e Visualizar Relatório
+                    {isEditing ? <Edit3 className="w-5 h-5 mr-2" /> : <Save className="w-5 h-5 mr-2" />}
+                    {isEditing ? "Atualizar Relatório" : "Salvar e Visualizar Relatório"}
                   </>
                 )}
               </Button>
