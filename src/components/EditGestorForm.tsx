@@ -126,6 +126,9 @@ const EditGestorForm = ({ gestorId, onClose, onSuccess }: EditGestorFormProps) =
       // Filter out empty links
       const validLinks = links.filter(link => link.label && link.url);
 
+      // Determine if foto_preenchida should be true (has photo)
+      const hasFoto = !!fotoUrl;
+
       const { error } = await supabase
         .from("gestores")
         .update({
@@ -133,6 +136,7 @@ const EditGestorForm = ({ gestorId, onClose, onSuccess }: EditGestorFormProps) =
           telefone: telefone || null,
           foto_url: fotoUrl,
           links: validLinks as unknown as null,
+          foto_preenchida: hasFoto,
         })
         .eq("id", gestorId);
 
@@ -141,6 +145,7 @@ const EditGestorForm = ({ gestorId, onClose, onSuccess }: EditGestorFormProps) =
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["gestores"] });
       queryClient.invalidateQueries({ queryKey: ["gestor", gestorId] });
+      queryClient.invalidateQueries({ queryKey: ["gestor-edit", gestorId] });
       toast({
         title: "Gestor atualizado!",
         description: `${nome} foi atualizado com sucesso.`,
