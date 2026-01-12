@@ -76,6 +76,60 @@ export type Database = {
           },
         ]
       }
+      client_reports: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          data_values: Json
+          id: string
+          layout: Json
+          nome: string
+          periodo_fim: string
+          periodo_inicio: string
+          template_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          data_values?: Json
+          id?: string
+          layout?: Json
+          nome: string
+          periodo_fim: string
+          periodo_inicio: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          data_values?: Json
+          id?: string
+          layout?: Json
+          nome?: string
+          periodo_fim?: string
+          periodo_inicio?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_reports_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_reports_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "report_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_time_tracking: {
         Row: {
           cliente_id: string
@@ -319,6 +373,47 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_templates: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          gestor_id: string | null
+          id: string
+          is_global: boolean
+          layout: Json
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          gestor_id?: string | null
+          id?: string
+          is_global?: boolean
+          layout?: Json
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          gestor_id?: string | null
+          id?: string
+          is_global?: boolean
+          layout?: Json
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_templates_gestor_id_fkey"
+            columns: ["gestor_id"]
+            isOneToOne: false
+            referencedRelation: "gestores"
             referencedColumns: ["id"]
           },
         ]
