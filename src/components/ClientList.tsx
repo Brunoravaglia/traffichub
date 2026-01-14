@@ -23,21 +23,20 @@ const ClientList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { gestor: loggedGestor, isLoggedIn } = useGestor();
   
-  // Initialize filter with logged gestor's ID
-  const [selectedGestorId, setSelectedGestorId] = useState<string>("all");
+  // Initialize filter with URL param or logged gestor's ID
+  const urlGestor = searchParams.get("gestor");
+  const [selectedGestorId, setSelectedGestorId] = useState<string>(urlGestor || "all");
+  const [hasInitialized, setHasInitialized] = useState(false);
   
-  // Set the filter to the logged gestor when they first load the page
+  // Set the filter to the logged gestor when they first load the page (only if no URL param)
   useEffect(() => {
-    if (isLoggedIn && loggedGestor?.id && selectedGestorId === "all") {
-      // Check if there's already a URL filter
-      const urlGestor = searchParams.get("gestor");
-      if (urlGestor) {
-        setSelectedGestorId(urlGestor);
-      } else {
+    if (!hasInitialized && isLoggedIn && loggedGestor?.id) {
+      if (!urlGestor) {
         setSelectedGestorId(loggedGestor.id);
       }
+      setHasInitialized(true);
     }
-  }, [isLoggedIn, loggedGestor?.id]);
+  }, [isLoggedIn, loggedGestor?.id, hasInitialized, urlGestor]);
 
   // Update URL when filter changes
   useEffect(() => {
