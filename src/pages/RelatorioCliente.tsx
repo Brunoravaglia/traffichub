@@ -84,6 +84,14 @@ interface ReportData {
     showMetaCpm: boolean;
     showMetaCustoPorSeguidor: boolean;
   };
+  sectionsConfig: {
+    showObjetivos: boolean;
+    showGoogleAds: boolean;
+    showMetaAds: boolean;
+    showCriativosGoogle: boolean;
+    showCriativosMeta: boolean;
+    showResumo: boolean;
+  };
 }
 
 const defaultReportData: ReportData = {
@@ -103,6 +111,14 @@ const defaultReportData: ReportData = {
     showMetaCustoPorLead: true,
     showMetaCpm: false,
     showMetaCustoPorSeguidor: false,
+  },
+  sectionsConfig: {
+    showObjetivos: true,
+    showGoogleAds: true,
+    showMetaAds: true,
+    showCriativosGoogle: true,
+    showCriativosMeta: true,
+    showResumo: true,
   },
 };
 
@@ -172,6 +188,7 @@ const RelatorioCliente = () => {
         criativosRanking: reportData.criativosRanking,
         showRanking: reportData.showRanking,
         metricsConfig: reportData.metricsConfig,
+        sectionsConfig: reportData.sectionsConfig,
       }));
       
       const { error } = await supabase
@@ -479,6 +496,90 @@ const RelatorioCliente = () => {
                       </PopoverContent>
                     </Popover>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Section Visibility Config */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Eye className="w-5 h-5 text-primary" />
+                  Seções do Relatório
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Mostrar Objetivos</Label>
+                  <Switch
+                    checked={reportData.sectionsConfig.showObjetivos}
+                    onCheckedChange={(checked) =>
+                      setReportData({
+                        ...reportData,
+                        sectionsConfig: { ...reportData.sectionsConfig, showObjetivos: checked },
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Mostrar Tráfego Google</Label>
+                  <Switch
+                    checked={reportData.sectionsConfig.showGoogleAds}
+                    onCheckedChange={(checked) =>
+                      setReportData({
+                        ...reportData,
+                        sectionsConfig: { ...reportData.sectionsConfig, showGoogleAds: checked },
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Mostrar Tráfego Meta</Label>
+                  <Switch
+                    checked={reportData.sectionsConfig.showMetaAds}
+                    onCheckedChange={(checked) =>
+                      setReportData({
+                        ...reportData,
+                        sectionsConfig: { ...reportData.sectionsConfig, showMetaAds: checked },
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Mostrar Criativos Google</Label>
+                  <Switch
+                    checked={reportData.sectionsConfig.showCriativosGoogle}
+                    onCheckedChange={(checked) =>
+                      setReportData({
+                        ...reportData,
+                        sectionsConfig: { ...reportData.sectionsConfig, showCriativosGoogle: checked },
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Mostrar Criativos Meta</Label>
+                  <Switch
+                    checked={reportData.sectionsConfig.showCriativosMeta}
+                    onCheckedChange={(checked) =>
+                      setReportData({
+                        ...reportData,
+                        sectionsConfig: { ...reportData.sectionsConfig, showCriativosMeta: checked },
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Mostrar Resumo</Label>
+                  <Switch
+                    checked={reportData.sectionsConfig.showResumo}
+                    onCheckedChange={(checked) =>
+                      setReportData({
+                        ...reportData,
+                        sectionsConfig: { ...reportData.sectionsConfig, showResumo: checked },
+                      })
+                    }
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -970,25 +1071,30 @@ const RelatorioCliente = () => {
               className="w-full max-w-[800px] text-white rounded-lg shadow-2xl overflow-hidden"
               style={{ fontFamily: "Inter, sans-serif", backgroundColor: "#1a1a2e" }}
             >
-              {/* Header with Client Logo */}
+              {/* Header with Client Logo + Name */}
               <div className="p-8 pb-4">
                 <div className="flex items-center justify-between mb-6">
-                  {cliente?.logo_url ? (
-                    <div className="w-20 h-20 rounded-xl overflow-hidden border border-white/20" style={{ backgroundColor: "transparent" }}>
-                      <img
-                        src={cliente.logo_url}
-                        alt={cliente.nome}
-                        className="w-full h-full object-cover rounded-xl"
-                        crossOrigin="anonymous"
-                      />
+                  <div className="flex items-center gap-4">
+                    {cliente?.logo_url ? (
+                      <div className="w-20 h-20 rounded-xl overflow-hidden border border-white/20" style={{ backgroundColor: "transparent" }}>
+                        <img
+                          src={cliente.logo_url}
+                          alt={cliente.nome}
+                          className="w-full h-full object-cover rounded-xl"
+                          crossOrigin="anonymous"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center">
+                        <span className="text-3xl font-bold">{cliente?.nome?.charAt(0)}</span>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-2xl font-bold text-primary uppercase">{cliente?.nome}</p>
+                      <p className="text-sm text-gray-400">Relatório de Performance</p>
                     </div>
-                  ) : (
-                    <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center">
-                      <span className="text-3xl font-bold">{cliente?.nome?.charAt(0)}</span>
-                    </div>
-                  )}
+                  </div>
                   <div className="text-right">
-                    <p className="text-xl font-bold text-primary uppercase mb-1">{cliente?.nome}</p>
                     <h1 className="text-2xl font-bold text-white mb-1">RESULTADOS DE CAMPANHA</h1>
                     <p className="text-lg text-gray-400 uppercase font-semibold">
                       Mês de {format(periodoInicio, "MMMM", { locale: ptBR })}
@@ -1002,104 +1108,110 @@ const RelatorioCliente = () => {
                 </div>
 
                 {/* Objectives */}
-                <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
-                  <h2 className="text-lg font-bold mb-3 text-primary tracking-widest">OBJETIVOS</h2>
-                  <ul className="space-y-2">
-                    {reportData.objetivos.filter(Boolean).map((obj, i) => (
-                      <li key={i} className="flex items-center gap-2 text-gray-300">
-                        <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
-                        {obj}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                {reportData.sectionsConfig.showObjetivos && reportData.objetivos.filter(Boolean).length > 0 && (
+                  <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
+                    <h2 className="text-lg font-bold mb-3 text-primary tracking-widest">OBJETIVOS</h2>
+                    <ul className="space-y-2">
+                      {reportData.objetivos.filter(Boolean).map((obj, i) => (
+                        <li key={i} className="flex items-center gap-2 text-gray-300">
+                          <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+                          {obj}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 {/* Google Ads Section */}
-                <div className="mb-6 p-5 rounded-xl bg-gradient-to-r from-blue-900/40 to-blue-900/10 border border-blue-500/30">
-                  <h3 className="text-lg font-bold mb-4 text-blue-400">TRÁFEGO GOOGLE</h3>
-                  <div className="grid grid-cols-4 gap-3">
-                    <div className="text-center p-3 rounded-lg bg-white/5">
-                      <p className="text-2xl font-bold text-white">{formatNumber(reportData.google.cliques)}</p>
-                      <p className="text-xs text-gray-400">Cliques</p>
+                {reportData.sectionsConfig.showGoogleAds && (
+                  <div className="mb-6 p-5 rounded-xl bg-gradient-to-r from-blue-900/40 to-blue-900/10 border border-blue-500/30">
+                    <h3 className="text-lg font-bold mb-4 text-blue-400">TRÁFEGO GOOGLE</h3>
+                    <div className="grid grid-cols-4 gap-3">
+                      <div className="text-center p-3 rounded-lg bg-white/5">
+                        <p className="text-2xl font-bold text-white">{formatNumber(reportData.google.cliques)}</p>
+                        <p className="text-xs text-gray-400">Cliques</p>
+                      </div>
+                      <div className="text-center p-3 rounded-lg bg-white/5">
+                        <p className="text-2xl font-bold text-white">{formatNumber(reportData.google.impressoes)}</p>
+                        <p className="text-xs text-gray-400">Impressões</p>
+                      </div>
+                      <div className="text-center p-3 rounded-lg bg-white/5">
+                        <p className="text-2xl font-bold text-white">{formatNumber(reportData.google.contatos)}</p>
+                        <p className="text-xs text-gray-400">Contatos</p>
+                      </div>
+                      <div className="text-center p-3 rounded-lg bg-white/5">
+                        <p className="text-2xl font-bold text-white">{formatCurrency(reportData.google.investido)}</p>
+                        <p className="text-xs text-gray-400">Investidos</p>
+                      </div>
                     </div>
-                    <div className="text-center p-3 rounded-lg bg-white/5">
-                      <p className="text-2xl font-bold text-white">{formatNumber(reportData.google.impressoes)}</p>
-                      <p className="text-xs text-gray-400">Impressões</p>
-                    </div>
-                    <div className="text-center p-3 rounded-lg bg-white/5">
-                      <p className="text-2xl font-bold text-white">{formatNumber(reportData.google.contatos)}</p>
-                      <p className="text-xs text-gray-400">Contatos</p>
-                    </div>
-                    <div className="text-center p-3 rounded-lg bg-white/5">
-                      <p className="text-2xl font-bold text-white">{formatCurrency(reportData.google.investido)}</p>
-                      <p className="text-xs text-gray-400">Investidos</p>
-                    </div>
+                    {(reportData.metricsConfig.showGoogleCustoPorLead || reportData.metricsConfig.showGoogleCpm) && (
+                      <div className="grid grid-cols-2 gap-3 mt-3">
+                        {reportData.metricsConfig.showGoogleCustoPorLead && (
+                          <div className="text-center p-3 rounded-lg bg-white/5">
+                            <p className="text-xl font-bold text-green-400">{formatCurrency(reportData.google.custoPorLead)}</p>
+                            <p className="text-xs text-gray-400">Custo por Lead</p>
+                          </div>
+                        )}
+                        {reportData.metricsConfig.showGoogleCpm && (
+                          <div className="text-center p-3 rounded-lg bg-white/5">
+                            <p className="text-xl font-bold text-yellow-400">{formatCurrency(reportData.google.cpm)}</p>
+                            <p className="text-xs text-gray-400">CPM</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {(reportData.metricsConfig.showGoogleCustoPorLead || reportData.metricsConfig.showGoogleCpm) && (
-                    <div className="grid grid-cols-2 gap-3 mt-3">
-                      {reportData.metricsConfig.showGoogleCustoPorLead && (
-                        <div className="text-center p-3 rounded-lg bg-white/5">
-                          <p className="text-xl font-bold text-green-400">{formatCurrency(reportData.google.custoPorLead)}</p>
-                          <p className="text-xs text-gray-400">Custo por Lead</p>
-                        </div>
-                      )}
-                      {reportData.metricsConfig.showGoogleCpm && (
-                        <div className="text-center p-3 rounded-lg bg-white/5">
-                          <p className="text-xl font-bold text-yellow-400">{formatCurrency(reportData.google.cpm)}</p>
-                          <p className="text-xs text-gray-400">CPM</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                )}
 
                 {/* Meta Ads Section */}
-                <div className="mb-6 p-5 rounded-xl bg-gradient-to-r from-purple-900/40 to-purple-900/10 border border-purple-500/30">
-                  <h3 className="text-lg font-bold mb-4 text-purple-400">TRÁFEGO META ADS</h3>
-                  <div className="grid grid-cols-4 gap-3">
-                    <div className="text-center p-3 rounded-lg bg-white/5">
-                      <p className="text-2xl font-bold text-white">{formatNumber(reportData.meta.impressoes)}</p>
-                      <p className="text-xs text-gray-400">Impressões</p>
+                {reportData.sectionsConfig.showMetaAds && (
+                  <div className="mb-6 p-5 rounded-xl bg-gradient-to-r from-purple-900/40 to-purple-900/10 border border-purple-500/30">
+                    <h3 className="text-lg font-bold mb-4 text-purple-400">TRÁFEGO META ADS</h3>
+                    <div className="grid grid-cols-4 gap-3">
+                      <div className="text-center p-3 rounded-lg bg-white/5">
+                        <p className="text-2xl font-bold text-white">{formatNumber(reportData.meta.impressoes)}</p>
+                        <p className="text-xs text-gray-400">Impressões</p>
+                      </div>
+                      <div className="text-center p-3 rounded-lg bg-white/5">
+                        <p className="text-2xl font-bold text-white">{formatNumber(reportData.meta.engajamento)}</p>
+                        <p className="text-xs text-gray-400">Engajamento</p>
+                      </div>
+                      <div className="text-center p-3 rounded-lg bg-white/5">
+                        <p className="text-2xl font-bold text-white">{formatNumber(reportData.meta.conversas)}</p>
+                        <p className="text-xs text-gray-400">Conversas</p>
+                      </div>
+                      <div className="text-center p-3 rounded-lg bg-white/5">
+                        <p className="text-2xl font-bold text-white">{formatCurrency(reportData.meta.investido)}</p>
+                        <p className="text-xs text-gray-400">Investidos</p>
+                      </div>
                     </div>
-                    <div className="text-center p-3 rounded-lg bg-white/5">
-                      <p className="text-2xl font-bold text-white">{formatNumber(reportData.meta.engajamento)}</p>
-                      <p className="text-xs text-gray-400">Engajamento</p>
-                    </div>
-                    <div className="text-center p-3 rounded-lg bg-white/5">
-                      <p className="text-2xl font-bold text-white">{formatNumber(reportData.meta.conversas)}</p>
-                      <p className="text-xs text-gray-400">Conversas</p>
-                    </div>
-                    <div className="text-center p-3 rounded-lg bg-white/5">
-                      <p className="text-2xl font-bold text-white">{formatCurrency(reportData.meta.investido)}</p>
-                      <p className="text-xs text-gray-400">Investidos</p>
-                    </div>
+                    {(reportData.metricsConfig.showMetaCustoPorLead || reportData.metricsConfig.showMetaCpm || reportData.metricsConfig.showMetaCustoPorSeguidor) && (
+                      <div className="grid grid-cols-3 gap-3 mt-3">
+                        {reportData.metricsConfig.showMetaCustoPorLead && (
+                          <div className="text-center p-3 rounded-lg bg-white/5">
+                            <p className="text-xl font-bold text-green-400">{formatCurrency(reportData.meta.custoPorLead)}</p>
+                            <p className="text-xs text-gray-400">Custo por Lead</p>
+                          </div>
+                        )}
+                        {reportData.metricsConfig.showMetaCpm && (
+                          <div className="text-center p-3 rounded-lg bg-white/5">
+                            <p className="text-xl font-bold text-yellow-400">{formatCurrency(reportData.meta.cpm)}</p>
+                            <p className="text-xs text-gray-400">CPM</p>
+                          </div>
+                        )}
+                        {reportData.metricsConfig.showMetaCustoPorSeguidor && (
+                          <div className="text-center p-3 rounded-lg bg-white/5">
+                            <p className="text-xl font-bold text-pink-400">{formatCurrency(reportData.meta.custoPorSeguidor)}</p>
+                            <p className="text-xs text-gray-400">Custo/Seguidor</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {(reportData.metricsConfig.showMetaCustoPorLead || reportData.metricsConfig.showMetaCpm || reportData.metricsConfig.showMetaCustoPorSeguidor) && (
-                    <div className="grid grid-cols-3 gap-3 mt-3">
-                      {reportData.metricsConfig.showMetaCustoPorLead && (
-                        <div className="text-center p-3 rounded-lg bg-white/5">
-                          <p className="text-xl font-bold text-green-400">{formatCurrency(reportData.meta.custoPorLead)}</p>
-                          <p className="text-xs text-gray-400">Custo por Lead</p>
-                        </div>
-                      )}
-                      {reportData.metricsConfig.showMetaCpm && (
-                        <div className="text-center p-3 rounded-lg bg-white/5">
-                          <p className="text-xl font-bold text-yellow-400">{formatCurrency(reportData.meta.cpm)}</p>
-                          <p className="text-xs text-gray-400">CPM</p>
-                        </div>
-                      )}
-                      {reportData.metricsConfig.showMetaCustoPorSeguidor && (
-                        <div className="text-center p-3 rounded-lg bg-white/5">
-                          <p className="text-xl font-bold text-pink-400">{formatCurrency(reportData.meta.custoPorSeguidor)}</p>
-                          <p className="text-xs text-gray-400">Custo/Seguidor</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                )}
 
                 {/* Google Creatives */}
-                {reportData.criativos.filter(c => c.platform === "google").length > 0 && (
+                {reportData.sectionsConfig.showCriativosGoogle && reportData.criativos.filter(c => c.platform === "google").length > 0 && (
                   <div className="mb-6">
                     <h3 className="text-lg font-bold mb-4 text-blue-400 tracking-widest">
                       CRIATIVOS GOOGLE
@@ -1115,7 +1227,7 @@ const RelatorioCliente = () => {
                 )}
 
                 {/* Meta Creatives */}
-                {reportData.criativos.filter(c => c.platform === "meta").length > 0 && (
+                {reportData.sectionsConfig.showCriativosMeta && reportData.criativos.filter(c => c.platform === "meta").length > 0 && (
                   <div className="mb-6">
                     <h3 className="text-lg font-bold mb-4 text-purple-400 tracking-widest">
                       CRIATIVOS META
@@ -1158,7 +1270,7 @@ const RelatorioCliente = () => {
                 )}
 
                 {/* Summary */}
-                {reportData.resumo && (
+                {reportData.sectionsConfig.showResumo && reportData.resumo && (
                   <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
                     <h3 className="text-lg font-bold mb-3 text-primary tracking-widest">
                       Resumo geral dos resultados
