@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Calendar, Briefcase, DollarSign, Target, Share2, Upload, X, Image as ImageIcon, Phone } from "lucide-react";
+import { ArrowLeft, User, Calendar, Briefcase, DollarSign, Target, Share2, Upload, X, Image as ImageIcon, Phone, FileText } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -37,6 +37,7 @@ const CreateClientForm = () => {
   const [investimentoMensal, setInvestimentoMensal] = useState("");
   const [expectativaResultados, setExpectativaResultados] = useState("");
   const [telefoneContato, setTelefoneContato] = useState("");
+  const [observacoes, setObservacoes] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -103,6 +104,7 @@ const CreateClientForm = () => {
           investimento_mensal: investimentoMensal ? parseFloat(investimentoMensal) : 0,
           expectativa_resultados: expectativaResultados,
           telefone_contato: telefoneContato || null,
+          observacoes: observacoes || null,
         })
         .select()
         .single();
@@ -380,6 +382,23 @@ const CreateClientForm = () => {
                 onChange={(e) => setExpectativaResultados(e.target.value)}
                 className="min-h-[100px] bg-secondary border-border focus:border-primary resize-none"
               />
+            </div>
+
+            {/* Observações */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <FileText className="w-4 h-4 text-primary" />
+                Observações
+              </label>
+              <Textarea
+                placeholder="Notas internas sobre o cliente (ex: tags de outras agências, informações importantes)..."
+                value={observacoes}
+                onChange={(e) => setObservacoes(e.target.value)}
+                className="min-h-[100px] bg-secondary border-border focus:border-primary resize-none"
+              />
+              <p className="text-xs text-muted-foreground">
+                Use este campo para anotar informações importantes sobre o cliente.
+              </p>
             </div>
 
             {/* Submit Button */}
