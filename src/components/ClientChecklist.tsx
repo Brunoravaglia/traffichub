@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Calendar, CreditCard, BarChart3, Palette, User, History, Save, Check, FileText, Settings } from "lucide-react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { ArrowLeft, Calendar, CreditCard, BarChart3, Palette, User, History, Save, Check, FileText, Settings, LayoutDashboard, ClipboardCheck } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import EditClientForm from "./EditClientForm";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -17,6 +17,8 @@ import ProgressBar from "./ProgressBar";
 import ChecklistCard from "./ChecklistCard";
 import PendenciasCard from "./PendenciasCard";
 import ReportCalendar from "./ReportCalendar";
+import ClientDashboard from "./ClientDashboard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 interface ChecklistData {
@@ -37,8 +39,11 @@ interface ChecklistData {
 
 const ClientChecklist = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get("tab") || "dados";
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [checklist, setChecklist] = useState<ChecklistData | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -321,7 +326,7 @@ Você Digital - Checklist do Gestor de Tráfego
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="vcd-card mb-8"
+            className="vcd-card mb-6"
           >
             <div className="flex flex-col md:flex-row md:items-center gap-6">
               {/* Client Info */}
@@ -334,168 +339,202 @@ Você Digital - Checklist do Gestor de Tráfego
                   <span className="px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary border border-primary/20">
                     {cliente.gestores?.nome}
                   </span>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="h-9 bg-secondary border-border hover:bg-secondary/80"
-                      >
-                        <Calendar className="mr-2 h-4 w-4 text-primary" />
-                        {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-card border-border" align="start">
-                      <CalendarComponent
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={(date) => date && setSelectedDate(date)}
-                        initialFocus
-                        className={cn("p-3 pointer-events-auto")}
-                      />
-                    </PopoverContent>
-                  </Popover>
                 </div>
               </div>
 
-              {/* Progress */}
-              <div className="w-full md:w-48">
-                <ProgressBar progress={progress} size="lg" />
-              </div>
+              {/* Progress - only show on checklist tab */}
+              {activeTab === "checklist" && (
+                <div className="w-full md:w-48">
+                  <ProgressBar progress={progress} size="lg" />
+                </div>
+              )}
             </div>
           </motion.div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Checklist Cards */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <ChecklistCard
-                  title="Faturamento"
-                  icon={CreditCard}
-                  delay={0.1}
-                  items={[
-                    {
-                      id: "pagamento_ok",
-                      label: "Pagamento OK",
-                      checked: checklist.pagamento_ok,
-                      onChange: (v) => handleChecklistChange("pagamento_ok", v),
-                    },
-                    {
-                      id: "conta_sem_bloqueios",
-                      label: "Conta sem bloqueios",
-                      checked: checklist.conta_sem_bloqueios,
-                      onChange: (v) => handleChecklistChange("conta_sem_bloqueios", v),
-                    },
-                    {
-                      id: "saldo_suficiente",
-                      label: "Saldo suficiente",
-                      checked: checklist.saldo_suficiente,
-                      onChange: (v) => handleChecklistChange("saldo_suficiente", v),
-                    },
-                  ]}
-                />
+          {/* Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="mb-6 w-full md:w-auto">
+              <TabsTrigger value="dados" className="gap-2">
+                <LayoutDashboard className="w-4 h-4" />
+                Dados & Saldos
+              </TabsTrigger>
+              <TabsTrigger value="checklist" className="gap-2">
+                <ClipboardCheck className="w-4 h-4" />
+                Checklist Diário
+              </TabsTrigger>
+            </TabsList>
 
-                <ChecklistCard
-                  title="Rastreamento"
-                  icon={BarChart3}
-                  delay={0.2}
-                  items={[
-                    {
-                      id: "pixel_tag_instalados",
-                      label: "Pixel / Tag instalados",
-                      checked: checklist.pixel_tag_instalados,
-                      onChange: (v) => handleChecklistChange("pixel_tag_instalados", v),
-                    },
-                    {
-                      id: "conversoes_configuradas",
-                      label: "Conversões configuradas",
-                      checked: checklist.conversoes_configuradas,
-                      onChange: (v) => handleChecklistChange("conversoes_configuradas", v),
-                    },
-                    {
-                      id: "integracao_crm",
-                      label: "Integração com CRM funcionando",
-                      checked: checklist.integracao_crm,
-                      onChange: (v) => handleChecklistChange("integracao_crm", v),
-                    },
-                  ]}
-                />
+            {/* Dados Tab */}
+            <TabsContent value="dados">
+              <ClientDashboard 
+                clienteId={id!} 
+                cliente={{
+                  nome: cliente.nome,
+                  investimento_mensal: cliente.investimento_mensal,
+                  gestores: cliente.gestores
+                }} 
+              />
+            </TabsContent>
 
-                <ChecklistCard
-                  title="Criativos"
-                  icon={Palette}
-                  delay={0.3}
-                  items={[
-                    {
-                      id: "criativos_atualizados",
-                      label: "Criativos atualizados",
-                      checked: checklist.criativos_atualizados,
-                      onChange: (v) => handleChecklistChange("criativos_atualizados", v),
-                    },
-                    {
-                      id: "cta_claro",
-                      label: "CTA claro",
-                      checked: checklist.cta_claro,
-                      onChange: (v) => handleChecklistChange("cta_claro", v),
-                    },
-                    {
-                      id: "teste_ab_ativo",
-                      label: "Teste A/B ativo",
-                      checked: checklist.teste_ab_ativo,
-                      onChange: (v) => handleChecklistChange("teste_ab_ativo", v),
-                    },
-                  ]}
-                />
-
-                <PendenciasCard
-                  value={checklist.pendencias}
-                  onChange={(v) => handleChecklistChange("pendencias", v)}
-                  delay={0.4}
-                />
+            {/* Checklist Tab */}
+            <TabsContent value="checklist">
+              <div className="mb-6">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="h-9 bg-secondary border-border hover:bg-secondary/80"
+                    >
+                      <Calendar className="mr-2 h-4 w-4 text-primary" />
+                      {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-card border-border" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => date && setSelectedDate(date)}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
 
-              {/* Save Button */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <Button
-                  onClick={handleSave}
-                  disabled={saveChecklistMutation.isPending || (!hasUnsavedChanges && isSaved)}
-                  className={cn(
-                    "w-full h-14 text-lg font-semibold transition-all duration-200",
-                    isSaved && !hasUnsavedChanges
-                      ? "bg-green-600 hover:bg-green-600 text-white"
-                      : "bg-primary hover:bg-primary/90 text-primary-foreground vcd-button-glow hover:scale-[1.02]"
-                  )}
-                >
-                  {saveChecklistMutation.isPending ? (
-                    <div className="w-6 h-6 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  ) : isSaved && !hasUnsavedChanges ? (
-                    <>
-                      <Check className="w-5 h-5 mr-2" />
-                      Salvo
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-5 h-5 mr-2" />
-                      Salvar Relatório
-                    </>
-                  )}
-                </Button>
-              </motion.div>
-            </div>
+              <div className="grid lg:grid-cols-3 gap-8">
+                {/* Checklist Cards */}
+                <div className="lg:col-span-2 space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <ChecklistCard
+                      title="Faturamento"
+                      icon={CreditCard}
+                      delay={0.1}
+                      items={[
+                        {
+                          id: "pagamento_ok",
+                          label: "Pagamento OK",
+                          checked: checklist.pagamento_ok,
+                          onChange: (v) => handleChecklistChange("pagamento_ok", v),
+                        },
+                        {
+                          id: "conta_sem_bloqueios",
+                          label: "Conta sem bloqueios",
+                          checked: checklist.conta_sem_bloqueios,
+                          onChange: (v) => handleChecklistChange("conta_sem_bloqueios", v),
+                        },
+                        {
+                          id: "saldo_suficiente",
+                          label: "Saldo suficiente",
+                          checked: checklist.saldo_suficiente,
+                          onChange: (v) => handleChecklistChange("saldo_suficiente", v),
+                        },
+                      ]}
+                    />
 
-            {/* Calendar Sidebar */}
-            <div className="lg:col-span-1">
-              <ReportCalendar
-                currentMonth={calendarMonth}
-                onMonthChange={setCalendarMonth}
-                filledDates={filledDatesData || []}
-                onExport={handleExport}
-              />
-            </div>
-          </div>
+                    <ChecklistCard
+                      title="Rastreamento"
+                      icon={BarChart3}
+                      delay={0.2}
+                      items={[
+                        {
+                          id: "pixel_tag_instalados",
+                          label: "Pixel / Tag instalados",
+                          checked: checklist.pixel_tag_instalados,
+                          onChange: (v) => handleChecklistChange("pixel_tag_instalados", v),
+                        },
+                        {
+                          id: "conversoes_configuradas",
+                          label: "Conversões configuradas",
+                          checked: checklist.conversoes_configuradas,
+                          onChange: (v) => handleChecklistChange("conversoes_configuradas", v),
+                        },
+                        {
+                          id: "integracao_crm",
+                          label: "Integração com CRM funcionando",
+                          checked: checklist.integracao_crm,
+                          onChange: (v) => handleChecklistChange("integracao_crm", v),
+                        },
+                      ]}
+                    />
+
+                    <ChecklistCard
+                      title="Criativos"
+                      icon={Palette}
+                      delay={0.3}
+                      items={[
+                        {
+                          id: "criativos_atualizados",
+                          label: "Criativos atualizados",
+                          checked: checklist.criativos_atualizados,
+                          onChange: (v) => handleChecklistChange("criativos_atualizados", v),
+                        },
+                        {
+                          id: "cta_claro",
+                          label: "CTA claro",
+                          checked: checklist.cta_claro,
+                          onChange: (v) => handleChecklistChange("cta_claro", v),
+                        },
+                        {
+                          id: "teste_ab_ativo",
+                          label: "Teste A/B ativo",
+                          checked: checklist.teste_ab_ativo,
+                          onChange: (v) => handleChecklistChange("teste_ab_ativo", v),
+                        },
+                      ]}
+                    />
+
+                    <PendenciasCard
+                      value={checklist.pendencias}
+                      onChange={(v) => handleChecklistChange("pendencias", v)}
+                      delay={0.4}
+                    />
+                  </div>
+
+                  {/* Save Button */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <Button
+                      onClick={handleSave}
+                      disabled={saveChecklistMutation.isPending || (!hasUnsavedChanges && isSaved)}
+                      className={cn(
+                        "w-full h-14 text-lg font-semibold transition-all duration-200",
+                        isSaved && !hasUnsavedChanges
+                          ? "bg-green-600 hover:bg-green-600 text-white"
+                          : "bg-primary hover:bg-primary/90 text-primary-foreground vcd-button-glow hover:scale-[1.02]"
+                      )}
+                    >
+                      {saveChecklistMutation.isPending ? (
+                        <div className="w-6 h-6 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                      ) : isSaved && !hasUnsavedChanges ? (
+                        <>
+                          <Check className="w-5 h-5 mr-2" />
+                          Salvo
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-5 h-5 mr-2" />
+                          Salvar Relatório
+                        </>
+                      )}
+                    </Button>
+                  </motion.div>
+                </div>
+
+                {/* Calendar Sidebar */}
+                <div className="lg:col-span-1">
+                  <ReportCalendar
+                    currentMonth={calendarMonth}
+                    onMonthChange={setCalendarMonth}
+                    filledDates={filledDatesData || []}
+                    onExport={handleExport}
+                  />
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>
