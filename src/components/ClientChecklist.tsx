@@ -234,6 +234,7 @@ Você Digital - Checklist do Gestor de Tráfego
 
   const calculateProgress = () => {
     if (!checklist) return 0;
+    // Setup inicial: apenas Faturamento + Rastreamento (6 campos)
     const fields = [
       checklist.pagamento_ok,
       checklist.conta_sem_bloqueios,
@@ -241,9 +242,6 @@ Você Digital - Checklist do Gestor de Tráfego
       checklist.pixel_tag_instalados,
       checklist.conversoes_configuradas,
       checklist.integracao_crm,
-      checklist.criativos_atualizados,
-      checklist.cta_claro,
-      checklist.teste_ab_ativo,
     ];
     const completed = fields.filter(Boolean).length;
     return Math.round((completed / fields.length) * 100);

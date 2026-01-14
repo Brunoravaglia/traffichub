@@ -66,6 +66,7 @@ const ClienteHistorico = () => {
   });
 
   const calculateProgress = (checklist: any) => {
+    // Setup inicial: apenas Faturamento + Rastreamento (6 campos)
     const fields = [
       checklist.pagamento_ok,
       checklist.conta_sem_bloqueios,
@@ -73,9 +74,6 @@ const ClienteHistorico = () => {
       checklist.pixel_tag_instalados,
       checklist.conversoes_configuradas,
       checklist.integracao_crm,
-      checklist.criativos_atualizados,
-      checklist.cta_claro,
-      checklist.teste_ab_ativo,
     ];
     const completed = fields.filter(Boolean).length;
     return Math.round((completed / fields.length) * 100);
