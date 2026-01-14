@@ -22,35 +22,36 @@ const VCDLogo = ({ size = "md", className = "", showText = false }: VCDLogoProps
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
     >
-      {/* Speech Bubble Logo */}
+      {/* Traffic Hub Logo */}
       <div
         className="relative flex items-center justify-center flex-shrink-0"
         style={{ width: dimensions.container, height: dimensions.container }}
       >
-        {/* Bubble shape */}
         <svg
-          viewBox="0 0 48 48"
+          viewBox="0 0 100 100"
           fill="none"
           className="w-full h-full"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Main bubble */}
+          {/* Background circle */}
+          <circle cx="50" cy="50" r="48" fill="hsl(var(--primary))" />
+          
+          {/* Inner design - stylized T and H for Traffic Hub */}
           <path
-            d="M24 4C12.954 4 4 11.954 4 22C4 27.5 6.5 32.4 10.5 35.8L8 44L18 39.5C19.9 40.1 21.9 40.5 24 40.5C35.046 40.5 44 32.546 44 22C44 11.454 35.046 4 24 4Z"
-            fill="hsl(43, 100%, 50%)"
+            d="M30 30 H70 V38 H54 V70 H46 V38 H30 V30Z"
+            fill="hsl(var(--primary-foreground))"
+          />
+          <path
+            d="M60 45 H68 V70 H60 V60 H52 V70 H44 V45 H52 V52 H60 V45Z"
+            fill="hsl(var(--primary-foreground))"
+            opacity="0.8"
           />
         </svg>
-        {/* V Letter */}
-        <span
-          className={`absolute font-bold text-primary-foreground ${dimensions.text}`}
-          style={{ marginTop: -2 }}
-        >
-          V
-        </span>
       </div>
 
       {showText && (
         <div className="flex flex-col">
-          <span className="font-bold text-foreground text-sm leading-tight">Você Digital</span>
+          <span className="font-bold text-foreground text-sm leading-tight">Traffic Hub</span>
           <span className="text-xs text-muted-foreground leading-tight">Performance</span>
         </div>
       )}
