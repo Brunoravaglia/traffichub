@@ -44,6 +44,14 @@ interface Creative {
   id: string;
   url: string;
   name: string;
+  platform: "google" | "meta";
+}
+
+interface RankingCreative {
+  id: string;
+  url: string;
+  result: string;
+  position: 1 | 2 | 3;
 }
 
 interface ReportData {
@@ -67,6 +75,8 @@ interface ReportData {
   };
   resumo: string;
   criativos: Creative[];
+  criativosRanking: RankingCreative[];
+  showRanking: boolean;
   metricsConfig: {
     showGoogleCustoPorLead: boolean;
     showGoogleCpm: boolean;
@@ -85,6 +95,8 @@ const defaultReportData: ReportData = {
   meta: { impressoes: 0, engajamento: 0, conversas: 0, investido: 0, custoPorLead: 0, cpm: 0, custoPorSeguidor: 0 },
   resumo: "",
   criativos: [],
+  criativosRanking: [],
+  showRanking: false,
   metricsConfig: {
     showGoogleCustoPorLead: true,
     showGoogleCpm: false,
@@ -100,12 +112,15 @@ const RelatorioCliente = () => {
   const queryClient = useQueryClient();
   const pdfRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const rankingInputRef = useRef<HTMLInputElement>(null);
 
   const [isPreview, setIsPreview] = useState(false);
   const [periodoInicio, setPeriodoInicio] = useState<Date>(new Date());
   const [periodoFim, setPeriodoFim] = useState<Date>(new Date());
   const [reportData, setReportData] = useState<ReportData>(defaultReportData);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingRanking, setUploadingRanking] = useState(false);
+  const [currentPlatform, setCurrentPlatform] = useState<"google" | "meta">("google");
   const [isSaving, setIsSaving] = useState(false);
 
   // Fetch client data
@@ -154,6 +169,8 @@ const RelatorioCliente = () => {
         objetivos: reportData.objetivos.filter(Boolean),
         resumo: reportData.resumo,
         criativos: reportData.criativos,
+        criativosRanking: reportData.criativosRanking,
+        showRanking: reportData.showRanking,
         metricsConfig: reportData.metricsConfig,
       }));
       
@@ -179,9 +196,15 @@ const RelatorioCliente = () => {
   });
 
   // Upload creative image
-  const handleUploadCreative = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUploadCreative = async (e: React.ChangeEvent<HTMLInputElement>, platform: "google" | "meta") => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const platformCreatives = reportData.criativos.filter(c => c.platform === platform);
+    if (platformCreatives.length >= 5) {
+      toast({ title: `Limite de 5 criativos ${platform === "google" ? "Google" : "Meta"} atingido`, variant: "destructive" });
+      return;
+    }
 
     setUploadingImage(true);
     try {
@@ -202,7 +225,7 @@ const RelatorioCliente = () => {
         ...prev,
         criativos: [
           ...prev.criativos,
-          { id: Date.now().toString(), url: urlData.publicUrl, name: file.name },
+          { id: Date.now().toString(), url: urlData.publicUrl, name: file.name, platform },
         ],
       }));
 
@@ -213,6 +236,62 @@ const RelatorioCliente = () => {
       setUploadingImage(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
+  };
+
+  // Upload ranking creative
+  const handleUploadRankingCreative = async (e: React.ChangeEvent<HTMLInputElement>, position: 1 | 2 | 3) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingRanking(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${clienteId}/ranking-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("report-assets")
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("report-assets")
+        .getPublicUrl(fileName);
+
+      setReportData((prev) => {
+        const existingIndex = prev.criativosRanking.findIndex(c => c.position === position);
+        const newRanking: RankingCreative = {
+          id: Date.now().toString(),
+          url: urlData.publicUrl,
+          result: "",
+          position,
+        };
+
+        if (existingIndex >= 0) {
+          const updated = [...prev.criativosRanking];
+          updated[existingIndex] = newRanking;
+          return { ...prev, criativosRanking: updated };
+        }
+
+        return { ...prev, criativosRanking: [...prev.criativosRanking, newRanking] };
+      });
+
+      toast({ title: `TOP ${position} adicionado!` });
+    } catch (error: any) {
+      toast({ title: "Erro ao fazer upload", description: error.message, variant: "destructive" });
+    } finally {
+      setUploadingRanking(false);
+      if (rankingInputRef.current) rankingInputRef.current.value = "";
+    }
+  };
+
+  const updateRankingResult = (position: 1 | 2 | 3, result: string) => {
+    setReportData((prev) => ({
+      ...prev,
+      criativosRanking: prev.criativosRanking.map((c) =>
+        c.position === position ? { ...c, result } : c
+      ),
+    }));
   };
 
   // Remove creative
@@ -702,26 +781,24 @@ const RelatorioCliente = () => {
               </CardContent>
             </Card>
 
-            {/* Creatives */}
-            <Card className="md:col-span-2">
+            {/* Creatives - Google */}
+            <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Image className="w-5 h-5 text-primary" />
-                  Criativos
+                  <div className="w-6 h-6 bg-blue-500/20 rounded flex items-center justify-center">
+                    <span className="text-blue-500 text-xs font-bold">G</span>
+                  </div>
+                  Criativos Google ({reportData.criativos.filter(c => c.platform === "google").length}/5)
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                  {reportData.criativos.map((creative) => (
+                <div className="grid grid-cols-3 gap-3">
+                  {reportData.criativos.filter(c => c.platform === "google").map((creative) => (
                     <div
                       key={creative.id}
                       className="relative group rounded-lg overflow-hidden border border-border aspect-square"
                     >
-                      <img
-                        src={creative.url}
-                        alt={creative.name}
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={creative.url} alt={creative.name} className="w-full h-full object-cover" />
                       <button
                         onClick={() => handleRemoveCreative(creative.id)}
                         className="absolute top-2 right-2 p-1 bg-destructive/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
@@ -730,29 +807,140 @@ const RelatorioCliente = () => {
                       </button>
                     </div>
                   ))}
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingImage}
-                    className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    {uploadingImage ? (
-                      <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <Upload className="w-8 h-8" />
-                        <span className="text-xs">Upload</span>
-                      </>
-                    )}
-                  </button>
+                  {reportData.criativos.filter(c => c.platform === "google").length < 5 && (
+                    <label className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-blue-500/50 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-blue-500 transition-colors cursor-pointer">
+                      {uploadingImage ? (
+                        <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <>
+                          <Upload className="w-6 h-6" />
+                          <span className="text-xs">Upload</span>
+                        </>
+                      )}
+                      <input type="file" accept="image/*" onChange={(e) => handleUploadCreative(e, "google")} className="hidden" />
+                    </label>
+                  )}
                 </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleUploadCreative}
-                  className="hidden"
-                />
               </CardContent>
+            </Card>
+
+            {/* Creatives - Meta */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <div className="w-6 h-6 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded flex items-center justify-center">
+                    <span className="text-purple-500 text-xs font-bold">M</span>
+                  </div>
+                  Criativos Meta ({reportData.criativos.filter(c => c.platform === "meta").length}/5)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-3">
+                  {reportData.criativos.filter(c => c.platform === "meta").map((creative) => (
+                    <div
+                      key={creative.id}
+                      className="relative group rounded-lg overflow-hidden border border-border aspect-square"
+                    >
+                      <img src={creative.url} alt={creative.name} className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => handleRemoveCreative(creative.id)}
+                        className="absolute top-2 right-2 p-1 bg-destructive/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive-foreground" />
+                      </button>
+                    </div>
+                  ))}
+                  {reportData.criativos.filter(c => c.platform === "meta").length < 5 && (
+                    <label className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-purple-500/50 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-purple-500 transition-colors cursor-pointer">
+                      {uploadingImage ? (
+                        <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <>
+                          <Upload className="w-6 h-6" />
+                          <span className="text-xs">Upload</span>
+                        </>
+                      )}
+                      <input type="file" accept="image/*" onChange={(e) => handleUploadCreative(e, "meta")} className="hidden" />
+                    </label>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Ranking Criativos */}
+            <Card className="md:col-span-2">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5 text-primary" />
+                    Ranking de Criativos (Top 3)
+                  </CardTitle>
+                  <Switch
+                    checked={reportData.showRanking}
+                    onCheckedChange={(checked) => setReportData({ ...reportData, showRanking: checked })}
+                  />
+                </div>
+              </CardHeader>
+              {reportData.showRanking && (
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-4">
+                    {([1, 2, 3] as const).map((position) => {
+                      const ranking = reportData.criativosRanking.find(c => c.position === position);
+                      return (
+                        <div key={position} className="space-y-2">
+                          <Label className="flex items-center gap-2">
+                            <span className={cn(
+                              "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
+                              position === 1 ? "bg-yellow-500 text-black" :
+                              position === 2 ? "bg-gray-400 text-black" :
+                              "bg-amber-700 text-white"
+                            )}>
+                              {position}
+                            </span>
+                            TOP {position}
+                          </Label>
+                          {ranking?.url ? (
+                            <div className="relative group rounded-lg overflow-hidden border border-border aspect-square">
+                              <img src={ranking.url} alt={`TOP ${position}`} className="w-full h-full object-cover" />
+                              <button
+                                onClick={() => setReportData(prev => ({
+                                  ...prev,
+                                  criativosRanking: prev.criativosRanking.filter(c => c.position !== position)
+                                }))}
+                                className="absolute top-2 right-2 p-1 bg-destructive/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive-foreground" />
+                              </button>
+                            </div>
+                          ) : (
+                            <label className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+                              {uploadingRanking ? (
+                                <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <>
+                                  <Upload className="w-6 h-6" />
+                                  <span className="text-xs">Upload</span>
+                                </>
+                              )}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleUploadRankingCreative(e, position)}
+                                className="hidden"
+                              />
+                            </label>
+                          )}
+                          <Input
+                            placeholder="Ex: 20 leads"
+                            value={ranking?.result || ""}
+                            onChange={(e) => updateRankingResult(position, e.target.value)}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              )}
             </Card>
 
             {/* Summary */}
@@ -786,11 +974,11 @@ const RelatorioCliente = () => {
               <div className="p-8 pb-4">
                 <div className="flex items-center justify-between mb-6">
                   {cliente?.logo_url ? (
-                    <div className="w-20 h-20 rounded-xl overflow-hidden bg-white/10 p-2 border border-white/20">
+                    <div className="w-20 h-20 rounded-xl overflow-hidden border border-white/20" style={{ backgroundColor: "transparent" }}>
                       <img
                         src={cliente.logo_url}
                         alt={cliente.nome}
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-cover rounded-xl"
                         crossOrigin="anonymous"
                       />
                     </div>
@@ -800,11 +988,11 @@ const RelatorioCliente = () => {
                     </div>
                   )}
                   <div className="text-right">
+                    <p className="text-xl font-bold text-primary uppercase mb-1">{cliente?.nome}</p>
                     <h1 className="text-2xl font-bold text-white mb-1">RESULTADOS DE CAMPANHA</h1>
-                    <p className="text-lg text-primary uppercase font-semibold">
+                    <p className="text-lg text-gray-400 uppercase font-semibold">
                       Mês de {format(periodoInicio, "MMMM", { locale: ptBR })}
                     </p>
-                    <p className="text-sm text-gray-400 mt-1">{cliente?.nome}</p>
                   </div>
                 </div>
 
@@ -910,21 +1098,59 @@ const RelatorioCliente = () => {
                   )}
                 </div>
 
-                {/* Creatives Section */}
-                {reportData.criativos.length > 0 && (
+                {/* Google Creatives */}
+                {reportData.criativos.filter(c => c.platform === "google").length > 0 && (
                   <div className="mb-6">
-                    <h3 className="text-lg font-bold mb-4 text-primary tracking-widest">
-                      CAMPANHAS E CRIATIVOS
+                    <h3 className="text-lg font-bold mb-4 text-blue-400 tracking-widest">
+                      CRIATIVOS GOOGLE
                     </h3>
-                    <div className="grid grid-cols-3 gap-3">
-                      {reportData.criativos.slice(0, 3).map((creative) => (
-                        <div key={creative.id} className="rounded-lg overflow-hidden border border-white/10">
-                          <img
-                            src={creative.url}
-                            alt={creative.name}
-                            className="w-full aspect-square object-cover"
-                            crossOrigin="anonymous"
-                          />
+                    <div className="grid grid-cols-5 gap-2">
+                      {reportData.criativos.filter(c => c.platform === "google").slice(0, 5).map((creative) => (
+                        <div key={creative.id} className="rounded-lg overflow-hidden border border-blue-500/30">
+                          <img src={creative.url} alt={creative.name} className="w-full aspect-square object-cover" crossOrigin="anonymous" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Meta Creatives */}
+                {reportData.criativos.filter(c => c.platform === "meta").length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold mb-4 text-purple-400 tracking-widest">
+                      CRIATIVOS META
+                    </h3>
+                    <div className="grid grid-cols-5 gap-2">
+                      {reportData.criativos.filter(c => c.platform === "meta").slice(0, 5).map((creative) => (
+                        <div key={creative.id} className="rounded-lg overflow-hidden border border-purple-500/30">
+                          <img src={creative.url} alt={creative.name} className="w-full aspect-square object-cover" crossOrigin="anonymous" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Ranking Section */}
+                {reportData.showRanking && reportData.criativosRanking.length > 0 && (
+                  <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-yellow-900/30 to-yellow-900/10 border border-yellow-500/30">
+                    <h3 className="text-lg font-bold mb-4 text-yellow-400 tracking-widest">
+                      🏆 RANKING DE CRIATIVOS
+                    </h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      {reportData.criativosRanking.sort((a, b) => a.position - b.position).map((ranking) => (
+                        <div key={ranking.id} className="text-center">
+                          <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2",
+                            ranking.position === 1 ? "bg-yellow-500 text-black" :
+                            ranking.position === 2 ? "bg-gray-400 text-black" :
+                            "bg-amber-700 text-white"
+                          )}>
+                            {ranking.position}
+                          </div>
+                          <div className="rounded-lg overflow-hidden border border-white/10 mb-2">
+                            <img src={ranking.url} alt={`TOP ${ranking.position}`} className="w-full aspect-square object-cover" crossOrigin="anonymous" />
+                          </div>
+                          <p className="text-sm font-semibold text-white">{ranking.result || "-"}</p>
                         </div>
                       ))}
                     </div>
@@ -946,8 +1172,8 @@ const RelatorioCliente = () => {
                   <div className="flex items-center gap-3">
                     <VCDLogo size="sm" showText={false} />
                     <div>
-                      <p className="text-xs text-gray-500">Traffic Hub</p>
-                      <p className="text-xs text-gray-500">www.traffichub.com.br</p>
+                      <p className="text-xs text-gray-500">Você Digital Propaganda</p>
+                      <p className="text-xs text-gray-500">www.vocedigitalpropaganda.com.br</p>
                     </div>
                   </div>
                   <div className="text-right text-xs text-gray-500">
