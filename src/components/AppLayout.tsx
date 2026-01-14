@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,15 +7,19 @@ import { LogOut } from "lucide-react";
 import AppSidebar from "./AppSidebar";
 import SessionTimer from "./SessionTimer";
 import OnboardingChecklist from "./OnboardingChecklist";
+import WelcomeModal from "./WelcomeModal";
+import NotificationCenter from "./NotificationCenter";
 import { useGestor } from "@/contexts/GestorContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AppLayoutProps {
   children: React.ReactNode;
 }
 
 const AppLayout = ({ children }: AppLayoutProps) => {
-  const { gestor, isLoggedIn, logout } = useGestor();
+  const { gestor, isLoggedIn, isFirstLogin, logout, refreshGestor } = useGestor();
   const navigate = useNavigate();
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -23,9 +27,32 @@ const AppLayout = ({ children }: AppLayoutProps) => {
     }
   }, [isLoggedIn, navigate]);
 
+  useEffect(() => {
+    // Show welcome modal only if first login and not dismissed
+    if (isFirstLogin && gestor && !(gestor as any).welcome_modal_dismissed) {
+      setShowWelcome(true);
+    }
+  }, [isFirstLogin, gestor]);
+
   const handleLogout = async () => {
     await logout();
     navigate("/");
+  };
+
+  const handleCloseWelcome = async (dontShowAgain: boolean) => {
+    setShowWelcome(false);
+    
+    if (dontShowAgain && gestor) {
+      await supabase
+        .from("gestores")
+        .update({ 
+          welcome_modal_dismissed: true,
+          first_login_at: new Date().toISOString()
+        })
+        .eq("id", gestor.id);
+      
+      await refreshGestor();
+    }
   };
 
   if (!isLoggedIn) {
@@ -76,6 +103,18 @@ const AppLayout = ({ children }: AppLayoutProps) => {
       
       {/* Onboarding Checklist */}
       <OnboardingChecklist />
+      
+      {/* Notification Center */}
+      <NotificationCenter />
+      
+      {/* Welcome Modal */}
+      {gestor && (
+        <WelcomeModal
+          isOpen={showWelcome}
+          onClose={handleCloseWelcome}
+          gestorName={gestor.nome}
+        />
+      )}
     </SidebarProvider>
   );
 };

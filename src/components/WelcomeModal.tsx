@@ -1,16 +1,21 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { X, Sparkles, Rocket, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
 import VCDLogo from "./VCDLogo";
 
 interface WelcomeModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose: (dontShowAgain: boolean) => void;
   gestorName: string;
 }
 
 const WelcomeModal = ({ isOpen, onClose, gestorName }: WelcomeModalProps) => {
+  const [dontShowAgain, setDontShowAgain] = useState(false);
+
   const features = [
     { icon: CheckCircle2, text: "Gerencie checklists de mídia paga" },
     { icon: Rocket, text: "Envie relatórios profissionais" },
@@ -18,7 +23,7 @@ const WelcomeModal = ({ isOpen, onClose, gestorName }: WelcomeModalProps) => {
   ];
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={() => onClose(dontShowAgain)}>
       <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-card border-border">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -86,13 +91,33 @@ const WelcomeModal = ({ isOpen, onClose, gestorName }: WelcomeModalProps) => {
               ))}
             </div>
 
+            {/* Don't show again checkbox */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7 }}
+              className="flex items-center space-x-2 pt-2"
+            >
+              <Checkbox
+                id="dontShowAgain"
+                checked={dontShowAgain}
+                onCheckedChange={(checked) => setDontShowAgain(checked === true)}
+              />
+              <Label
+                htmlFor="dontShowAgain"
+                className="text-sm text-muted-foreground cursor-pointer"
+              >
+                Não mostrar esta mensagem novamente
+              </Label>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
             >
               <Button
-                onClick={onClose}
+                onClick={() => onClose(dontShowAgain)}
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 Começar a usar

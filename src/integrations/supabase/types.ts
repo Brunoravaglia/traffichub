@@ -28,6 +28,8 @@ export type Database = {
           pagamento_ok: boolean
           pendencias: string | null
           pixel_tag_instalados: boolean
+          relatorio_semanal_data: string | null
+          relatorio_semanal_enviado: boolean | null
           saldo_suficiente: boolean
           teste_ab_ativo: boolean
           updated_at: string
@@ -45,6 +47,8 @@ export type Database = {
           pagamento_ok?: boolean
           pendencias?: string | null
           pixel_tag_instalados?: boolean
+          relatorio_semanal_data?: string | null
+          relatorio_semanal_enviado?: boolean | null
           saldo_suficiente?: boolean
           teste_ab_ativo?: boolean
           updated_at?: string
@@ -62,6 +66,8 @@ export type Database = {
           pagamento_ok?: boolean
           pendencias?: string | null
           pixel_tag_instalados?: boolean
+          relatorio_semanal_data?: string | null
+          relatorio_semanal_enviado?: boolean | null
           saldo_suficiente?: boolean
           teste_ab_ativo?: boolean
           updated_at?: string
@@ -80,36 +86,84 @@ export type Database = {
         Row: {
           cliente_id: string
           created_at: string
+          criativos: Json | null
           data_values: Json
+          google_cliques: number | null
+          google_contatos: number | null
+          google_cpm: number | null
+          google_custo_por_lead: number | null
+          google_impressoes: number | null
+          google_investido: number | null
           id: string
           layout: Json
+          meta_conversas: number | null
+          meta_cpm: number | null
+          meta_custo_por_lead: number | null
+          meta_custo_por_seguidor: number | null
+          meta_engajamento: number | null
+          meta_impressoes: number | null
+          meta_investido: number | null
           nome: string
+          objetivos: string[] | null
           periodo_fim: string
           periodo_inicio: string
+          resumo: string | null
           template_id: string | null
           updated_at: string
         }
         Insert: {
           cliente_id: string
           created_at?: string
+          criativos?: Json | null
           data_values?: Json
+          google_cliques?: number | null
+          google_contatos?: number | null
+          google_cpm?: number | null
+          google_custo_por_lead?: number | null
+          google_impressoes?: number | null
+          google_investido?: number | null
           id?: string
           layout?: Json
+          meta_conversas?: number | null
+          meta_cpm?: number | null
+          meta_custo_por_lead?: number | null
+          meta_custo_por_seguidor?: number | null
+          meta_engajamento?: number | null
+          meta_impressoes?: number | null
+          meta_investido?: number | null
           nome: string
+          objetivos?: string[] | null
           periodo_fim: string
           periodo_inicio: string
+          resumo?: string | null
           template_id?: string | null
           updated_at?: string
         }
         Update: {
           cliente_id?: string
           created_at?: string
+          criativos?: Json | null
           data_values?: Json
+          google_cliques?: number | null
+          google_contatos?: number | null
+          google_cpm?: number | null
+          google_custo_por_lead?: number | null
+          google_impressoes?: number | null
+          google_investido?: number | null
           id?: string
           layout?: Json
+          meta_conversas?: number | null
+          meta_cpm?: number | null
+          meta_custo_por_lead?: number | null
+          meta_custo_por_seguidor?: number | null
+          meta_engajamento?: number | null
+          meta_impressoes?: number | null
+          meta_investido?: number | null
           nome?: string
+          objetivos?: string[] | null
           periodo_fim?: string
           periodo_inicio?: string
+          resumo?: string | null
           template_id?: string | null
           updated_at?: string
         }
@@ -369,6 +423,7 @@ export type Database = {
           onboarding_completo: boolean
           senha: string
           telefone: string | null
+          welcome_modal_dismissed: boolean | null
         }
         Insert: {
           created_at?: string
@@ -382,6 +437,7 @@ export type Database = {
           onboarding_completo?: boolean
           senha?: string
           telefone?: string | null
+          welcome_modal_dismissed?: boolean | null
         }
         Update: {
           created_at?: string
@@ -395,6 +451,7 @@ export type Database = {
           onboarding_completo?: boolean
           senha?: string
           telefone?: string | null
+          welcome_modal_dismissed?: boolean | null
         }
         Relationships: []
       }
