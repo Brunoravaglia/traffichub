@@ -182,6 +182,92 @@ export type Database = {
           },
         ]
       }
+      client_tracking: {
+        Row: {
+          clarity_installed: boolean | null
+          cliente_id: string
+          created_at: string
+          ga4_id: string | null
+          gmn_status: string | null
+          google_ads_status: string | null
+          google_dias_restantes: number | null
+          google_proxima_recarga: string | null
+          google_saldo: number | null
+          google_ultima_validacao: string | null
+          google_valor_diario: number | null
+          gtm_id: string | null
+          id: string
+          meta_ads_active: boolean | null
+          meta_dias_restantes: number | null
+          meta_proxima_recarga: string | null
+          meta_saldo: number | null
+          meta_ultima_validacao: string | null
+          meta_valor_diario: number | null
+          pixel_installed: boolean | null
+          search_console_status: string | null
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          clarity_installed?: boolean | null
+          cliente_id: string
+          created_at?: string
+          ga4_id?: string | null
+          gmn_status?: string | null
+          google_ads_status?: string | null
+          google_dias_restantes?: number | null
+          google_proxima_recarga?: string | null
+          google_saldo?: number | null
+          google_ultima_validacao?: string | null
+          google_valor_diario?: number | null
+          gtm_id?: string | null
+          id?: string
+          meta_ads_active?: boolean | null
+          meta_dias_restantes?: number | null
+          meta_proxima_recarga?: string | null
+          meta_saldo?: number | null
+          meta_ultima_validacao?: string | null
+          meta_valor_diario?: number | null
+          pixel_installed?: boolean | null
+          search_console_status?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          clarity_installed?: boolean | null
+          cliente_id?: string
+          created_at?: string
+          ga4_id?: string | null
+          gmn_status?: string | null
+          google_ads_status?: string | null
+          google_dias_restantes?: number | null
+          google_proxima_recarga?: string | null
+          google_saldo?: number | null
+          google_ultima_validacao?: string | null
+          google_valor_diario?: number | null
+          gtm_id?: string | null
+          id?: string
+          meta_ads_active?: boolean | null
+          meta_dias_restantes?: number | null
+          meta_proxima_recarga?: string | null
+          meta_saldo?: number | null
+          meta_ultima_validacao?: string | null
+          meta_valor_diario?: number | null
+          pixel_installed?: boolean | null
+          search_console_status?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_tracking_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: true
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           created_at: string
@@ -268,6 +354,7 @@ export type Database = {
         Row: {
           created_at: string
           dados_completos: boolean
+          first_login_at: string | null
           foto_preenchida: boolean
           foto_url: string | null
           id: string
@@ -280,6 +367,7 @@ export type Database = {
         Insert: {
           created_at?: string
           dados_completos?: boolean
+          first_login_at?: string | null
           foto_preenchida?: boolean
           foto_url?: string | null
           id?: string
@@ -292,6 +380,7 @@ export type Database = {
         Update: {
           created_at?: string
           dados_completos?: boolean
+          first_login_at?: string | null
           foto_preenchida?: boolean
           foto_url?: string | null
           id?: string

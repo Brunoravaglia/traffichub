@@ -9,6 +9,7 @@ interface Gestor {
   onboarding_completo: boolean;
   foto_preenchida: boolean;
   dados_completos: boolean;
+  first_login_at: string | null;
 }
 
 interface GestorContextType {
@@ -17,10 +18,12 @@ interface GestorContextType {
   sessionStartTime: Date | null;
   sessionDuration: number;
   isLoggedIn: boolean;
+  isFirstLogin: boolean;
   login: (gestorId: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   updatePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
   refreshGestor: () => Promise<void>;
+  markWelcomeSeen: () => Promise<void>;
 }
 
 const GestorContext = createContext<GestorContextType | undefined>(undefined);
@@ -38,6 +41,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const [sessionDuration, setSessionDuration] = useState(0);
+  const [isFirstLogin, setIsFirstLogin] = useState(false);
 
   // Load from sessionStorage on mount
   useEffect(() => {
@@ -52,7 +56,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       // Fetch gestor data
       supabase
         .from("gestores")
-        .select("id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos")
+        .select("id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at")
         .eq("id", storedGestorId)
         .single()
         .then(({ data }) => {
@@ -81,9 +85,11 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       // Verify password
       const { data: gestorData, error } = await supabase
         .from("gestores")
-        .select("id, nome, foto_url, telefone, senha, onboarding_completo, foto_preenchida, dados_completos")
+        .select("id, nome, foto_url, telefone, senha, onboarding_completo, foto_preenchida, dados_completos, first_login_at")
         .eq("id", gestorId)
         .single();
+
+      const isFirstTimeLogin = !gestorData?.first_login_at;
 
       if (error || !gestorData) {
         return { success: false, error: "Gestor não encontrado" };
@@ -116,7 +122,9 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         onboarding_completo: gestorData.onboarding_completo,
         foto_preenchida: gestorData.foto_preenchida,
         dados_completos: gestorData.dados_completos,
+        first_login_at: gestorData.first_login_at,
       });
+      setIsFirstLogin(isFirstTimeLogin);
       setSessionId(sessionData.id);
       setSessionStartTime(now);
       setSessionDuration(0);
@@ -151,11 +159,24 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
     setSessionId(null);
     setSessionStartTime(null);
     setSessionDuration(0);
+    setIsFirstLogin(false);
 
     sessionStorage.removeItem("vcd_gestor_id");
     sessionStorage.removeItem("vcd_session_id");
     sessionStorage.removeItem("vcd_session_start");
     sessionStorage.removeItem("vcd_unlocked");
+  };
+
+  const markWelcomeSeen = async () => {
+    if (!gestor) return;
+    
+    await supabase
+      .from("gestores")
+      .update({ first_login_at: new Date().toISOString() })
+      .eq("id", gestor.id);
+    
+    setIsFirstLogin(false);
+    setGestor({ ...gestor, first_login_at: new Date().toISOString() });
   };
 
   const updatePassword = async (newPassword: string): Promise<{ success: boolean; error?: string }> => {
@@ -180,7 +201,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
 
     const { data } = await supabase
       .from("gestores")
-      .select("id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos")
+      .select("id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at")
       .eq("id", gestor.id)
       .single();
 
@@ -197,10 +218,12 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         sessionStartTime,
         sessionDuration,
         isLoggedIn: !!gestor,
+        isFirstLogin,
         login,
         logout,
         updatePassword,
         refreshGestor,
+        markWelcomeSeen,
       }}
     >
       {children}
