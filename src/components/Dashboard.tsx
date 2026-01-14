@@ -308,11 +308,11 @@ const Dashboard = () => {
                   className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all group"
                 >
                   {cliente.logo_url ? (
-                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-secondary border border-border">
-                      <img src={cliente.logo_url} alt={cliente.nome} className="w-full h-full object-contain p-1" />
+                    <div className="w-14 h-14 rounded-full overflow-hidden border border-border">
+                      <img src={cliente.logo_url} alt={cliente.nome} className="w-full h-full object-cover" />
                     </div>
                   ) : (
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center">
                       <span className="text-xl font-bold text-primary-foreground">
                         {cliente.nome.charAt(0).toUpperCase()}
                       </span>
