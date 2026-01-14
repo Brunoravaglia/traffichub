@@ -338,6 +338,7 @@ export type Database = {
           investimento_mensal: number | null
           logo_url: string | null
           nome: string
+          observacoes: string | null
           redes_sociais: string[] | null
           telefone_contato: string | null
           updated_at: string
@@ -351,6 +352,7 @@ export type Database = {
           investimento_mensal?: number | null
           logo_url?: string | null
           nome: string
+          observacoes?: string | null
           redes_sociais?: string[] | null
           telefone_contato?: string | null
           updated_at?: string
@@ -364,6 +366,7 @@ export type Database = {
           investimento_mensal?: number | null
           logo_url?: string | null
           nome?: string
+          observacoes?: string | null
           redes_sociais?: string[] | null
           telefone_contato?: string | null
           updated_at?: string
