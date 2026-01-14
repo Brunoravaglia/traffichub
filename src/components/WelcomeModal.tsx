@@ -23,7 +23,12 @@ const WelcomeModal = ({ isOpen, onClose, gestorName }: WelcomeModalProps) => {
   ];
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => onClose(dontShowAgain)}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose(dontShowAgain);
+      }}
+    >
       <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-card border-border">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}

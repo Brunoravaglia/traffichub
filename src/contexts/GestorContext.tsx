@@ -10,6 +10,7 @@ interface Gestor {
   foto_preenchida: boolean;
   dados_completos: boolean;
   first_login_at: string | null;
+  welcome_modal_dismissed: boolean | null;
 }
 
 interface GestorContextType {
@@ -56,12 +57,15 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       // Fetch gestor data
       supabase
         .from("gestores")
-        .select("id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at")
+        .select(
+          "id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed"
+        )
         .eq("id", storedGestorId)
         .single()
         .then(({ data }) => {
           if (data) {
             setGestor(data);
+            setIsFirstLogin(!data.first_login_at);
           }
         });
     }
@@ -85,7 +89,9 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       // Verify password
       const { data: gestorData, error } = await supabase
         .from("gestores")
-        .select("id, nome, foto_url, telefone, senha, onboarding_completo, foto_preenchida, dados_completos, first_login_at")
+        .select(
+          "id, nome, foto_url, telefone, senha, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed"
+        )
         .eq("id", gestorId)
         .single();
 
@@ -123,6 +129,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         foto_preenchida: gestorData.foto_preenchida,
         dados_completos: gestorData.dados_completos,
         first_login_at: gestorData.first_login_at,
+        welcome_modal_dismissed: gestorData.welcome_modal_dismissed,
       });
       setIsFirstLogin(isFirstTimeLogin);
       setSessionId(sessionData.id);
@@ -201,7 +208,9 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
 
     const { data } = await supabase
       .from("gestores")
-      .select("id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at")
+      .select(
+        "id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed"
+      )
       .eq("id", gestor.id)
       .single();
 
