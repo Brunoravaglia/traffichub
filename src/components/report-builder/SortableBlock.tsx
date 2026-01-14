@@ -39,35 +39,34 @@ export function SortableBlock({ block, onUpdate, onDelete, onOpenConfig, isEditi
     transition,
   };
 
-  const renderBlock = () => {
-    const commonProps = {
-      onUpdate: handleConfigUpdate,
-      isEditing,
-    };
+  const handleConfigUpdate = <T,>(config: T) => {
+    onUpdate(block.id, config as Record<string, unknown>);
+  };
 
+  const renderBlock = () => {
     switch (block.type) {
       case 'header':
-        return <HeaderBlock config={block.config as any} {...commonProps} />;
+        return <HeaderBlock config={block.config as any} onUpdate={handleConfigUpdate} isEditing={isEditing} />;
       case 'section-title':
-        return <SectionTitleBlock config={block.config as any} {...commonProps} />;
+        return <SectionTitleBlock config={block.config as any} onUpdate={handleConfigUpdate} isEditing={isEditing} />;
       case 'metric-row':
-        return <MetricRowBlock config={block.config as any} {...commonProps} />;
+        return <MetricRowBlock config={block.config as any} onUpdate={handleConfigUpdate} isEditing={isEditing} />;
       case 'metric-card':
-        return <MetricRowBlock config={{ title: '', platform: 'google', metrics: [block.config as any] }} {...commonProps} />;
+        return <MetricRowBlock config={{ title: '', platform: 'google', metrics: [block.config as any] }} onUpdate={handleConfigUpdate} isEditing={isEditing} />;
       case 'creative-gallery':
-        return <CreativeGalleryBlock config={block.config as any} {...commonProps} />;
+        return <CreativeGalleryBlock config={block.config as any} onUpdate={handleConfigUpdate} isEditing={isEditing} />;
       case 'image':
-        return <ImageBlock config={block.config as any} {...commonProps} />;
+        return <ImageBlock config={block.config as any} onUpdate={handleConfigUpdate} isEditing={isEditing} />;
       case 'objectives':
-        return <ObjectivesBlock config={block.config as any} {...commonProps} />;
+        return <ObjectivesBlock config={block.config as any} onUpdate={handleConfigUpdate} isEditing={isEditing} />;
       case 'balance-info':
-        return <BalanceInfoBlock config={block.config as any} {...commonProps} />;
+        return <BalanceInfoBlock config={block.config as any} onUpdate={handleConfigUpdate} isEditing={isEditing} />;
       case 'footer':
-        return <FooterBlock config={block.config as any} {...commonProps} />;
+        return <FooterBlock config={block.config as any} onUpdate={handleConfigUpdate} isEditing={isEditing} />;
       case 'text':
-        return <TextBlock config={block.config as any} {...commonProps} />;
+        return <TextBlock config={block.config as any} onUpdate={handleConfigUpdate} isEditing={isEditing} />;
       case 'chart':
-        return <ChartBlock config={block.config as any} {...commonProps} />;
+        return <ChartBlock config={block.config as any} onUpdate={handleConfigUpdate} isEditing={isEditing} />;
       default:
         return <div className="p-4 text-muted-foreground">Bloco desconhecido</div>;
     }
