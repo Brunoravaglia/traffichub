@@ -19,6 +19,11 @@ interface OnboardingItem {
 const OnboardingChecklist = () => {
   const { gestor, refreshGestor } = useGestor();
   const navigate = useNavigate();
+  
+  // Check sessionStorage to see if user dismissed onboarding this session
+  const [dismissedThisSession, setDismissedThisSession] = useState(() => {
+    return sessionStorage.getItem("vcd_onboarding_dismissed") === "true";
+  });
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
 
@@ -46,10 +51,11 @@ const OnboardingChecklist = () => {
   const allCompleted = completedCount === items.length;
 
   useEffect(() => {
-    if (gestor && !gestor.onboarding_completo) {
+    // Only show if not completed, not dismissed this session, and gestor exists
+    if (gestor && !gestor.onboarding_completo && !dismissedThisSession) {
       setIsOpen(true);
     }
-  }, [gestor]);
+  }, [gestor, dismissedThisSession]);
 
   const markAsComplete = async () => {
     if (!gestor) return;
@@ -63,7 +69,7 @@ const OnboardingChecklist = () => {
     setIsOpen(false);
   };
 
-  if (!gestor || gestor.onboarding_completo) return null;
+  if (!gestor || gestor.onboarding_completo || dismissedThisSession) return null;
 
   return (
     <>
@@ -115,7 +121,11 @@ const OnboardingChecklist = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setIsMinimized(true)}
+                    onClick={() => {
+                      sessionStorage.setItem("vcd_onboarding_dismissed", "true");
+                      setDismissedThisSession(true);
+                      setIsOpen(false);
+                    }}
                     className="text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10"
                   >
                     <X className="h-5 w-5" />
@@ -193,7 +203,11 @@ const OnboardingChecklist = () => {
                 ) : (
                   <Button
                     variant="outline"
-                    onClick={() => setIsMinimized(true)}
+                    onClick={() => {
+                      sessionStorage.setItem("vcd_onboarding_dismissed", "true");
+                      setDismissedThisSession(true);
+                      setIsOpen(false);
+                    }}
                     className="w-full"
                   >
                     Fazer depois
