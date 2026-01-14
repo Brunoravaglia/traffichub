@@ -14,11 +14,12 @@ const Dashboard = () => {
   const monthEnd = format(endOfMonth(currentDate), "yyyy-MM-dd");
 
   // Fetch stats
-  const { data: stats } = useQuery({
+  const { data: stats, refetch } = useQuery({
     queryKey: ["dashboard-stats"],
+    staleTime: 0,
     queryFn: async () => {
       const [clientesRes, gestoresRes, checklistsRes, relatoriosRes] = await Promise.all([
-        supabase.from("clientes").select("id, nome, logo_url, created_at"),
+        supabase.from("clientes").select("id, nome, logo_url, created_at").order("created_at", { ascending: false }),
         supabase.from("gestores").select("id, nome, foto_url"),
         supabase.from("checklists").select("*").gte("data", monthStart).lte("data", monthEnd),
         supabase.from("relatorios").select("*").gte("data", monthStart).lte("data", monthEnd),
