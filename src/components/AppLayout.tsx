@@ -17,9 +17,12 @@ interface AppLayoutProps {
 }
 
 const AppLayout = ({ children }: AppLayoutProps) => {
-  const { gestor, isLoggedIn, isFirstLogin, logout, refreshGestor } = useGestor();
+  const { gestor, isLoggedIn, logout, refreshGestor } = useGestor();
   const navigate = useNavigate();
   const [showWelcome, setShowWelcome] = useState(false);
+  const [welcomeShownSession, setWelcomeShownSession] = useState(() => {
+    return sessionStorage.getItem("vcd_welcome_shown") === "true";
+  });
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -28,11 +31,17 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   }, [isLoggedIn, navigate]);
 
   useEffect(() => {
-    // Show welcome modal only if first login and not dismissed
-    if (isFirstLogin && gestor && !(gestor as any).welcome_modal_dismissed) {
+    // Show welcome modal only once per session, only for first access, and only if not dismissed
+    const shouldShow =
+      !!gestor &&
+      !gestor.first_login_at &&
+      !gestor.welcome_modal_dismissed &&
+      !welcomeShownSession;
+
+    if (shouldShow) {
       setShowWelcome(true);
     }
-  }, [isFirstLogin, gestor]);
+  }, [gestor, welcomeShownSession]);
 
   const handleLogout = async () => {
     await logout();
@@ -41,16 +50,25 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
   const handleCloseWelcome = async (dontShowAgain: boolean) => {
     setShowWelcome(false);
-    
-    if (dontShowAgain && gestor) {
-      await supabase
-        .from("gestores")
-        .update({ 
-          welcome_modal_dismissed: true,
-          first_login_at: new Date().toISOString()
-        })
-        .eq("id", gestor.id);
-      
+    sessionStorage.setItem("vcd_welcome_shown", "true");
+    setWelcomeShownSession(true);
+
+    if (!gestor) return;
+
+    const updates: Record<string, any> = {};
+
+    // Mark first access as seen so it never loops
+    if (!gestor.first_login_at) {
+      updates.first_login_at = new Date().toISOString();
+    }
+
+    // Persist "don't show again" choice
+    if (dontShowAgain) {
+      updates.welcome_modal_dismissed = true;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await supabase.from("gestores").update(updates).eq("id", gestor.id);
       await refreshGestor();
     }
   };
