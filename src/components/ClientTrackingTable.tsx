@@ -13,6 +13,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -44,17 +51,25 @@ interface ClientTracking {
   google_dias_restantes: number;
   google_ultima_validacao: string | null;
   google_proxima_recarga: string | null;
+  google_recarga_tipo: string | null;
   meta_saldo: number;
   meta_valor_diario: number;
   meta_dias_restantes: number;
   meta_ultima_validacao: string | null;
   meta_proxima_recarga: string | null;
+  meta_recarga_tipo: string | null;
   url: string | null;
   clientes?: {
     nome: string;
     logo_url: string | null;
   };
 }
+
+const RECARGA_OPTIONS = [
+  { value: "mensal", label: "Mensal (1x/mês)" },
+  { value: "semanal", label: "Semanal (4x/mês)" },
+  { value: "continuo", label: "Contínuo (Cartão)" },
+];
 
 interface EditDialogProps {
   tracking: ClientTracking | null;
@@ -78,8 +93,10 @@ const EditTrackingDialog = ({ tracking, clienteId, clienteNome, onClose, onSave 
       gmn_status: "",
       google_saldo: 0,
       google_valor_diario: 0,
+      google_recarga_tipo: "mensal",
       meta_saldo: 0,
       meta_valor_diario: 0,
+      meta_recarga_tipo: "mensal",
       url: "",
     }
   );
@@ -168,7 +185,7 @@ const EditTrackingDialog = ({ tracking, clienteId, clienteNome, onClose, onSave 
 
         <div className="col-span-2 border-t border-border pt-4 mt-2">
           <h4 className="font-semibold text-foreground mb-3">Saldos Google Ads</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Saldo Google (R$)</Label>
               <Input
@@ -187,12 +204,30 @@ const EditTrackingDialog = ({ tracking, clienteId, clienteNome, onClose, onSave 
                 onChange={(e) => setFormData({ ...formData, google_valor_diario: parseFloat(e.target.value) || 0 })}
               />
             </div>
+            <div className="space-y-2">
+              <Label>Tipo de Recarga</Label>
+              <Select
+                value={formData.google_recarga_tipo || "mensal"}
+                onValueChange={(v) => setFormData({ ...formData, google_recarga_tipo: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {RECARGA_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
         <div className="col-span-2 border-t border-border pt-4 mt-2">
           <h4 className="font-semibold text-foreground mb-3">Saldos Meta Ads</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Saldo Meta (R$)</Label>
               <Input
@@ -210,6 +245,24 @@ const EditTrackingDialog = ({ tracking, clienteId, clienteNome, onClose, onSave 
                 value={formData.meta_valor_diario || 0}
                 onChange={(e) => setFormData({ ...formData, meta_valor_diario: parseFloat(e.target.value) || 0 })}
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Tipo de Recarga</Label>
+              <Select
+                value={formData.meta_recarga_tipo || "mensal"}
+                onValueChange={(v) => setFormData({ ...formData, meta_recarga_tipo: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {RECARGA_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
@@ -259,6 +312,36 @@ const StatusBadge = ({ value, type }: { value: boolean | string | null; type?: "
   }
 
   return <span className="text-sm text-foreground">{value}</span>;
+};
+
+const RecargaBadge = ({ tipo }: { tipo: string | null }) => {
+  const option = RECARGA_OPTIONS.find(o => o.value === tipo);
+  
+  if (!tipo || tipo === "mensal") {
+    return (
+      <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-blue-500/20 text-xs">
+        Mensal
+      </Badge>
+    );
+  }
+  
+  if (tipo === "semanal") {
+    return (
+      <Badge variant="secondary" className="bg-purple-500/10 text-purple-600 border-purple-500/20 text-xs">
+        Semanal
+      </Badge>
+    );
+  }
+  
+  if (tipo === "continuo") {
+    return (
+      <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20 text-xs">
+        <RefreshCw className="w-3 h-3 mr-1" /> Contínuo
+      </Badge>
+    );
+  }
+
+  return <span className="text-muted-foreground text-xs">{option?.label || tipo}</span>;
 };
 
 const formatCurrency = (value: number) => {
@@ -340,9 +423,11 @@ const ClientTrackingTable = () => {
         google_saldo: data.google_saldo,
         google_valor_diario: data.google_valor_diario,
         google_dias_restantes: googleDias,
+        google_recarga_tipo: data.google_recarga_tipo || "mensal",
         meta_saldo: data.meta_saldo,
         meta_valor_diario: data.meta_valor_diario,
         meta_dias_restantes: metaDias,
+        meta_recarga_tipo: data.meta_recarga_tipo || "mensal",
         google_ultima_validacao: format(now, "yyyy-MM-dd"),
         meta_ultima_validacao: format(now, "yyyy-MM-dd"),
         google_proxima_recarga: format(googleProxima, "yyyy-MM-dd"),
@@ -457,8 +542,10 @@ const ClientTrackingTable = () => {
                 <TableHead className="min-w-[110px]">GMN</TableHead>
                 <TableHead className="min-w-[100px]">Saldo G</TableHead>
                 <TableHead className="min-w-[80px]">Dias G</TableHead>
+                <TableHead className="min-w-[100px]">Recarga G</TableHead>
                 <TableHead className="min-w-[100px]">Saldo M</TableHead>
                 <TableHead className="min-w-[80px]">Dias M</TableHead>
+                <TableHead className="min-w-[100px]">Recarga M</TableHead>
                 <TableHead className="min-w-[180px]">URL</TableHead>
                 <TableHead className="min-w-[60px]">Ações</TableHead>
               </TableRow>
@@ -483,11 +570,17 @@ const ClientTrackingTable = () => {
                   <TableCell className={tracking.google_dias_restantes < 5 ? "text-red-500 font-medium" : ""}>
                     {tracking.google_dias_restantes}
                   </TableCell>
+                  <TableCell>
+                    <RecargaBadge tipo={tracking.google_recarga_tipo} />
+                  </TableCell>
                   <TableCell className={tracking.meta_saldo < 100 ? "text-red-500 font-medium" : ""}>
                     {formatCurrency(tracking.meta_saldo)}
                   </TableCell>
                   <TableCell className={tracking.meta_dias_restantes < 5 ? "text-red-500 font-medium" : ""}>
                     {tracking.meta_dias_restantes}
+                  </TableCell>
+                  <TableCell>
+                    <RecargaBadge tipo={tracking.meta_recarga_tipo} />
                   </TableCell>
                   <TableCell>
                     {tracking.url ? (

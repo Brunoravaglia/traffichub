@@ -192,6 +192,7 @@ export type Database = {
           google_ads_status: string | null
           google_dias_restantes: number | null
           google_proxima_recarga: string | null
+          google_recarga_tipo: string | null
           google_saldo: number | null
           google_ultima_validacao: string | null
           google_valor_diario: number | null
@@ -200,6 +201,7 @@ export type Database = {
           meta_ads_active: boolean | null
           meta_dias_restantes: number | null
           meta_proxima_recarga: string | null
+          meta_recarga_tipo: string | null
           meta_saldo: number | null
           meta_ultima_validacao: string | null
           meta_valor_diario: number | null
@@ -217,6 +219,7 @@ export type Database = {
           google_ads_status?: string | null
           google_dias_restantes?: number | null
           google_proxima_recarga?: string | null
+          google_recarga_tipo?: string | null
           google_saldo?: number | null
           google_ultima_validacao?: string | null
           google_valor_diario?: number | null
@@ -225,6 +228,7 @@ export type Database = {
           meta_ads_active?: boolean | null
           meta_dias_restantes?: number | null
           meta_proxima_recarga?: string | null
+          meta_recarga_tipo?: string | null
           meta_saldo?: number | null
           meta_ultima_validacao?: string | null
           meta_valor_diario?: number | null
@@ -242,6 +246,7 @@ export type Database = {
           google_ads_status?: string | null
           google_dias_restantes?: number | null
           google_proxima_recarga?: string | null
+          google_recarga_tipo?: string | null
           google_saldo?: number | null
           google_ultima_validacao?: string | null
           google_valor_diario?: number | null
@@ -250,6 +255,7 @@ export type Database = {
           meta_ads_active?: boolean | null
           meta_dias_restantes?: number | null
           meta_proxima_recarga?: string | null
+          meta_recarga_tipo?: string | null
           meta_saldo?: number | null
           meta_ultima_validacao?: string | null
           meta_valor_diario?: number | null
