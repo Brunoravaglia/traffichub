@@ -53,6 +53,10 @@ const AppSidebar = () => {
       { title: "Ver Clientes", icon: Users, path: "/clientes" },
       { title: "Novo Cliente", icon: Plus, path: "/novo-cliente" },
     ],
+    relatorios: [
+      { title: "Novo Relatório", icon: Plus, path: "/relatorio-cliente" },
+      { title: "Histórico", icon: History, path: "/historico" },
+    ],
     gestores: [
       { title: "Ver Gestores", icon: Briefcase, path: "/gestores" },
       { title: "Novo Gestor", icon: UserPlus, path: "/novo-gestor" },
@@ -138,7 +142,44 @@ const AppSidebar = () => {
           </Collapsible>
         </SidebarGroup>
 
-        {/* Gestores */}
+        {/* Relatórios */}
+        <SidebarGroup>
+          <Collapsible defaultOpen className="group/collapsible">
+            <SidebarGroupLabel
+              asChild
+              className={cn("cursor-pointer", isCollapsed && "sr-only")}
+            >
+              <CollapsibleTrigger className="flex w-full items-center justify-between">
+                <span>Relatórios</span>
+                <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+              </CollapsibleTrigger>
+            </SidebarGroupLabel>
+            <CollapsibleContent>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {menuItems.relatorios.map((item) => (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton
+                        onClick={() => navigate(item.path)}
+                        isActive={isActive(item.path)}
+                        tooltip={item.title}
+                        className={cn(
+                          "transition-all duration-200",
+                          isActive(item.path) &&
+                            "bg-primary/10 text-primary border-l-2 border-primary"
+                        )}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </Collapsible>
+        </SidebarGroup>
+
         <SidebarGroup>
           <Collapsible defaultOpen className="group/collapsible">
             <SidebarGroupLabel
