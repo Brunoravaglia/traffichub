@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle2, Circle, Camera, Users, FileText, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { useGestor } from "@/contexts/GestorContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +28,7 @@ const OnboardingChecklist = () => {
   });
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
 
   const items: OnboardingItem[] = [
     {
@@ -66,6 +69,22 @@ const OnboardingChecklist = () => {
       .eq("id", gestor.id);
 
     await refreshGestor();
+    setIsOpen(false);
+  };
+
+  const handleDismiss = async () => {
+    if (dontShowAgain && gestor) {
+      // Save permanently to database
+      await supabase
+        .from("gestores")
+        .update({ onboarding_completo: true })
+        .eq("id", gestor.id);
+      await refreshGestor();
+    } else {
+      // Just dismiss for this session
+      sessionStorage.setItem("vcd_onboarding_dismissed", "true");
+      setDismissedThisSession(true);
+    }
     setIsOpen(false);
   };
 
@@ -121,11 +140,7 @@ const OnboardingChecklist = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => {
-                      sessionStorage.setItem("vcd_onboarding_dismissed", "true");
-                      setDismissedThisSession(true);
-                      setIsOpen(false);
-                    }}
+                    onClick={handleDismiss}
                     className="text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10"
                   >
                     <X className="h-5 w-5" />
@@ -191,7 +206,23 @@ const OnboardingChecklist = () => {
               </div>
 
               {/* Footer */}
-              <div className="p-6 pt-0">
+              <div className="p-6 pt-0 space-y-4">
+                {!allCompleted && (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="dontShowOnboarding"
+                      checked={dontShowAgain}
+                      onCheckedChange={(checked) => setDontShowAgain(checked === true)}
+                    />
+                    <Label
+                      htmlFor="dontShowOnboarding"
+                      className="text-sm text-muted-foreground cursor-pointer"
+                    >
+                      Não exibir mais essa mensagem
+                    </Label>
+                  </div>
+                )}
+                
                 {allCompleted ? (
                   <Button
                     onClick={markAsComplete}
@@ -203,11 +234,7 @@ const OnboardingChecklist = () => {
                 ) : (
                   <Button
                     variant="outline"
-                    onClick={() => {
-                      sessionStorage.setItem("vcd_onboarding_dismissed", "true");
-                      setDismissedThisSession(true);
-                      setIsOpen(false);
-                    }}
+                    onClick={handleDismiss}
                     className="w-full"
                   >
                     Fazer depois
