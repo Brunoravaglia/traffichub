@@ -17,6 +17,8 @@ import Relatorio from "./pages/Relatorio";
 import NovoRelatorio from "./pages/NovoRelatorio";
 import Gestores from "./pages/Gestores";
 import GestorSettings from "./pages/GestorSettings";
+import Controle from "./pages/Controle";
+import RelatorioCliente from "./pages/RelatorioCliente";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,9 +43,11 @@ const App = () => (
             <Route path="/cliente/:id/historico" element={<AppLayout><Historico /></AppLayout>} />
             <Route path="/cliente/:id/relatorio/:data" element={<AppLayout><Relatorio /></AppLayout>} />
             <Route path="/cliente/:id/novo-relatorio" element={<AppLayout><NovoRelatorio /></AppLayout>} />
+            <Route path="/cliente/:id/enviar-relatorio" element={<AppLayout><RelatorioCliente /></AppLayout>} />
             <Route path="/gestores" element={<AppLayout><Gestores /></AppLayout>} />
             <Route path="/configuracoes" element={<AppLayout><GestorSettings /></AppLayout>} />
             <Route path="/gerencial" element={<AppLayout><DashboardGerencial /></AppLayout>} />
+            <Route path="/controle" element={<AppLayout><Controle /></AppLayout>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

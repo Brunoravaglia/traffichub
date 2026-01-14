@@ -98,6 +98,8 @@ const ClientList = () => {
       if (error) throw error;
       return data;
     },
+    refetchOnWindowFocus: false,
+    staleTime: 30000,
   });
 
   const calculateProgress = (checklist: any) => {

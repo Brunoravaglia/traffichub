@@ -47,6 +47,7 @@ const AppSidebar = () => {
     main: [
       { title: "Dashboard", icon: Home, path: "/dashboard" },
       { title: "Gerencial", icon: BarChart3, path: "/gerencial" },
+      { title: "Controle", icon: FileText, path: "/controle" },
     ],
     clientes: [
       { title: "Ver Clientes", icon: Users, path: "/clientes" },
