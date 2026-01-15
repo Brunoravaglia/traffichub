@@ -369,6 +369,7 @@ Você Digital - Checklist do Gestor de Tráfego
                 cliente={{
                   nome: cliente.nome,
                   investimento_mensal: cliente.investimento_mensal,
+                  redes_sociais: cliente.redes_sociais || [],
                   gestores: cliente.gestores
                 }} 
               />

@@ -242,6 +242,7 @@ export type Database = {
           cliente_id: string
           created_at: string
           ga4_id: string | null
+          ga4_ids: string[] | null
           gmn_status: string | null
           google_ads_status: string | null
           google_dias_restantes: number | null
@@ -251,6 +252,7 @@ export type Database = {
           google_ultima_validacao: string | null
           google_valor_diario: number | null
           gtm_id: string | null
+          gtm_ids: string[] | null
           id: string
           meta_ads_active: boolean | null
           meta_dias_restantes: number | null
@@ -269,6 +271,7 @@ export type Database = {
           cliente_id: string
           created_at?: string
           ga4_id?: string | null
+          ga4_ids?: string[] | null
           gmn_status?: string | null
           google_ads_status?: string | null
           google_dias_restantes?: number | null
@@ -278,6 +281,7 @@ export type Database = {
           google_ultima_validacao?: string | null
           google_valor_diario?: number | null
           gtm_id?: string | null
+          gtm_ids?: string[] | null
           id?: string
           meta_ads_active?: boolean | null
           meta_dias_restantes?: number | null
@@ -296,6 +300,7 @@ export type Database = {
           cliente_id?: string
           created_at?: string
           ga4_id?: string | null
+          ga4_ids?: string[] | null
           gmn_status?: string | null
           google_ads_status?: string | null
           google_dias_restantes?: number | null
@@ -305,6 +310,7 @@ export type Database = {
           google_ultima_validacao?: string | null
           google_valor_diario?: number | null
           gtm_id?: string | null
+          gtm_ids?: string[] | null
           id?: string
           meta_ads_active?: boolean | null
           meta_dias_restantes?: number | null
@@ -528,6 +534,50 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_template_metrics: {
+        Row: {
+          created_at: string
+          display_order: number | null
+          icon: string | null
+          id: string
+          is_visible: boolean | null
+          label: string
+          metric_key: string
+          platform: string
+          template_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_visible?: boolean | null
+          label: string
+          metric_key: string
+          platform: string
+          template_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_visible?: boolean | null
+          label?: string
+          metric_key?: string
+          platform?: string
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_template_metrics_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "report_templates"
             referencedColumns: ["id"]
           },
         ]
