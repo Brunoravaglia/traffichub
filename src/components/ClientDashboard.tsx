@@ -34,13 +34,17 @@ import {
   AlertTriangle,
   RefreshCw,
   ExternalLink,
+  Plus,
+  Trash2,
 } from "lucide-react";
+import DynamicIdFields from "./DynamicIdFields";
 
 interface ClientDashboardProps {
   clienteId: string;
   cliente: {
     nome: string;
     investimento_mensal: number | null;
+    redes_sociais?: string[];
     gestores?: { nome: string };
   };
 }
@@ -49,7 +53,9 @@ interface ClientTracking {
   id?: string;
   cliente_id: string;
   gtm_id: string | null;
+  gtm_ids: string[];
   ga4_id: string | null;
+  ga4_ids: string[];
   google_ads_status: string | null;
   clarity_installed: boolean;
   meta_ads_active: boolean;
@@ -105,6 +111,10 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<ClientTracking>>({});
 
+  // Check if client has specific services
+  const hasGoogleAds = cliente.redes_sociais?.includes("google") ?? true;
+  const hasMetaAds = cliente.redes_sociais?.includes("meta") ?? true;
+
   const { data: tracking, isLoading } = useQuery({
     queryKey: ["client-tracking", clienteId],
     queryFn: async () => {
@@ -115,7 +125,14 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
         .maybeSingle();
 
       if (error) throw error;
-      return data as ClientTracking | null;
+      
+      // Handle legacy gtm_ids and ga4_ids
+      const result = data as ClientTracking | null;
+      if (result) {
+        result.gtm_ids = (result as any).gtm_ids || [];
+        result.ga4_ids = (result as any).ga4_ids || [];
+      }
+      return result;
     },
   });
 
@@ -136,8 +153,10 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
 
       const payload = {
         cliente_id: clienteId,
-        gtm_id: data.gtm_id,
-        ga4_id: data.ga4_id,
+        gtm_id: data.gtm_ids?.[0] || data.gtm_id || null,
+        gtm_ids: data.gtm_ids || [],
+        ga4_id: data.ga4_ids?.[0] || data.ga4_id || null,
+        ga4_ids: data.ga4_ids || [],
         google_ads_status: data.google_ads_status,
         clarity_installed: data.clarity_installed,
         meta_ads_active: data.meta_ads_active,
@@ -162,13 +181,13 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
       if (tracking?.id) {
         const { error } = await supabase
           .from("client_tracking")
-          .update(payload)
+          .update(payload as any)
           .eq("id", tracking.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("client_tracking")
-          .insert([payload]);
+          .insert([payload as any]);
         if (error) throw error;
       }
     },
@@ -191,7 +210,9 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
       tracking || {
         cliente_id: clienteId,
         gtm_id: "",
+        gtm_ids: [],
         ga4_id: "",
+        ga4_ids: [],
         google_ads_status: "",
         clarity_installed: false,
         meta_ads_active: false,
@@ -236,53 +257,57 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
+      {/* Summary Cards - Show only for contracted services */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Card className="bg-card border-border">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-blue-500" />
-                Saldo Google Ads
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-foreground">
-                {formatCurrency(tracking?.google_saldo || 0)}
-              </p>
-              <p className={`text-sm ${googleDiasClass}`}>
-                {tracking?.google_dias_restantes || 0} dias restantes
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
+        {hasGoogleAds && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className="bg-card border-border">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-blue-500" />
+                  Saldo Google Ads
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-foreground">
+                  {formatCurrency(tracking?.google_saldo || 0)}
+                </p>
+                <p className={`text-sm ${googleDiasClass}`}>
+                  {tracking?.google_dias_restantes || 0} dias restantes
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-        >
-          <Card className="bg-card border-border">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-purple-500" />
-                Saldo Meta Ads
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-foreground">
-                {formatCurrency(tracking?.meta_saldo || 0)}
-              </p>
-              <p className={`text-sm ${metaDiasClass}`}>
-                {tracking?.meta_dias_restantes || 0} dias restantes
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
+        {hasMetaAds && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+          >
+            <Card className="bg-card border-border">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-purple-500" />
+                  Saldo Meta Ads
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-foreground">
+                  {formatCurrency(tracking?.meta_saldo || 0)}
+                </p>
+                <p className={`text-sm ${metaDiasClass}`}>
+                  {tracking?.meta_dias_restantes || 0} dias restantes
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -298,10 +323,15 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold text-foreground">
-                {formatCurrency((tracking?.google_valor_diario || 0) + (tracking?.meta_valor_diario || 0))}
+                {formatCurrency(
+                  (hasGoogleAds ? tracking?.google_valor_diario || 0 : 0) + 
+                  (hasMetaAds ? tracking?.meta_valor_diario || 0 : 0)
+                )}
               </p>
               <p className="text-sm text-muted-foreground">
-                Google: {formatCurrency(tracking?.google_valor_diario || 0)} | Meta: {formatCurrency(tracking?.meta_valor_diario || 0)}
+                {hasGoogleAds && `Google: ${formatCurrency(tracking?.google_valor_diario || 0)}`}
+                {hasGoogleAds && hasMetaAds && " | "}
+                {hasMetaAds && `Meta: ${formatCurrency(tracking?.meta_valor_diario || 0)}`}
               </p>
             </CardContent>
           </Card>
@@ -353,54 +383,58 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
                     <DialogTitle>Configurar Tracking - {cliente.nome}</DialogTitle>
                   </DialogHeader>
 
-                  <div className="grid grid-cols-2 gap-4 py-4">
-                    <div className="space-y-2">
-                      <Label>GTM ID</Label>
-                      <Input
-                        value={formData.gtm_id || ""}
-                        onChange={(e) => setFormData({ ...formData, gtm_id: e.target.value })}
-                        placeholder="GTM-XXXXXXXX"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>GA4 ID</Label>
-                      <Input
-                        value={formData.ga4_id || ""}
-                        onChange={(e) => setFormData({ ...formData, ga4_id: e.target.value })}
-                        placeholder="G-XXXXXXXXXX"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Google Ads Status</Label>
-                      <Input
-                        value={formData.google_ads_status || ""}
-                        onChange={(e) => setFormData({ ...formData, google_ads_status: e.target.value })}
-                        placeholder="ativo / inativo"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Search Console</Label>
-                      <Input
-                        value={formData.search_console_status || ""}
-                        onChange={(e) => setFormData({ ...formData, search_console_status: e.target.value })}
-                        placeholder="sim / não"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>GMN Status</Label>
-                      <Input
-                        value={formData.gmn_status || ""}
-                        onChange={(e) => setFormData({ ...formData, gmn_status: e.target.value })}
-                        placeholder="sim / não"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>URL do Site</Label>
-                      <Input
-                        value={formData.url || ""}
-                        onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                        placeholder="https://..."
-                      />
+                  <div className="space-y-4 py-4">
+                    {/* Dynamic GTM IDs */}
+                    <DynamicIdFields
+                      label="GTM IDs (múltiplos containers)"
+                      placeholder="GTM-XXXXXXXX"
+                      values={formData.gtm_ids || []}
+                      onChange={(values) => setFormData({ ...formData, gtm_ids: values })}
+                      maxItems={10}
+                    />
+
+                    {/* Dynamic GA4 IDs */}
+                    <DynamicIdFields
+                      label="GA4 IDs (múltiplas propriedades)"
+                      placeholder="G-XXXXXXXXXX"
+                      values={formData.ga4_ids || []}
+                      onChange={(values) => setFormData({ ...formData, ga4_ids: values })}
+                      maxItems={10}
+                    />
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Google Ads Status</Label>
+                        <Input
+                          value={formData.google_ads_status || ""}
+                          onChange={(e) => setFormData({ ...formData, google_ads_status: e.target.value })}
+                          placeholder="ativo / inativo"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Search Console</Label>
+                        <Input
+                          value={formData.search_console_status || ""}
+                          onChange={(e) => setFormData({ ...formData, search_console_status: e.target.value })}
+                          placeholder="sim / não"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>GMN Status</Label>
+                        <Input
+                          value={formData.gmn_status || ""}
+                          onChange={(e) => setFormData({ ...formData, gmn_status: e.target.value })}
+                          placeholder="sim / não"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>URL do Site</Label>
+                        <Input
+                          value={formData.url || ""}
+                          onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                          placeholder="https://..."
+                        />
+                      </div>
                     </div>
 
                     <div className="col-span-2 grid grid-cols-3 gap-4">
