@@ -53,12 +53,27 @@ interface TemplateConfig {
 }
 
 const DEFAULT_METRICS: MetricConfig[] = [
+  // Google Ads Metrics
   { key: "google_cliques", label: "Cliques", icon: "click", platform: "google", visible: true },
   { key: "google_impressoes", label: "Impressões", icon: "eye", platform: "google", visible: true },
   { key: "google_contatos", label: "Contatos/Leads", icon: "message", platform: "google", visible: true },
   { key: "google_investido", label: "Investido", icon: "dollar", platform: "google", visible: true },
   { key: "google_cpl", label: "Custo por Lead", icon: "target", platform: "google", visible: true },
   { key: "google_cpm", label: "CPM", icon: "trending", platform: "google", visible: false },
+  { key: "google_ctr", label: "CTR (%)", icon: "percent", platform: "google", visible: false },
+  { key: "google_cpc", label: "CPC (Custo por Clique)", icon: "dollar", platform: "google", visible: false },
+  { key: "google_conversoes", label: "Conversões", icon: "check", platform: "google", visible: true },
+  { key: "google_taxa_conversao", label: "Taxa de Conversão", icon: "percent", platform: "google", visible: false },
+  { key: "google_roas", label: "ROAS", icon: "trending", platform: "google", visible: false },
+  { key: "google_custo_conversao", label: "Custo por Conversão", icon: "target", platform: "google", visible: false },
+  { key: "google_alcance", label: "Alcance", icon: "users", platform: "google", visible: false },
+  { key: "google_frequencia", label: "Frequência", icon: "repeat", platform: "google", visible: false },
+  { key: "google_visualizacoes_video", label: "Visualizações de Vídeo", icon: "play", platform: "google", visible: false },
+  { key: "google_taxa_visualizacao", label: "Taxa de Visualização", icon: "percent", platform: "google", visible: false },
+  { key: "google_interacoes", label: "Interações", icon: "mouse", platform: "google", visible: false },
+  { key: "google_taxa_interacao", label: "Taxa de Interação", icon: "percent", platform: "google", visible: false },
+  
+  // Meta Ads Metrics
   { key: "meta_impressoes", label: "Impressões", icon: "eye", platform: "meta", visible: true },
   { key: "meta_engajamento", label: "Engajamento", icon: "trending", platform: "meta", visible: true },
   { key: "meta_conversas", label: "Conversas", icon: "message", platform: "meta", visible: true },
@@ -66,6 +81,25 @@ const DEFAULT_METRICS: MetricConfig[] = [
   { key: "meta_cpl", label: "Custo por Lead", icon: "target", platform: "meta", visible: true },
   { key: "meta_cpm", label: "CPM", icon: "trending", platform: "meta", visible: false },
   { key: "meta_custo_seguidor", label: "Custo por Seguidor", icon: "users", platform: "meta", visible: false },
+  { key: "meta_cliques", label: "Cliques no Link", icon: "click", platform: "meta", visible: true },
+  { key: "meta_ctr", label: "CTR (%)", icon: "percent", platform: "meta", visible: false },
+  { key: "meta_cpc", label: "CPC (Custo por Clique)", icon: "dollar", platform: "meta", visible: false },
+  { key: "meta_alcance", label: "Alcance", icon: "users", platform: "meta", visible: true },
+  { key: "meta_frequencia", label: "Frequência", icon: "repeat", platform: "meta", visible: false },
+  { key: "meta_leads", label: "Leads Gerados", icon: "user-plus", platform: "meta", visible: true },
+  { key: "meta_conversoes", label: "Conversões", icon: "check", platform: "meta", visible: false },
+  { key: "meta_roas", label: "ROAS", icon: "trending", platform: "meta", visible: false },
+  { key: "meta_curtidas_pagina", label: "Curtidas na Página", icon: "thumbs-up", platform: "meta", visible: false },
+  { key: "meta_seguidores", label: "Novos Seguidores", icon: "user-plus", platform: "meta", visible: false },
+  { key: "meta_compartilhamentos", label: "Compartilhamentos", icon: "share", platform: "meta", visible: false },
+  { key: "meta_salvos", label: "Salvos", icon: "bookmark", platform: "meta", visible: false },
+  { key: "meta_comentarios", label: "Comentários", icon: "message-circle", platform: "meta", visible: false },
+  { key: "meta_visualizacoes_video", label: "Visualizações de Vídeo", icon: "play", platform: "meta", visible: false },
+  { key: "meta_retencao_video", label: "Retenção de Vídeo (%)", icon: "percent", platform: "meta", visible: false },
+  { key: "meta_mensagens_iniciadas", label: "Mensagens Iniciadas", icon: "send", platform: "meta", visible: false },
+  { key: "meta_respostas_mensagem", label: "Respostas de Mensagem", icon: "reply", platform: "meta", visible: false },
+  { key: "meta_agendamentos", label: "Agendamentos", icon: "calendar", platform: "meta", visible: false },
+  { key: "meta_checkins", label: "Check-ins", icon: "map-pin", platform: "meta", visible: false },
 ];
 
 const DEFAULT_SECTIONS = {
@@ -358,8 +392,8 @@ export function ReportTemplateManager({ onSelectTemplate }: ReportTemplateManage
 
             {/* Metrics Config */}
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Métricas Google Ads</Label>
-              <div className="grid grid-cols-3 gap-2">
+              <Label className="text-base font-semibold">Métricas Google Ads ({formData.metrics.filter(m => m.platform === "google" && m.visible).length} selecionadas)</Label>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-60 overflow-y-auto p-1">
                 {formData.metrics
                   .filter((m) => m.platform === "google")
                   .map((metric) => (
@@ -372,7 +406,7 @@ export function ReportTemplateManager({ onSelectTemplate }: ReportTemplateManage
                       }`}
                       onClick={() => toggleMetric(metric.key)}
                     >
-                      <span className="text-sm">{metric.label}</span>
+                      <span className="text-sm truncate mr-2">{metric.label}</span>
                       <Switch checked={metric.visible} />
                     </div>
                   ))}
@@ -380,8 +414,8 @@ export function ReportTemplateManager({ onSelectTemplate }: ReportTemplateManage
             </div>
 
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Métricas Meta Ads</Label>
-              <div className="grid grid-cols-3 gap-2">
+              <Label className="text-base font-semibold">Métricas Meta Ads ({formData.metrics.filter(m => m.platform === "meta" && m.visible).length} selecionadas)</Label>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-60 overflow-y-auto p-1">
                 {formData.metrics
                   .filter((m) => m.platform === "meta")
                   .map((metric) => (
@@ -394,7 +428,7 @@ export function ReportTemplateManager({ onSelectTemplate }: ReportTemplateManage
                       }`}
                       onClick={() => toggleMetric(metric.key)}
                     >
-                      <span className="text-sm">{metric.label}</span>
+                      <span className="text-sm truncate mr-2">{metric.label}</span>
                       <Switch checked={metric.visible} />
                     </div>
                   ))}
