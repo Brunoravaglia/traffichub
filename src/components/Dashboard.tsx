@@ -131,7 +131,11 @@ const Dashboard = () => {
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          <motion.div variants={itemVariants} className="vcd-card group hover:border-primary/30 transition-all duration-300">
+          <motion.div 
+            variants={itemVariants} 
+            onClick={() => navigate("/clientes")}
+            className="vcd-card group hover:border-primary/30 transition-all duration-300 cursor-pointer"
+          >
             <div className="flex items-center justify-between mb-3">
               <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Users className="w-6 h-6 text-primary" />
@@ -142,7 +146,11 @@ const Dashboard = () => {
             <p className="text-sm text-muted-foreground">Clientes Ativos</p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="vcd-card group hover:border-primary/30 transition-all duration-300">
+          <motion.div 
+            variants={itemVariants} 
+            onClick={() => navigate("/gestores")}
+            className="vcd-card group hover:border-primary/30 transition-all duration-300 cursor-pointer"
+          >
             <div className="flex items-center justify-between mb-3">
               <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Briefcase className="w-6 h-6 text-primary" />
@@ -152,7 +160,11 @@ const Dashboard = () => {
             <p className="text-sm text-muted-foreground">Gestores</p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="vcd-card group hover:border-primary/30 transition-all duration-300">
+          <motion.div 
+            variants={itemVariants} 
+            onClick={() => navigate("/controle")}
+            className="vcd-card group hover:border-primary/30 transition-all duration-300 cursor-pointer"
+          >
             <div className="flex items-center justify-between mb-3">
               <div className="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <CheckCircle2 className="w-6 h-6 text-green-500" />
@@ -162,7 +174,11 @@ const Dashboard = () => {
             <p className="text-sm text-muted-foreground">Média Conclusão</p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="vcd-card group hover:border-primary/30 transition-all duration-300">
+          <motion.div 
+            variants={itemVariants} 
+            onClick={() => navigate("/controle")}
+            className="vcd-card group hover:border-primary/30 transition-all duration-300 cursor-pointer"
+          >
             <div className="flex items-center justify-between mb-3">
               <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <AlertCircle className="w-6 h-6 text-orange-500" />
