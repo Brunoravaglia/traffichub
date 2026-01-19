@@ -358,120 +358,107 @@ const Conquistas = () => {
 
       {/* Achievements Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        <AnimatePresence mode="popLayout">
-          {filteredAchievements.map((achievement, index) => {
-            const isUnlocked = unlockedIds.has(achievement.id);
-            const rarity = rarityConfig[achievement.rarity];
-            const IconComponent = getIcon(achievement.icon);
-            const unlockedDate = getUnlockedDate(achievement.id);
+        {filteredAchievements.map((achievement, index) => {
+          const isUnlocked = unlockedIds.has(achievement.id);
+          const rarity = rarityConfig[achievement.rarity];
+          const IconComponent = getIcon(achievement.icon);
+          const unlockedDate = getUnlockedDate(achievement.id);
 
-            return (
-              <motion.div
-                key={achievement.id}
-                layout
-                initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ delay: index * 0.03, type: "spring", stiffness: 300 }}
-                whileHover={{ scale: 1.05, y: -5 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setSelectedAchievement({ 
-                  ...achievement, 
-                  unlocked: isUnlocked,
-                  unlockedAt: unlockedDate 
-                })}
-                className="cursor-pointer"
+          return (
+            <motion.div
+              key={achievement.id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.02, duration: 0.3 }}
+              whileHover={{ scale: 1.05, y: -5 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setSelectedAchievement({ 
+                ...achievement, 
+                unlocked: isUnlocked,
+                unlockedAt: unlockedDate 
+              })}
+              className="cursor-pointer"
+            >
+              <Card 
+                className={cn(
+                  "relative overflow-hidden transition-all duration-300 h-full",
+                  isUnlocked 
+                    ? `${rarity.bgColor} ${rarity.borderColor} border-2 shadow-lg ${rarity.glowColor}` 
+                    : "bg-muted/30 border-border/50 grayscale opacity-60"
+                )}
               >
-                <Card 
-                  className={cn(
-                    "relative overflow-hidden transition-all duration-300 h-full",
-                    isUnlocked 
-                      ? `${rarity.bgColor} ${rarity.borderColor} border-2 shadow-lg ${rarity.glowColor}` 
-                      : "bg-muted/30 border-border/50 grayscale opacity-60"
-                  )}
-                >
-                  {/* Rarity Indicator */}
-                  {isUnlocked && (
-                    <div className={cn(
-                      "absolute top-0 left-0 right-0 h-1 bg-gradient-to-r",
-                      rarity.color
+                {/* Rarity Indicator */}
+                {isUnlocked && (
+                  <div className={cn(
+                    "absolute top-0 left-0 right-0 h-1 bg-gradient-to-r",
+                    rarity.color
+                  )} />
+                )}
+
+                <CardContent className="p-4 flex flex-col items-center text-center">
+                  {/* Icon */}
+                  <div
+                    className={cn(
+                      "w-16 h-16 rounded-full flex items-center justify-center mb-3 relative",
+                      isUnlocked 
+                        ? `bg-gradient-to-br ${rarity.color}` 
+                        : "bg-muted"
+                    )}
+                  >
+                    {isUnlocked ? (
+                      <IconComponent className="w-8 h-8 text-white" />
+                    ) : (
+                      <Lock className="w-6 h-6 text-muted-foreground" />
+                    )}
+                  </div>
+
+                  {/* Name */}
+                  <h3 className={cn(
+                    "font-semibold text-sm line-clamp-2",
+                    isUnlocked ? rarity.textColor : "text-muted-foreground"
+                  )}>
+                    {achievement.name}
+                  </h3>
+
+                  {/* Points */}
+                  <div className="flex items-center gap-1 mt-2">
+                    <Sparkles className={cn(
+                      "w-3 h-3",
+                      isUnlocked ? "text-amber-400" : "text-muted-foreground"
                     )} />
-                  )}
-
-                  <CardContent className="p-4 flex flex-col items-center text-center">
-                    {/* Icon */}
-                    <motion.div
-                      className={cn(
-                        "w-16 h-16 rounded-full flex items-center justify-center mb-3 relative",
-                        isUnlocked 
-                          ? `bg-gradient-to-br ${rarity.color}` 
-                          : "bg-muted"
-                      )}
-                      animate={isUnlocked ? {
-                        boxShadow: [
-                          "0 0 0 0 rgba(255,255,255,0.2)",
-                          "0 0 20px 5px rgba(255,255,255,0.1)",
-                          "0 0 0 0 rgba(255,255,255,0.2)",
-                        ]
-                      } : {}}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      {isUnlocked ? (
-                        <IconComponent className="w-8 h-8 text-white" />
-                      ) : (
-                        <Lock className="w-6 h-6 text-muted-foreground" />
-                      )}
-                    </motion.div>
-
-                    {/* Name */}
-                    <h3 className={cn(
-                      "font-semibold text-sm line-clamp-2",
-                      isUnlocked ? rarity.textColor : "text-muted-foreground"
+                    <span className={cn(
+                      "text-xs font-medium",
+                      isUnlocked ? "text-amber-400" : "text-muted-foreground"
                     )}>
-                      {achievement.name}
-                    </h3>
+                      {achievement.points} pts
+                    </span>
+                  </div>
 
-                    {/* Points */}
-                    <div className="flex items-center gap-1 mt-2">
-                      <Sparkles className={cn(
-                        "w-3 h-3",
-                        isUnlocked ? "text-amber-400" : "text-muted-foreground"
-                      )} />
-                      <span className={cn(
-                        "text-xs font-medium",
-                        isUnlocked ? "text-amber-400" : "text-muted-foreground"
-                      )}>
-                        {achievement.points} pts
-                      </span>
-                    </div>
+                  {/* Rarity Badge */}
+                  <span 
+                    className={cn(
+                      "mt-2 text-[10px] px-2 py-0.5 rounded-full border",
+                      isUnlocked 
+                        ? `${rarity.textColor} ${rarity.borderColor}` 
+                        : "text-muted-foreground border-muted"
+                    )}
+                  >
+                    {rarity.label}
+                  </span>
+                </CardContent>
 
-                    {/* Rarity Badge */}
-                    <Badge 
-                      variant="outline" 
-                      className={cn(
-                        "mt-2 text-[10px]",
-                        isUnlocked 
-                          ? `${rarity.textColor} ${rarity.borderColor}` 
-                          : "text-muted-foreground border-muted"
-                      )}
-                    >
-                      {rarity.label}
-                    </Badge>
-                  </CardContent>
-
-                  {/* Legendary Shimmer Effect */}
-                  {isUnlocked && achievement.rarity === "legendary" && (
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                      animate={{ x: ["-100%", "200%"] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                    />
-                  )}
-                </Card>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
+                {/* Legendary Shimmer Effect */}
+                {isUnlocked && achievement.rarity === "legendary" && (
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"
+                    animate={{ x: ["-100%", "200%"] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  />
+                )}
+              </Card>
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* Achievement Detail Modal */}
