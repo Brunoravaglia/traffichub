@@ -91,9 +91,12 @@ const RechargeList = ({ gestorFilter }: RechargeListProps) => {
         return;
       }
 
-      // Google recharge - skip if tipo is "continuo" (recorrente/cartão)
+      // Google recharge - skip if:
+      // - tipo is "continuo" (recorrente/cartão)
+      // - no daily spend configured (means client doesn't use Google Ads)
       const googleTipo = tracking.google_recarga_tipo;
-      if (tracking.google_proxima_recarga && googleTipo !== "continuo") {
+      const googleValorDiario = Number(tracking.google_valor_diario) || 0;
+      if (tracking.google_proxima_recarga && googleTipo !== "continuo" && googleValorDiario > 0) {
         const date = new Date(tracking.google_proxima_recarga);
         const diasRestantes = differenceInDays(date, today);
         
@@ -104,16 +107,20 @@ const RechargeList = ({ gestorFilter }: RechargeListProps) => {
           platform: "google",
           date,
           saldo: Number(tracking.google_saldo) || 0,
-          valorDiario: Number(tracking.google_valor_diario) || 0,
+          valorDiario: googleValorDiario,
           diasRestantes,
           gestorId: cliente.gestor_id,
         });
       }
 
-      // Meta recharge - skip if tipo is "continuo" OR meta_ads_active is false
+      // Meta recharge - skip if:
+      // - tipo is "continuo"
+      // - meta_ads_active is false
+      // - no daily spend configured
       const metaTipo = tracking.meta_recarga_tipo;
       const metaAdsActive = tracking.meta_ads_active;
-      if (tracking.meta_proxima_recarga && metaTipo !== "continuo" && metaAdsActive) {
+      const metaValorDiario = Number(tracking.meta_valor_diario) || 0;
+      if (tracking.meta_proxima_recarga && metaTipo !== "continuo" && metaAdsActive && metaValorDiario > 0) {
         const date = new Date(tracking.meta_proxima_recarga);
         const diasRestantes = differenceInDays(date, today);
         
@@ -124,7 +131,7 @@ const RechargeList = ({ gestorFilter }: RechargeListProps) => {
           platform: "meta",
           date,
           saldo: Number(tracking.meta_saldo) || 0,
-          valorDiario: Number(tracking.meta_valor_diario) || 0,
+          valorDiario: metaValorDiario,
           diasRestantes,
           gestorId: cliente.gestor_id,
         });
