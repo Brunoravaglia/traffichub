@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useGestor } from "@/contexts/GestorContext";
@@ -30,6 +30,8 @@ export const useAchievements = () => {
   const { gestor, sessionDuration } = useGestor();
   const queryClient = useQueryClient();
   const [newlyUnlocked, setNewlyUnlocked] = useState<Achievement | null>(null);
+  const lastCheckRef = useRef<number>(0);
+  const isCheckingRef = useRef<boolean>(false);
 
   // Fetch all achievements
   const { data: achievements = [] } = useQuery({
@@ -42,6 +44,8 @@ export const useAchievements = () => {
       if (error) throw error;
       return data as Achievement[];
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000,
   });
 
   // Fetch unlocked achievements
@@ -57,9 +61,10 @@ export const useAchievements = () => {
       return data.map((ua) => ua.achievement_id);
     },
     enabled: !!gestor?.id,
+    staleTime: 60 * 1000, // 1 minute
   });
 
-  // Fetch gestor stats for achievement checking
+  // Fetch gestor stats for achievement checking - less frequently
   const { data: gestorStats } = useQuery({
     queryKey: ["gestor-stats", gestor?.id],
     queryFn: async (): Promise<GestorStats | null> => {
@@ -129,7 +134,7 @@ export const useAchievements = () => {
       return {
         clientsCount: clientsCount || 0,
         reportsCount,
-        hoursLogged: hoursLogged + Math.floor(sessionDuration / 3600), // Include current session
+        hoursLogged,
         perfectChecklists,
         templatesCreated: templatesCreated || 0,
         profileComplete: gestor.dados_completos,
@@ -138,7 +143,8 @@ export const useAchievements = () => {
       };
     },
     enabled: !!gestor?.id,
-    refetchInterval: 60000, // Refetch every minute
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes instead of 1
   });
 
   // Unlock achievement mutation
@@ -157,15 +163,22 @@ export const useAchievements = () => {
     },
     onSuccess: () => {
       refetchUnlocked();
-      queryClient.invalidateQueries({ queryKey: ["gestor-achievements"] });
     },
   });
 
-  // Check and unlock achievements
+  // Check and unlock achievements - with debounce
   const checkAchievements = useCallback(() => {
     if (!gestor || !gestorStats || !achievements.length) return;
+    if (isCheckingRef.current) return;
+    
+    // Debounce: only check every 30 seconds
+    const now = Date.now();
+    if (now - lastCheckRef.current < 30000) return;
+    lastCheckRef.current = now;
+    isCheckingRef.current = true;
 
     const unlockedSet = new Set(unlockedAchievements);
+    const currentHours = gestorStats.hoursLogged + Math.floor(sessionDuration / 3600);
 
     for (const achievement of achievements) {
       if (unlockedSet.has(achievement.id)) continue;
@@ -189,7 +202,7 @@ export const useAchievements = () => {
           shouldUnlock = gestorStats.reportsCount >= achievement.requirement_value;
           break;
         case "hours_logged":
-          shouldUnlock = gestorStats.hoursLogged >= achievement.requirement_value;
+          shouldUnlock = currentHours >= achievement.requirement_value;
           break;
         case "perfect_checklists":
           shouldUnlock = gestorStats.perfectChecklists >= achievement.requirement_value;
@@ -202,20 +215,22 @@ export const useAchievements = () => {
       if (shouldUnlock) {
         unlockMutation.mutate(achievement.id);
         setNewlyUnlocked(achievement);
-        break; // Only show one at a time
+        isCheckingRef.current = false;
+        return; // Only show one at a time
       }
     }
-  }, [gestor, gestorStats, achievements, unlockedAchievements, unlockMutation]);
+    
+    isCheckingRef.current = false;
+  }, [gestor?.id, gestorStats, achievements, unlockedAchievements, sessionDuration, unlockMutation]);
 
-  // Check achievements periodically
+  // Check achievements on mount and when stats change significantly
   useEffect(() => {
-    if (!gestor) return;
+    if (!gestor?.id || !gestorStats) return;
 
-    checkAchievements();
-
-    const interval = setInterval(checkAchievements, 30000); // Check every 30 seconds
-    return () => clearInterval(interval);
-  }, [checkAchievements, gestor]);
+    // Initial check after a delay
+    const timer = setTimeout(checkAchievements, 2000);
+    return () => clearTimeout(timer);
+  }, [gestor?.id, gestorStats?.clientsCount, gestorStats?.reportsCount]);
 
   const dismissNewlyUnlocked = useCallback(() => {
     setNewlyUnlocked(null);
