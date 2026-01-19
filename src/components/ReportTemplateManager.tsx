@@ -180,6 +180,7 @@ export function ReportTemplateManager({ onSelectTemplate }: ReportTemplateManage
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["report-templates"] });
+      queryClient.invalidateQueries({ queryKey: ["report-templates-selector"] });
       toast({ title: "Template salvo com sucesso!" });
       setIsDialogOpen(false);
       setEditingTemplate(null);

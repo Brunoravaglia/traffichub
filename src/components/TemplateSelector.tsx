@@ -69,14 +69,22 @@ export function TemplateSelector({ onSelect, selectedTemplateId }: TemplateSelec
   const { data: templates, isLoading } = useQuery({
     queryKey: ["report-templates-selector", gestor?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch templates that are global OR belong to this gestor
+      let query = supabase
         .from("report_templates")
         .select("*")
-        .or(`is_global.eq.true,gestor_id.eq.${gestor?.id}`)
         .order("created_at", { ascending: false });
+      
+      if (gestor?.id) {
+        query = query.or(`is_global.eq.true,gestor_id.eq.${gestor.id}`);
+      } else {
+        query = query.eq("is_global", true);
+      }
+      
+      const { data, error } = await query;
 
       if (error) throw error;
-      return data.map((t) => ({
+      return (data || []).map((t) => ({
         id: t.id,
         nome: t.nome,
         descricao: t.descricao || "",
@@ -85,7 +93,9 @@ export function TemplateSelector({ onSelect, selectedTemplateId }: TemplateSelec
         sections: (t.layout as any)?.sections || DEFAULT_SECTIONS,
       })) as TemplateConfig[];
     },
-    enabled: !!gestor?.id,
+    enabled: true,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   const filteredTemplates = templates?.filter((t) =>
