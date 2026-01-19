@@ -1,5 +1,7 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+
+const SAVE_INTERVAL = 30000; // Save every 30 seconds
 
 interface Gestor {
   id: string;
@@ -43,6 +45,46 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const [sessionDuration, setSessionDuration] = useState(0);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
+  const lastSavedDurationRef = useRef<number>(0);
+  const saveIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Function to save session duration to database
+  const saveSessionDuration = useCallback(async (isLogout = false) => {
+    const currentSessionId = sessionStorage.getItem("vcd_session_id");
+    const currentSessionStart = sessionStorage.getItem("vcd_session_start");
+    
+    if (!currentSessionId || !currentSessionStart) return;
+
+    const startTime = new Date(currentSessionStart);
+    const now = new Date();
+    const durationSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+
+    // Don't save if duration hasn't changed significantly (at least 10 seconds difference)
+    if (!isLogout && Math.abs(durationSeconds - lastSavedDurationRef.current) < 10) {
+      return;
+    }
+
+    lastSavedDurationRef.current = durationSeconds;
+
+    try {
+      const updateData: Record<string, unknown> = {
+        duration_seconds: durationSeconds,
+      };
+
+      if (isLogout) {
+        updateData.logout_at = now.toISOString();
+      }
+
+      await supabase
+        .from("gestor_sessions")
+        .update(updateData)
+        .eq("id", currentSessionId);
+      
+      console.log(`[Session] Saved duration: ${durationSeconds}s (logout: ${isLogout})`);
+    } catch (error) {
+      console.error("[Session] Error saving duration:", error);
+    }
+  }, []);
 
   // Load from sessionStorage on mount
   useEffect(() => {
@@ -71,7 +113,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // Update session duration every second
+  // Update session duration every second (for display)
   useEffect(() => {
     if (!sessionStartTime) return;
 
@@ -83,6 +125,93 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
 
     return () => clearInterval(interval);
   }, [sessionStartTime]);
+
+  // CRITICAL: Save session duration to database every 30 seconds
+  useEffect(() => {
+    if (!sessionId || !sessionStartTime) {
+      if (saveIntervalRef.current) {
+        clearInterval(saveIntervalRef.current);
+        saveIntervalRef.current = null;
+      }
+      return;
+    }
+
+    // Save immediately when session starts
+    saveSessionDuration();
+
+    // Set up periodic saving
+    saveIntervalRef.current = setInterval(() => {
+      saveSessionDuration();
+    }, SAVE_INTERVAL);
+
+    return () => {
+      if (saveIntervalRef.current) {
+        clearInterval(saveIntervalRef.current);
+        saveIntervalRef.current = null;
+      }
+    };
+  }, [sessionId, sessionStartTime, saveSessionDuration]);
+
+  // Save on visibility change (tab hidden/shown)
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        saveSessionDuration();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [sessionId, saveSessionDuration]);
+
+  // CRITICAL: Save on page unload using sendBeacon for reliability
+  useEffect(() => {
+    if (!sessionId || !sessionStartTime) return;
+
+    const handleBeforeUnload = () => {
+      const storedStart = sessionStorage.getItem("vcd_session_start");
+      const storedSessionId = sessionStorage.getItem("vcd_session_id");
+      
+      if (!storedStart || !storedSessionId) return;
+
+      const startTime = new Date(storedStart);
+      const now = new Date();
+      const durationSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+
+      // Use sendBeacon for reliable data sending even when page is closing
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/gestor_sessions?id=eq.${storedSessionId}`;
+      const headers = {
+        "Content-Type": "application/json",
+        "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        "Prefer": "return=minimal",
+      };
+
+      const data = JSON.stringify({ duration_seconds: durationSeconds });
+      
+      // sendBeacon is the most reliable way to send data on page close
+      const blob = new Blob([data], { type: "application/json" });
+      
+      // Create a FormData-like structure with headers embedded in URL
+      try {
+        // Try fetch with keepalive first (more reliable with headers)
+        fetch(url, {
+          method: "PATCH",
+          headers,
+          body: data,
+          keepalive: true,
+        });
+      } catch {
+        // Fallback: sendBeacon cannot send custom headers, so this is best-effort
+        console.log("[Session] Attempting beacon save on unload");
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [sessionId, sessionStartTime]);
 
   const login = async (gestorId: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
@@ -108,7 +237,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       // Create session
       const { data: sessionData, error: sessionError } = await supabase
         .from("gestor_sessions")
-        .insert({ gestor_id: gestorId })
+        .insert({ gestor_id: gestorId, duration_seconds: 0 })
         .select()
         .single();
 
@@ -135,11 +264,14 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       setSessionId(sessionData.id);
       setSessionStartTime(now);
       setSessionDuration(0);
+      lastSavedDurationRef.current = 0;
 
       sessionStorage.setItem("vcd_gestor_id", gestorId);
       sessionStorage.setItem("vcd_session_id", sessionData.id);
       sessionStorage.setItem("vcd_session_start", now.toISOString());
       sessionStorage.setItem("vcd_unlocked", "true");
+
+      console.log("[Session] Login successful, session created:", sessionData.id);
 
       return { success: true };
     } catch (err) {
@@ -149,29 +281,22 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    if (sessionId && sessionStartTime) {
-      const now = new Date();
-      const durationSeconds = Math.floor((now.getTime() - sessionStartTime.getTime()) / 1000);
-
-      await supabase
-        .from("gestor_sessions")
-        .update({
-          logout_at: now.toISOString(),
-          duration_seconds: durationSeconds,
-        })
-        .eq("id", sessionId);
-    }
+    // Save final duration with logout timestamp
+    await saveSessionDuration(true);
 
     setGestor(null);
     setSessionId(null);
     setSessionStartTime(null);
     setSessionDuration(0);
     setIsFirstLogin(false);
+    lastSavedDurationRef.current = 0;
 
     sessionStorage.removeItem("vcd_gestor_id");
     sessionStorage.removeItem("vcd_session_id");
     sessionStorage.removeItem("vcd_session_start");
     sessionStorage.removeItem("vcd_unlocked");
+
+    console.log("[Session] Logout complete");
   };
 
   const markWelcomeSeen = async () => {
