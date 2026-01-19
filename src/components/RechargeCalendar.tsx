@@ -103,9 +103,12 @@ const RechargeCalendarComponent = ({ gestorFilter }: RechargeCalendarProps) => {
         return;
       }
 
-      // Google recharge - skip if tipo is "continuo" (recorrente/cartão)
+      // Google recharge - skip if:
+      // - tipo is "continuo" (recorrente/cartão)
+      // - no daily spend configured (means client doesn't use Google Ads)
       const googleTipo = tracking.google_recarga_tipo;
-      if (tracking.google_proxima_recarga && googleTipo !== "continuo") {
+      const googleValorDiario = Number(tracking.google_valor_diario) || 0;
+      if (tracking.google_proxima_recarga && googleTipo !== "continuo" && googleValorDiario > 0) {
         allEvents.push({
           clienteId: tracking.cliente_id,
           clienteNome: cliente.nome,
@@ -113,16 +116,20 @@ const RechargeCalendarComponent = ({ gestorFilter }: RechargeCalendarProps) => {
           platform: "google",
           date: new Date(tracking.google_proxima_recarga),
           saldo: Number(tracking.google_saldo) || 0,
-          valorDiario: Number(tracking.google_valor_diario) || 0,
+          valorDiario: googleValorDiario,
           diasRestantes: tracking.google_dias_restantes || 0,
           gestorId: cliente.gestor_id,
         });
       }
 
-      // Meta recharge - skip if tipo is "continuo" OR meta_ads_active is false
+      // Meta recharge - skip if:
+      // - tipo is "continuo"
+      // - meta_ads_active is false
+      // - no daily spend configured
       const metaTipo = tracking.meta_recarga_tipo;
       const metaAdsActive = tracking.meta_ads_active;
-      if (tracking.meta_proxima_recarga && metaTipo !== "continuo" && metaAdsActive) {
+      const metaValorDiario = Number(tracking.meta_valor_diario) || 0;
+      if (tracking.meta_proxima_recarga && metaTipo !== "continuo" && metaAdsActive && metaValorDiario > 0) {
         allEvents.push({
           clienteId: tracking.cliente_id,
           clienteNome: cliente.nome,
@@ -130,7 +137,7 @@ const RechargeCalendarComponent = ({ gestorFilter }: RechargeCalendarProps) => {
           platform: "meta",
           date: new Date(tracking.meta_proxima_recarga),
           saldo: Number(tracking.meta_saldo) || 0,
-          valorDiario: Number(tracking.meta_valor_diario) || 0,
+          valorDiario: metaValorDiario,
           diasRestantes: tracking.meta_dias_restantes || 0,
           gestorId: cliente.gestor_id,
         });
