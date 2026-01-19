@@ -36,9 +36,11 @@ import {
   Mail,
   Users,
   BarChart3,
+  Sparkles,
 } from "lucide-react";
 import VCDLogo from "@/components/VCDLogo";
 import { cn } from "@/lib/utils";
+import TemplateSelector from "@/components/TemplateSelector";
 
 interface Creative {
   id: string;
@@ -236,6 +238,8 @@ const RelatorioCliente = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const rankingInputRef = useRef<HTMLInputElement>(null);
 
+  const [step, setStep] = useState<"template" | "editor">("template");
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | undefined>(undefined);
   const [isPreview, setIsPreview] = useState(false);
   const [periodoInicio, setPeriodoInicio] = useState<Date>(new Date());
   const [periodoFim, setPeriodoFim] = useState<Date>(new Date());
@@ -244,6 +248,88 @@ const RelatorioCliente = () => {
   const [uploadingRanking, setUploadingRanking] = useState(false);
   const [currentPlatform, setCurrentPlatform] = useState<"google" | "meta">("google");
   const [isSaving, setIsSaving] = useState(false);
+
+  // Apply template to report data
+  const applyTemplate = (template: any) => {
+    if (!template) {
+      setStep("editor");
+      return;
+    }
+
+    setSelectedTemplateId(template.id);
+    
+    // Apply sections config from template
+    if (template.sections) {
+      setReportData(prev => ({
+        ...prev,
+        sectionsConfig: {
+          showObjetivos: template.sections.showObjetivos ?? true,
+          showGoogleAds: template.sections.showGoogleAds ?? true,
+          showMetaAds: template.sections.showMetaAds ?? true,
+          showCriativosGoogle: template.sections.showCriativosGoogle ?? true,
+          showCriativosMeta: template.sections.showCriativosMeta ?? true,
+          showResumo: template.sections.showResumo ?? true,
+        },
+        metricsConfig: applyMetricsFromTemplate(template.metrics || []),
+      }));
+    }
+    
+    setStep("editor");
+    toast({ 
+      title: "Modelo aplicado!", 
+      description: `Usando "${template.nome}" como base para o relatório.` 
+    });
+  };
+
+  // Convert template metrics to metricsConfig format
+  const applyMetricsFromTemplate = (metrics: any[]): ReportData["metricsConfig"] => {
+    const config = { ...defaultReportData.metricsConfig };
+    
+    metrics.forEach((metric: any) => {
+      const key = metric.key;
+      const visible = metric.visible;
+      
+      // Map template metric keys to metricsConfig keys
+      if (key === "google_cpl") config.showGoogleCustoPorLead = visible;
+      else if (key === "google_cpm") config.showGoogleCpm = visible;
+      else if (key === "google_ctr") config.showGoogleCtr = visible;
+      else if (key === "google_cpc") config.showGoogleCpc = visible;
+      else if (key === "google_conversoes") config.showGoogleConversoes = visible;
+      else if (key === "google_taxa_conversao") config.showGoogleTaxaConversao = visible;
+      else if (key === "google_roas") config.showGoogleRoas = visible;
+      else if (key === "google_custo_conversao") config.showGoogleCustoConversao = visible;
+      else if (key === "google_alcance") config.showGoogleAlcance = visible;
+      else if (key === "google_frequencia") config.showGoogleFrequencia = visible;
+      else if (key === "google_visualizacoes_video") config.showGoogleVisualizacoesVideo = visible;
+      else if (key === "google_taxa_visualizacao") config.showGoogleTaxaVisualizacao = visible;
+      else if (key === "google_interacoes") config.showGoogleInteracoes = visible;
+      else if (key === "google_taxa_interacao") config.showGoogleTaxaInteracao = visible;
+      else if (key === "meta_cpl") config.showMetaCustoPorLead = visible;
+      else if (key === "meta_cpm") config.showMetaCpm = visible;
+      else if (key === "meta_custo_seguidor") config.showMetaCustoPorSeguidor = visible;
+      else if (key === "meta_cliques") config.showMetaCliques = visible;
+      else if (key === "meta_ctr") config.showMetaCtr = visible;
+      else if (key === "meta_cpc") config.showMetaCpc = visible;
+      else if (key === "meta_alcance") config.showMetaAlcance = visible;
+      else if (key === "meta_frequencia") config.showMetaFrequencia = visible;
+      else if (key === "meta_leads") config.showMetaLeads = visible;
+      else if (key === "meta_conversoes") config.showMetaConversoes = visible;
+      else if (key === "meta_roas") config.showMetaRoas = visible;
+      else if (key === "meta_curtidas_pagina") config.showMetaCurtidasPagina = visible;
+      else if (key === "meta_seguidores") config.showMetaSeguidores = visible;
+      else if (key === "meta_compartilhamentos") config.showMetaCompartilhamentos = visible;
+      else if (key === "meta_salvos") config.showMetaSalvos = visible;
+      else if (key === "meta_comentarios") config.showMetaComentarios = visible;
+      else if (key === "meta_visualizacoes_video") config.showMetaVisualizacoesVideo = visible;
+      else if (key === "meta_retencao_video") config.showMetaRetencaoVideo = visible;
+      else if (key === "meta_mensagens_iniciadas") config.showMetaMensagensIniciadas = visible;
+      else if (key === "meta_respostas_mensagem") config.showMetaRespostasMensagem = visible;
+      else if (key === "meta_agendamentos") config.showMetaAgendamentos = visible;
+      else if (key === "meta_checkins") config.showMetaCheckins = visible;
+    });
+    
+    return config;
+  };
 
   // Fetch client data
   const { data: cliente, isLoading: clienteLoading } = useQuery({
@@ -493,15 +579,74 @@ const RelatorioCliente = () => {
     );
   }
 
+  // Template Selection Step
+  if (step === "template") {
+    return (
+      <div className="min-h-full bg-background">
+        {/* Header */}
+        <div className="sticky top-0 z-50 bg-card/95 backdrop-blur border-b border-border p-4">
+          <div className="max-w-5xl mx-auto flex items-center gap-4">
+            <Button variant="ghost" onClick={() => navigate(-1)}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </Button>
+            <Separator orientation="vertical" className="h-6" />
+            <div className="flex items-center gap-2">
+              <Avatar className="w-8 h-8">
+                <AvatarImage src={cliente?.logo_url || undefined} />
+                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                  {cliente?.nome?.substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className="font-semibold text-foreground">{cliente?.nome}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-5xl mx-auto p-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-8"
+          >
+            {/* Hero Section */}
+            <div className="text-center space-y-4 py-8">
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.1 }}
+                className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20"
+              >
+                <Sparkles className="w-10 h-10 text-primary" />
+              </motion.div>
+              <h1 className="text-3xl font-bold text-foreground">
+                Criar Relatório
+              </h1>
+              <p className="text-muted-foreground max-w-lg mx-auto">
+                Escolha um modelo para começar rapidamente ou continue sem modelo para personalizar do zero
+              </p>
+            </div>
+
+            {/* Template Selector */}
+            <TemplateSelector
+              onSelect={applyTemplate}
+              selectedTemplateId={selectedTemplateId}
+            />
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-full bg-background">
       {/* Toolbar */}
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur border-b border-border p-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate(-1)}>
+            <Button variant="ghost" onClick={() => setStep("template")}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar
+              Modelos
             </Button>
             <Separator orientation="vertical" className="h-6" />
             <div className="flex items-center gap-2">
