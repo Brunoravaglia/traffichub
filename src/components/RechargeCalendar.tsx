@@ -14,10 +14,9 @@ import {
   startOfWeek,
   endOfWeek,
   isToday,
-  addDays
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +24,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useGestor } from "@/contexts/GestorContext";
 
 interface RechargeEvent {
   clienteId: string;
@@ -36,6 +43,11 @@ interface RechargeEvent {
   saldo: number;
   valorDiario: number;
   diasRestantes: number;
+  gestorId: string;
+}
+
+interface RechargeCalendarProps {
+  gestorFilter?: string;
 }
 
 const formatCurrency = (value: number): string => {
@@ -45,18 +57,19 @@ const formatCurrency = (value: number): string => {
   }).format(value);
 };
 
-const RechargeCalendarComponent = () => {
+const RechargeCalendarComponent = ({ gestorFilter }: RechargeCalendarProps) => {
   const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const { data: rechargeData, isLoading } = useQuery({
-    queryKey: ["recharge-calendar"],
+    queryKey: ["recharge-calendar", gestorFilter],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("client_tracking")
-        .select("*, clientes(id, nome, logo_url)")
+        .select("*, clientes(id, nome, logo_url, gestor_id)")
         .or("google_proxima_recarga.not.is.null,meta_proxima_recarga.not.is.null");
 
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -71,6 +84,11 @@ const RechargeCalendarComponent = () => {
       const cliente = tracking.clientes as any;
       if (!cliente) return;
 
+      // Filter by gestor if specified
+      if (gestorFilter && gestorFilter !== "all" && cliente.gestor_id !== gestorFilter) {
+        return;
+      }
+
       // Google recharge
       if (tracking.google_proxima_recarga) {
         allEvents.push({
@@ -82,6 +100,7 @@ const RechargeCalendarComponent = () => {
           saldo: Number(tracking.google_saldo) || 0,
           valorDiario: Number(tracking.google_valor_diario) || 0,
           diasRestantes: tracking.google_dias_restantes || 0,
+          gestorId: cliente.gestor_id,
         });
       }
 
@@ -96,12 +115,13 @@ const RechargeCalendarComponent = () => {
           saldo: Number(tracking.meta_saldo) || 0,
           valorDiario: Number(tracking.meta_valor_diario) || 0,
           diasRestantes: tracking.meta_dias_restantes || 0,
+          gestorId: cliente.gestor_id,
         });
       }
     });
 
     return allEvents;
-  }, [rechargeData]);
+  }, [rechargeData, gestorFilter]);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);

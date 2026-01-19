@@ -12,7 +12,6 @@ import {
   ArrowRight
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -32,6 +31,11 @@ interface RechargeItem {
   saldo: number;
   valorDiario: number;
   diasRestantes: number;
+  gestorId: string;
+}
+
+interface RechargeListProps {
+  gestorFilter?: string;
 }
 
 const formatCurrency = (value: number): string => {
@@ -41,16 +45,16 @@ const formatCurrency = (value: number): string => {
   }).format(value);
 };
 
-const RechargeList = () => {
+const RechargeList = ({ gestorFilter }: RechargeListProps) => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<"all" | "google" | "meta" | "urgent">("all");
 
   const { data: trackingData, isLoading } = useQuery({
-    queryKey: ["recharge-list"],
+    queryKey: ["recharge-list", gestorFilter],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("client_tracking")
-        .select("*, clientes(id, nome, logo_url)")
+        .select("*, clientes(id, nome, logo_url, gestor_id)")
         .or("google_proxima_recarga.not.is.null,meta_proxima_recarga.not.is.null");
 
       if (error) throw error;
@@ -68,6 +72,11 @@ const RechargeList = () => {
       const cliente = tracking.clientes as any;
       if (!cliente) return;
 
+      // Filter by gestor if specified
+      if (gestorFilter && gestorFilter !== "all" && cliente.gestor_id !== gestorFilter) {
+        return;
+      }
+
       // Google recharge
       if (tracking.google_proxima_recarga) {
         const date = new Date(tracking.google_proxima_recarga);
@@ -82,6 +91,7 @@ const RechargeList = () => {
           saldo: Number(tracking.google_saldo) || 0,
           valorDiario: Number(tracking.google_valor_diario) || 0,
           diasRestantes,
+          gestorId: cliente.gestor_id,
         });
       }
 
@@ -99,13 +109,14 @@ const RechargeList = () => {
           saldo: Number(tracking.meta_saldo) || 0,
           valorDiario: Number(tracking.meta_valor_diario) || 0,
           diasRestantes,
+          gestorId: cliente.gestor_id,
         });
       }
     });
 
     // Sort by days remaining (most urgent first)
     return allRecharges.sort((a, b) => a.diasRestantes - b.diasRestantes);
-  }, [trackingData]);
+  }, [trackingData, gestorFilter]);
 
   const filteredRecharges = useMemo(() => {
     switch (filter) {
