@@ -3,7 +3,7 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { Download, TrendingUp, MousePointer, Eye, Target, Award, Search, DollarSign, AlertTriangle } from "lucide-react";
+import { Download, TrendingUp, MousePointer, Eye, Target, Award, Search, DollarSign, AlertTriangle, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 
@@ -29,6 +29,10 @@ interface RelatorioPDFExportProps {
     alcance_facebook?: number | null;
     edited_at?: string | null;
     edit_count?: number | null;
+    saldo_google?: number | null;
+    saldo_meta?: number | null;
+    google_recarga_tipo?: string | null;
+    meta_recarga_tipo?: string | null;
   };
 }
 
@@ -222,6 +226,19 @@ const RelatorioPDFExport = ({ cliente, relatorio }: RelatorioPDFExportProps) => 
             />
           </div>
 
+          {/* Google Balance */}
+          {relatorio.saldo_google !== null && relatorio.saldo_google !== undefined && relatorio.google_recarga_tipo !== 'continuo' && (
+            <div className="mt-4 p-4 rounded-xl bg-[#4285f4]/10 border border-[#4285f4]/20">
+              <div className="flex items-center gap-2">
+                <Wallet className="w-5 h-5 text-[#4285f4]" />
+                <span className="text-white/60 text-sm">Saldo Restante</span>
+                <span className="text-[#4285f4] font-bold text-lg ml-auto">
+                  {formatCurrency(relatorio.saldo_google)}
+                </span>
+              </div>
+            </div>
+          )}
+
           {relatorio.top_palavras_chaves && relatorio.top_palavras_chaves.length > 0 && (
             <div className="mt-4 p-4 rounded-xl bg-white/5 border border-white/10">
               <p className="text-white/60 text-sm mb-2">Top Palavras-Chave</p>
@@ -285,6 +302,19 @@ const RelatorioPDFExport = ({ cliente, relatorio }: RelatorioPDFExportProps) => 
               color="#1877f2"
             />
           </div>
+
+          {/* Meta Balance */}
+          {relatorio.saldo_meta !== null && relatorio.saldo_meta !== undefined && relatorio.meta_recarga_tipo !== 'continuo' && (
+            <div className="mt-4 p-4 rounded-xl bg-[#1877f2]/10 border border-[#1877f2]/20">
+              <div className="flex items-center gap-2">
+                <Wallet className="w-5 h-5 text-[#1877f2]" />
+                <span className="text-white/60 text-sm">Saldo Restante</span>
+                <span className="text-[#1877f2] font-bold text-lg ml-auto">
+                  {formatCurrency(relatorio.saldo_meta)}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
