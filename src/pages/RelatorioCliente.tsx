@@ -19,6 +19,12 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   ArrowLeft,
   CalendarIcon,
   Download,
@@ -37,10 +43,12 @@ import {
   Users,
   BarChart3,
   Sparkles,
+  FileText,
 } from "lucide-react";
 import VCDLogo from "@/components/VCDLogo";
 import { cn } from "@/lib/utils";
 import TemplateSelector from "@/components/TemplateSelector";
+import { useGestor } from "@/contexts/GestorContext";
 
 interface Creative {
   id: string;
@@ -234,6 +242,7 @@ const RelatorioCliente = () => {
   const { id: clienteId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { gestor } = useGestor();
   const pdfRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const rankingInputRef = useRef<HTMLInputElement>(null);
@@ -248,6 +257,14 @@ const RelatorioCliente = () => {
   const [uploadingRanking, setUploadingRanking] = useState(false);
   const [currentPlatform, setCurrentPlatform] = useState<"google" | "meta">("google");
   const [isSaving, setIsSaving] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  
+  // Save as template dialog state
+  const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+  const [templateDescription, setTemplateDescription] = useState("");
+  const [templateIsGlobal, setTemplateIsGlobal] = useState(false);
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
 
   // Apply template to report data
   const applyTemplate = (template: any) => {
@@ -554,13 +571,80 @@ const RelatorioCliente = () => {
     }
   };
 
-  // Save and export
-  const handleSaveAndExport = async () => {
-    setIsSaving(true);
+  // Export PDF only (saves report automatically first)
+  const handleExport = async () => {
+    setIsExporting(true);
     calculateMetrics();
     await saveReportMutation.mutateAsync();
     await handleExportPDF();
-    setIsSaving(false);
+    setIsExporting(false);
+  };
+
+  // Save current config as template
+  const handleSaveAsTemplate = async () => {
+    if (!templateName.trim()) {
+      toast({ title: "Nome obrigatório", description: "Digite um nome para o modelo", variant: "destructive" });
+      return;
+    }
+
+    setIsSavingTemplate(true);
+    try {
+      // Convert current metricsConfig to template metrics format
+      const metrics = [
+        // Google metrics
+        { key: "google_cliques", label: "Cliques", icon: "click", platform: "google", visible: true },
+        { key: "google_impressoes", label: "Impressões", icon: "eye", platform: "google", visible: true },
+        { key: "google_contatos", label: "Contatos/Leads", icon: "message", platform: "google", visible: true },
+        { key: "google_investido", label: "Investido", icon: "dollar", platform: "google", visible: true },
+        { key: "google_cpl", label: "Custo por Lead", icon: "target", platform: "google", visible: reportData.metricsConfig.showGoogleCustoPorLead },
+        { key: "google_cpm", label: "CPM", icon: "trending", platform: "google", visible: reportData.metricsConfig.showGoogleCpm },
+        { key: "google_ctr", label: "CTR (%)", icon: "percent", platform: "google", visible: reportData.metricsConfig.showGoogleCtr },
+        { key: "google_cpc", label: "CPC", icon: "dollar", platform: "google", visible: reportData.metricsConfig.showGoogleCpc },
+        { key: "google_conversoes", label: "Conversões", icon: "check", platform: "google", visible: reportData.metricsConfig.showGoogleConversoes },
+        { key: "google_roas", label: "ROAS", icon: "trending", platform: "google", visible: reportData.metricsConfig.showGoogleRoas },
+        // Meta metrics
+        { key: "meta_impressoes", label: "Impressões", icon: "eye", platform: "meta", visible: true },
+        { key: "meta_engajamento", label: "Engajamento", icon: "trending", platform: "meta", visible: true },
+        { key: "meta_conversas", label: "Conversas", icon: "message", platform: "meta", visible: true },
+        { key: "meta_investido", label: "Investido", icon: "dollar", platform: "meta", visible: true },
+        { key: "meta_cpl", label: "Custo por Lead", icon: "target", platform: "meta", visible: reportData.metricsConfig.showMetaCustoPorLead },
+        { key: "meta_cpm", label: "CPM", icon: "trending", platform: "meta", visible: reportData.metricsConfig.showMetaCpm },
+        { key: "meta_cliques", label: "Cliques no Link", icon: "click", platform: "meta", visible: reportData.metricsConfig.showMetaCliques },
+        { key: "meta_alcance", label: "Alcance", icon: "users", platform: "meta", visible: reportData.metricsConfig.showMetaAlcance },
+        { key: "meta_leads", label: "Leads", icon: "user-plus", platform: "meta", visible: reportData.metricsConfig.showMetaLeads },
+        { key: "meta_roas", label: "ROAS", icon: "trending", platform: "meta", visible: reportData.metricsConfig.showMetaRoas },
+      ];
+
+      const layoutData = JSON.parse(JSON.stringify({
+        metrics,
+        sections: reportData.sectionsConfig,
+      }));
+
+      const { error } = await supabase
+        .from("report_templates")
+        .insert([{
+          nome: templateName.trim(),
+          descricao: templateDescription.trim(),
+          is_global: templateIsGlobal,
+          gestor_id: gestor?.id,
+          layout: layoutData,
+        }]);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ["report-templates"] });
+      queryClient.invalidateQueries({ queryKey: ["report-templates-selector"] });
+      
+      toast({ title: "Modelo salvo!", description: `"${templateName}" está disponível para uso.` });
+      setSaveTemplateDialogOpen(false);
+      setTemplateName("");
+      setTemplateDescription("");
+      setTemplateIsGlobal(false);
+    } catch (error: any) {
+      toast({ title: "Erro ao salvar modelo", description: error.message, variant: "destructive" });
+    } finally {
+      setIsSavingTemplate(false);
+    }
   };
 
   // Format currency
@@ -663,11 +747,10 @@ const RelatorioCliente = () => {
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              onClick={() => saveReportMutation.mutate()}
-              disabled={saveReportMutation.isPending}
+              onClick={() => setSaveTemplateDialogOpen(true)}
             >
-              <Save className="w-4 h-4 mr-2" />
-              Salvar
+              <FileText className="w-4 h-4 mr-2" />
+              Salvar Modelo
             </Button>
             <Button
               variant={isPreview ? "default" : "outline"}
@@ -677,17 +760,70 @@ const RelatorioCliente = () => {
               }}
             >
               <Eye className="w-4 h-4 mr-2" />
-              {isPreview ? "Editar" : "Preview"}
+              Preview
             </Button>
             <Button 
-              onClick={handleSaveAndExport} 
+              onClick={handleExport} 
               className="bg-primary hover:bg-primary/90"
-              disabled={isSaving}
+              disabled={isExporting}
             >
               <Download className="w-4 h-4 mr-2" />
-              {isSaving ? "Salvando..." : "Salvar e Exportar"}
+              {isExporting ? "Exportando..." : "Exportar"}
             </Button>
           </div>
+
+          {/* Save Template Dialog */}
+          <Dialog open={saveTemplateDialogOpen} onOpenChange={setSaveTemplateDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-primary" />
+                  Salvar como Modelo
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="template-name">Nome do Modelo *</Label>
+                  <Input
+                    id="template-name"
+                    value={templateName}
+                    onChange={(e) => setTemplateName(e.target.value)}
+                    placeholder="Ex: Relatório Mensal E-commerce"
+                    className="bg-secondary/50"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="template-desc">Descrição</Label>
+                  <Textarea
+                    id="template-desc"
+                    value={templateDescription}
+                    onChange={(e) => setTemplateDescription(e.target.value)}
+                    placeholder="Descreva o objetivo deste modelo..."
+                    className="bg-secondary/50 min-h-[80px]"
+                  />
+                </div>
+                <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
+                  <div>
+                    <Label className="text-sm font-medium">Disponível para todos</Label>
+                    <p className="text-xs text-muted-foreground">Outros gestores poderão usar este modelo</p>
+                  </div>
+                  <Switch
+                    checked={templateIsGlobal}
+                    onCheckedChange={setTemplateIsGlobal}
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setSaveTemplateDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleSaveAsTemplate} disabled={isSavingTemplate}>
+                    <Save className="w-4 h-4 mr-2" />
+                    {isSavingTemplate ? "Salvando..." : "Salvar Modelo"}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
