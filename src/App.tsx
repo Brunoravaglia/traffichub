@@ -22,6 +22,7 @@ import Controle from "./pages/Controle";
 import RelatorioCliente from "./pages/RelatorioCliente";
 import SelecionarCliente from "./pages/SelecionarCliente";
 import Modelos from "./pages/Modelos";
+import Conquistas from "./pages/Conquistas";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/controle" element={<AppLayout><Controle /></AppLayout>} />
             <Route path="/relatorio-cliente" element={<AppLayout><SelecionarCliente /></AppLayout>} />
             <Route path="/modelos" element={<AppLayout><Modelos /></AppLayout>} />
+            <Route path="/conquistas" element={<AppLayout><Conquistas /></AppLayout>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

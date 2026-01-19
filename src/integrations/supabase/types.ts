@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          name: string
+          points: number
+          rarity: string
+          requirement_type: string
+          requirement_value: number
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description: string
+          icon?: string
+          id?: string
+          name: string
+          points?: number
+          rarity?: string
+          requirement_type: string
+          requirement_value?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          name?: string
+          points?: number
+          rarity?: string
+          requirement_type?: string
+          requirement_value?: number
+        }
+        Relationships: []
+      }
       checklists: {
         Row: {
           cliente_id: string
@@ -380,6 +419,45 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "clientes_gestor_id_fkey"
+            columns: ["gestor_id"]
+            isOneToOne: false
+            referencedRelation: "gestores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gestor_achievements: {
+        Row: {
+          achievement_id: string
+          gestor_id: string
+          id: string
+          shared_linkedin: boolean | null
+          unlocked_at: string
+        }
+        Insert: {
+          achievement_id: string
+          gestor_id: string
+          id?: string
+          shared_linkedin?: boolean | null
+          unlocked_at?: string
+        }
+        Update: {
+          achievement_id?: string
+          gestor_id?: string
+          id?: string
+          shared_linkedin?: boolean | null
+          unlocked_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gestor_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gestor_achievements_gestor_id_fkey"
             columns: ["gestor_id"]
             isOneToOne: false
             referencedRelation: "gestores"
