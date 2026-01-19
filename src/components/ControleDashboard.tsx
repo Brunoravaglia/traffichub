@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import { startOfMonth, endOfMonth, format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ import {
   Gauge,
   Wallet,
   Clock,
+  Banknote,
 } from "lucide-react";
 
 interface ClientTracking {
@@ -62,6 +64,10 @@ const formatCurrency = (value: number) => {
 };
 
 const ControleDashboard = () => {
+  const now = new Date();
+  const monthStart = startOfMonth(now);
+  const monthEnd = endOfMonth(now);
+
   const { data: trackingData, isLoading } = useQuery({
     queryKey: ["client-tracking-dashboard"],
     queryFn: async () => {
@@ -73,6 +79,25 @@ const ControleDashboard = () => {
         `);
       if (error) throw error;
       return data as ClientTracking[];
+    },
+  });
+
+  // Fetch monthly investment from client_reports
+  const { data: monthlyInvestment } = useQuery({
+    queryKey: ["monthly-investment", format(monthStart, "yyyy-MM")],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("client_reports")
+        .select("google_investido, meta_investido")
+        .gte("periodo_inicio", format(monthStart, "yyyy-MM-dd"))
+        .lte("periodo_fim", format(monthEnd, "yyyy-MM-dd"));
+      
+      if (error) throw error;
+      
+      const totalGoogle = data?.reduce((acc, r) => acc + (Number(r.google_investido) || 0), 0) || 0;
+      const totalMeta = data?.reduce((acc, r) => acc + (Number(r.meta_investido) || 0), 0) || 0;
+      
+      return { google: totalGoogle, meta: totalMeta, total: totalGoogle + totalMeta };
     },
   });
 
@@ -138,11 +163,38 @@ const ControleDashboard = () => {
   return (
     <div className="space-y-6 mb-8">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Monthly Investment - NEW */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0 }}
+        >
+          <Card className="bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border-emerald-500/20">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Investido Este Mês</p>
+                  <p className="text-2xl font-bold text-foreground mt-1">
+                    {formatCurrency(monthlyInvestment?.total || 0)}
+                  </p>
+                  <div className="flex items-center gap-2 mt-2 text-xs">
+                    <span className="text-blue-500">G: {formatCurrency(monthlyInvestment?.google || 0)}</span>
+                    <span className="text-purple-500">M: {formatCurrency(monthlyInvestment?.meta || 0)}</span>
+                  </div>
+                </div>
+                <div className="p-3 rounded-xl bg-emerald-500/10">
+                  <Banknote className="w-6 h-6 text-emerald-500" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
         >
           <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border-blue-500/20">
             <CardContent className="p-4">
@@ -153,8 +205,8 @@ const ControleDashboard = () => {
                     {formatCurrency(totalSaldo)}
                   </p>
                   <div className="flex items-center gap-2 mt-2 text-xs">
-                    <span className="text-blue-500">Google: {formatCurrency(totalGoogleSaldo)}</span>
-                    <span className="text-purple-500">Meta: {formatCurrency(totalMetaSaldo)}</span>
+                    <span className="text-blue-500">G: {formatCurrency(totalGoogleSaldo)}</span>
+                    <span className="text-purple-500">M: {formatCurrency(totalMetaSaldo)}</span>
                   </div>
                 </div>
                 <div className="p-3 rounded-xl bg-blue-500/10">

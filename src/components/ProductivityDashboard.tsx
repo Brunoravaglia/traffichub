@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Clock, TrendingUp, Calendar, Users, Timer, Target, BarChart3 } from "lucide-react";
+import { Clock, TrendingUp, Calendar, Users, Timer, Target, BarChart3, Banknote } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInDays, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -18,6 +18,15 @@ import {
   CartesianGrid,
 } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+};
 
 const formatDuration = (seconds: number): string => {
   if (!seconds || seconds <= 0) return "0min";
@@ -93,6 +102,36 @@ const ProductivityDashboard = () => {
       const { data: allGestores } = await supabase
         .from("gestores")
         .select("id, nome");
+
+      // Fetch gestor's clients
+      const { data: gestorClientes } = await supabase
+        .from("clientes")
+        .select("id")
+        .eq("gestor_id", gestor!.id);
+      
+      const clienteIds = gestorClientes?.map(c => c.id) || [];
+
+      // Fetch investment data for gestor's clients (monthly and accumulated)
+      const monthStart = startOfMonth(now);
+      const monthEnd = endOfMonth(now);
+      
+      const { data: monthlyReports } = await supabase
+        .from("client_reports")
+        .select("google_investido, meta_investido, cliente_id")
+        .in("cliente_id", clienteIds)
+        .gte("periodo_inicio", format(monthStart, "yyyy-MM-dd"))
+        .lte("periodo_fim", format(monthEnd, "yyyy-MM-dd"));
+
+      const { data: allTimeReports } = await supabase
+        .from("client_reports")
+        .select("google_investido, meta_investido, cliente_id")
+        .in("cliente_id", clienteIds);
+
+      const monthlyInvestment = monthlyReports?.reduce((acc, r) => 
+        acc + (Number(r.google_investido) || 0) + (Number(r.meta_investido) || 0), 0) || 0;
+      
+      const totalInvestment = allTimeReports?.reduce((acc, r) => 
+        acc + (Number(r.google_investido) || 0) + (Number(r.meta_investido) || 0), 0) || 0;
 
       // Calculate total time worked (using processed sessions)
       const totalSeconds = processedSessions.reduce(
@@ -172,6 +211,8 @@ const ProductivityDashboard = () => {
         sessionCount: processedSessions.length,
         clientTimeData,
         dailyData,
+        monthlyInvestment,
+        totalInvestment,
         comparison: {
           avgAllGestores,
           ranking,
@@ -214,7 +255,7 @@ const ProductivityDashboard = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -285,6 +326,42 @@ const ProductivityDashboard = () => {
           <p className="text-sm text-muted-foreground">
             de {productivityData?.comparison.totalGestores || 0} gestores
           </p>
+        </motion.div>
+
+        {/* Monthly Investment */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="vcd-card"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+              <Banknote className="w-5 h-5 text-emerald-500" />
+            </div>
+          </div>
+          <p className="text-xl font-bold text-foreground">
+            {formatCurrency(productivityData?.monthlyInvestment || 0)}
+          </p>
+          <p className="text-sm text-muted-foreground">Investido Este Mês</p>
+        </motion.div>
+
+        {/* Total Investment */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="vcd-card"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-amber-500" />
+            </div>
+          </div>
+          <p className="text-xl font-bold text-foreground">
+            {formatCurrency(productivityData?.totalInvestment || 0)}
+          </p>
+          <p className="text-sm text-muted-foreground">Total Acumulado</p>
         </motion.div>
       </div>
 
