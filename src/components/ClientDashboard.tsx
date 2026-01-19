@@ -206,8 +206,15 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
   });
 
   const openEditDialog = () => {
-    setFormData(
-      tracking || {
+    if (tracking) {
+      // Ensure arrays are properly initialized from existing data
+      setFormData({
+        ...tracking,
+        gtm_ids: tracking.gtm_ids || (tracking.gtm_id ? [tracking.gtm_id] : []),
+        ga4_ids: tracking.ga4_ids || (tracking.ga4_id ? [tracking.ga4_id] : []),
+      });
+    } else {
+      setFormData({
         cliente_id: clienteId,
         gtm_id: "",
         gtm_ids: [],
@@ -226,8 +233,8 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
         meta_valor_diario: 0,
         meta_recarga_tipo: "mensal",
         url: "",
-      }
-    );
+      });
+    }
     setIsDialogOpen(true);
   };
 
