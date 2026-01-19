@@ -71,7 +71,21 @@ const RechargeCalendarComponent = ({ gestorFilter }: RechargeCalendarProps) => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data || [];
+      return (data || []) as Array<{
+        cliente_id: string;
+        google_proxima_recarga: string | null;
+        google_recarga_tipo: string | null;
+        google_saldo: number | null;
+        google_valor_diario: number | null;
+        google_dias_restantes: number | null;
+        meta_proxima_recarga: string | null;
+        meta_recarga_tipo: string | null;
+        meta_ads_active: boolean | null;
+        meta_saldo: number | null;
+        meta_valor_diario: number | null;
+        meta_dias_restantes: number | null;
+        clientes: { id: string; nome: string; logo_url: string | null; gestor_id: string } | null;
+      }>;
     },
   });
 
@@ -89,8 +103,9 @@ const RechargeCalendarComponent = ({ gestorFilter }: RechargeCalendarProps) => {
         return;
       }
 
-      // Google recharge
-      if (tracking.google_proxima_recarga) {
+      // Google recharge - skip if tipo is "continuo" (recorrente/cartão)
+      const googleTipo = tracking.google_recarga_tipo;
+      if (tracking.google_proxima_recarga && googleTipo !== "continuo") {
         allEvents.push({
           clienteId: tracking.cliente_id,
           clienteNome: cliente.nome,
@@ -104,8 +119,10 @@ const RechargeCalendarComponent = ({ gestorFilter }: RechargeCalendarProps) => {
         });
       }
 
-      // Meta recharge
-      if (tracking.meta_proxima_recarga) {
+      // Meta recharge - skip if tipo is "continuo" OR meta_ads_active is false
+      const metaTipo = tracking.meta_recarga_tipo;
+      const metaAdsActive = tracking.meta_ads_active;
+      if (tracking.meta_proxima_recarga && metaTipo !== "continuo" && metaAdsActive) {
         allEvents.push({
           clienteId: tracking.cliente_id,
           clienteNome: cliente.nome,

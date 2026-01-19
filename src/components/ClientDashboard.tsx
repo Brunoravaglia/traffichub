@@ -280,12 +280,21 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-foreground">
-                  {formatCurrency(tracking?.google_saldo || 0)}
-                </p>
-                <p className={`text-sm ${googleDiasClass}`}>
-                  {tracking?.google_dias_restantes || 0} dias restantes
-                </p>
+                {tracking?.google_recarga_tipo === "continuo" ? (
+                  <>
+                    <p className="text-2xl font-bold text-green-500">Recorrente</p>
+                    <p className="text-sm text-muted-foreground">Cartão automático</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold text-foreground">
+                      {formatCurrency(tracking?.google_saldo || 0)}
+                    </p>
+                    <p className={`text-sm ${googleDiasClass}`}>
+                      {tracking?.google_dias_restantes || 0} dias restantes
+                    </p>
+                  </>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -305,12 +314,21 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-foreground">
-                  {formatCurrency(tracking?.meta_saldo || 0)}
-                </p>
-                <p className={`text-sm ${metaDiasClass}`}>
-                  {tracking?.meta_dias_restantes || 0} dias restantes
-                </p>
+                {tracking?.meta_recarga_tipo === "continuo" ? (
+                  <>
+                    <p className="text-2xl font-bold text-green-500">Recorrente</p>
+                    <p className="text-sm text-muted-foreground">Cartão automático</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold text-foreground">
+                      {formatCurrency(tracking?.meta_saldo || 0)}
+                    </p>
+                    <p className={`text-sm ${metaDiasClass}`}>
+                      {tracking?.meta_dias_restantes || 0} dias restantes
+                    </p>
+                  </>
+                )}
               </CardContent>
             </Card>
           </motion.div>

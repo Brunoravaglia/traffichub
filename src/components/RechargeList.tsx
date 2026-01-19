@@ -58,7 +58,21 @@ const RechargeList = ({ gestorFilter }: RechargeListProps) => {
         .or("google_proxima_recarga.not.is.null,meta_proxima_recarga.not.is.null");
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as Array<{
+        cliente_id: string;
+        google_proxima_recarga: string | null;
+        google_recarga_tipo: string | null;
+        google_saldo: number | null;
+        google_valor_diario: number | null;
+        google_dias_restantes: number | null;
+        meta_proxima_recarga: string | null;
+        meta_recarga_tipo: string | null;
+        meta_ads_active: boolean | null;
+        meta_saldo: number | null;
+        meta_valor_diario: number | null;
+        meta_dias_restantes: number | null;
+        clientes: { id: string; nome: string; logo_url: string | null; gestor_id: string } | null;
+      }>;
     },
   });
 
@@ -69,7 +83,7 @@ const RechargeList = ({ gestorFilter }: RechargeListProps) => {
     const today = new Date();
 
     trackingData.forEach((tracking) => {
-      const cliente = tracking.clientes as any;
+      const cliente = tracking.clientes;
       if (!cliente) return;
 
       // Filter by gestor if specified
@@ -77,8 +91,9 @@ const RechargeList = ({ gestorFilter }: RechargeListProps) => {
         return;
       }
 
-      // Google recharge
-      if (tracking.google_proxima_recarga) {
+      // Google recharge - skip if tipo is "continuo" (recorrente/cartão)
+      const googleTipo = tracking.google_recarga_tipo;
+      if (tracking.google_proxima_recarga && googleTipo !== "continuo") {
         const date = new Date(tracking.google_proxima_recarga);
         const diasRestantes = differenceInDays(date, today);
         
@@ -95,8 +110,10 @@ const RechargeList = ({ gestorFilter }: RechargeListProps) => {
         });
       }
 
-      // Meta recharge
-      if (tracking.meta_proxima_recarga) {
+      // Meta recharge - skip if tipo is "continuo" OR meta_ads_active is false
+      const metaTipo = tracking.meta_recarga_tipo;
+      const metaAdsActive = tracking.meta_ads_active;
+      if (tracking.meta_proxima_recarga && metaTipo !== "continuo" && metaAdsActive) {
         const date = new Date(tracking.meta_proxima_recarga);
         const diasRestantes = differenceInDays(date, today);
         
