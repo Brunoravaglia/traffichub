@@ -504,20 +504,38 @@ const InputField = ({
   onChange,
   type = "text",
   placeholder,
-}: InputFieldProps) => (
-  <div className="space-y-2">
-    <label className="text-sm font-medium text-foreground flex items-center gap-2">
-      <span className="text-primary">{icon}</span>
-      {label}
-    </label>
-    <Input
-      type={type}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className="h-12 bg-secondary border-border focus:border-primary"
-    />
-  </div>
-);
+}: InputFieldProps) => {
+  // For numeric inputs, we want empty field by default with placeholder showing "0"
+  const isNumeric = type === "number";
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    if (isNumeric) {
+      // Allow empty, digits, and decimal point only
+      if (newValue === "" || /^[0-9]*\.?[0-9]*$/.test(newValue)) {
+        onChange(newValue);
+      }
+    } else {
+      onChange(newValue);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-medium text-foreground flex items-center gap-2">
+        <span className="text-primary">{icon}</span>
+        {label}
+      </label>
+      <Input
+        type="text"
+        inputMode={isNumeric ? "decimal" : "text"}
+        value={value}
+        onChange={handleChange}
+        placeholder={placeholder}
+        className="h-12 bg-secondary border-border focus:border-primary"
+      />
+    </div>
+  );
+};
 
 export default NovoRelatorio;
