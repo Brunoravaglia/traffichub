@@ -611,72 +611,79 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
           </Card>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-        >
-          <Card className="bg-card border-border h-full">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">Próximas Recargas</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {tracking ? (
-                <>
-                  <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-blue-400">Google Ads</span>
-                      <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-blue-500/20 text-xs">
-                        {tracking.google_recarga_tipo === "continuo" ? (
-                          <><RefreshCw className="w-3 h-3 mr-1" /> Contínuo</>
-                        ) : tracking.google_recarga_tipo === "semanal" ? (
-                          "Semanal"
-                        ) : (
-                          "Mensal"
-                        )}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Próxima recarga: {tracking.google_proxima_recarga
-                        ? format(new Date(tracking.google_proxima_recarga), "dd/MM/yyyy")
-                        : "-"}
-                    </p>
-                    <p className={`text-lg font-bold ${googleDiasClass}`}>
-                      {tracking.google_dias_restantes} dias restantes
-                    </p>
-                  </div>
+        {/* Only show Próximas Recargas if client has any ads platform */}
+        {(hasGoogleAds || hasMetaAds) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+          >
+            <Card className="bg-card border-border h-full">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Próximas Recargas</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {tracking ? (
+                  <>
+                    {hasGoogleAds && (
+                      <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-blue-400">Google Ads</span>
+                          <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-blue-500/20 text-xs">
+                            {tracking.google_recarga_tipo === "continuo" ? (
+                              <><RefreshCw className="w-3 h-3 mr-1" /> Contínuo</>
+                            ) : tracking.google_recarga_tipo === "semanal" ? (
+                              "Semanal"
+                            ) : (
+                              "Mensal"
+                            )}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Próxima recarga: {tracking.google_proxima_recarga
+                            ? format(new Date(tracking.google_proxima_recarga), "dd/MM/yyyy")
+                            : "-"}
+                        </p>
+                        <p className={`text-lg font-bold ${googleDiasClass}`}>
+                          {tracking.google_dias_restantes} dias restantes
+                        </p>
+                      </div>
+                    )}
 
-                  <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-purple-400">Meta Ads</span>
-                      <Badge variant="secondary" className="bg-purple-500/10 text-purple-600 border-purple-500/20 text-xs">
-                        {tracking.meta_recarga_tipo === "continuo" ? (
-                          <><RefreshCw className="w-3 h-3 mr-1" /> Contínuo</>
-                        ) : tracking.meta_recarga_tipo === "semanal" ? (
-                          "Semanal"
-                        ) : (
-                          "Mensal"
-                        )}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Próxima recarga: {tracking.meta_proxima_recarga
-                        ? format(new Date(tracking.meta_proxima_recarga), "dd/MM/yyyy")
-                        : "-"}
-                    </p>
-                    <p className={`text-lg font-bold ${metaDiasClass}`}>
-                      {tracking.meta_dias_restantes} dias restantes
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <p className="text-center text-muted-foreground py-6">
-                  Configure o tracking para ver as próximas recargas
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
+                    {hasMetaAds && (
+                      <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-purple-400">Meta Ads</span>
+                          <Badge variant="secondary" className="bg-purple-500/10 text-purple-600 border-purple-500/20 text-xs">
+                            {tracking.meta_recarga_tipo === "continuo" ? (
+                              <><RefreshCw className="w-3 h-3 mr-1" /> Contínuo</>
+                            ) : tracking.meta_recarga_tipo === "semanal" ? (
+                              "Semanal"
+                            ) : (
+                              "Mensal"
+                            )}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Próxima recarga: {tracking.meta_proxima_recarga
+                            ? format(new Date(tracking.meta_proxima_recarga), "dd/MM/yyyy")
+                            : "-"}
+                        </p>
+                        <p className={`text-lg font-bold ${metaDiasClass}`}>
+                          {tracking.meta_dias_restantes} dias restantes
+                        </p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-center text-muted-foreground py-6">
+                    Configure o tracking para ver as próximas recargas
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
       </div>
     </div>
   );
