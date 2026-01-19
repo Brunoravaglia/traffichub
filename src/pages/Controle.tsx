@@ -7,7 +7,7 @@ import ControleDashboard from "@/components/ControleDashboard";
 const Controle = () => {
   return (
     <div className="min-h-full bg-background p-6">
-      <div className="max-w-full mx-auto">
+      <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
