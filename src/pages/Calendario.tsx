@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Users } from "lucide-react";
+import { Calendar, Users, StickyNote } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useGestor } from "@/contexts/GestorContext";
@@ -11,12 +11,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RechargeCalendarComponent from "@/components/RechargeCalendar";
 import RechargeList from "@/components/RechargeList";
+import CalendarNotes from "@/components/CalendarNotes";
 
-const Recargas = () => {
+const Calendario = () => {
   const { gestor } = useGestor();
   const [selectedGestor, setSelectedGestor] = useState<string>(gestor?.id || "all");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
   // Fetch all gestores for filter
   const { data: gestores } = useQuery({
@@ -43,10 +46,10 @@ const Recargas = () => {
             <div>
               <h1 className="text-2xl font-bold text-foreground flex items-center gap-3 mb-1">
                 <Calendar className="w-7 h-7 text-primary" />
-                Calendário de Recargas
+                Calendário
               </h1>
               <p className="text-muted-foreground text-sm">
-                Visualize todas as recargas programadas dos seus clientes
+                Visualize recargas e notas do seu calendário
               </p>
             </div>
 
@@ -74,12 +77,38 @@ const Recargas = () => {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Calendar */}
           <div className="lg:col-span-2">
-            <RechargeCalendarComponent gestorFilter={selectedGestor} />
+            <RechargeCalendarComponent 
+              gestorFilter={selectedGestor} 
+              onDateSelect={setSelectedDate}
+              selectedDate={selectedDate}
+            />
           </div>
 
-          {/* Sidebar - Next Recharges */}
-          <div className="lg:col-span-1">
-            <RechargeList gestorFilter={selectedGestor} />
+          {/* Sidebar - Tabs for Recharges and Notes */}
+          <div className="lg:col-span-1 space-y-6">
+            <Tabs defaultValue="recargas" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-secondary">
+                <TabsTrigger value="recargas" className="gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Recargas
+                </TabsTrigger>
+                <TabsTrigger value="notas" className="gap-2">
+                  <StickyNote className="w-4 h-4" />
+                  Notas
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="recargas" className="mt-4">
+                <RechargeList gestorFilter={selectedGestor} />
+              </TabsContent>
+              <TabsContent value="notas" className="mt-4">
+                <div className="vcd-card p-4">
+                  <CalendarNotes 
+                    selectedDate={selectedDate} 
+                    gestorFilter={selectedGestor}
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </div>
@@ -87,4 +116,4 @@ const Recargas = () => {
   );
 };
 
-export default Recargas;
+export default Calendario;

@@ -11,6 +11,7 @@ import WelcomeModal from "./WelcomeModal";
 import NotificationCenter from "./NotificationCenter";
 import SecurityLockScreen, { LOCK_INTERVAL_MS } from "./SecurityLockScreen";
 import AchievementUnlockOverlay from "./AchievementUnlockOverlay";
+import CalendarReminders from "./CalendarReminders";
 import { useGestor } from "@/contexts/GestorContext";
 import { useAchievements } from "@/hooks/useAchievements";
 import { supabase } from "@/integrations/supabase/client";
@@ -203,6 +204,9 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         achievement={newlyUnlocked}
         onClose={dismissNewlyUnlocked}
       />
+
+      {/* Calendar Reminders */}
+      <CalendarReminders />
     </SidebarProvider>
   );
 };
