@@ -58,6 +58,22 @@ const NovoRelatorio = () => {
     enabled: !!id,
   });
 
+  // Fetch client tracking data for balance info
+  const { data: clientTracking } = useQuery({
+    queryKey: ["client_tracking", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("client_tracking")
+        .select("google_saldo, meta_saldo, google_recarga_tipo, meta_recarga_tipo")
+        .eq("cliente_id", id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
   // Check for existing report on date change
   const { data: existingReport } = useQuery({
     queryKey: ["relatorio", id, format(selectedDate, "yyyy-MM-dd")],
@@ -211,6 +227,11 @@ const NovoRelatorio = () => {
     alcance_facebook: parseInt(alcanceFacebook) || 0,
     edited_at: isEditing ? new Date().toISOString() : null,
     edit_count: isEditing ? editCount + 1 : 0,
+    // Balance info from client tracking
+    saldo_google: clientTracking?.google_saldo ?? null,
+    saldo_meta: clientTracking?.meta_saldo ?? null,
+    google_recarga_tipo: clientTracking?.google_recarga_tipo ?? null,
+    meta_recarga_tipo: clientTracking?.meta_recarga_tipo ?? null,
   };
 
   return (
