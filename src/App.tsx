@@ -25,6 +25,7 @@ import Modelos from "./pages/Modelos";
 import Conquistas from "./pages/Conquistas";
 import Produtividade from "./pages/Produtividade";
 import PrevisaoSaldo from "./pages/PrevisaoSaldo";
+import Recargas from "./pages/Recargas";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +61,7 @@ const App = () => (
             <Route path="/conquistas" element={<AppLayout><Conquistas /></AppLayout>} />
             <Route path="/produtividade" element={<AppLayout><Produtividade /></AppLayout>} />
             <Route path="/previsao-saldo" element={<AppLayout><PrevisaoSaldo /></AppLayout>} />
+            <Route path="/recargas" element={<AppLayout><Recargas /></AppLayout>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

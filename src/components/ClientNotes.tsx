@@ -46,14 +46,14 @@ const ClientNotes = ({ clienteId }: ClientNotesProps) => {
     queryKey: ["client-notes", clienteId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("client_notes")
+        .from("client_notes" as any)
         .select("*, gestores(nome, foto_url)")
         .eq("cliente_id", clienteId)
         .order("is_pinned", { ascending: false })
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as Note[];
+      return (data || []) as unknown as Note[];
     },
     enabled: !!clienteId,
   });
@@ -61,7 +61,7 @@ const ClientNotes = ({ clienteId }: ClientNotesProps) => {
   // Add note mutation
   const addNoteMutation = useMutation({
     mutationFn: async (data: { content: string; type: string }) => {
-      const { error } = await supabase.from("client_notes").insert({
+      const { error } = await supabase.from("client_notes" as any).insert({
         cliente_id: clienteId,
         gestor_id: gestor!.id,
         content: data.content,
@@ -84,7 +84,7 @@ const ClientNotes = ({ clienteId }: ClientNotesProps) => {
   const updateNoteMutation = useMutation({
     mutationFn: async ({ id, content }: { id: string; content: string }) => {
       const { error } = await supabase
-        .from("client_notes")
+        .from("client_notes" as any)
         .update({ content, updated_at: new Date().toISOString() })
         .eq("id", id);
       if (error) throw error;
@@ -102,7 +102,7 @@ const ClientNotes = ({ clienteId }: ClientNotesProps) => {
   const pinNoteMutation = useMutation({
     mutationFn: async ({ id, isPinned }: { id: string; isPinned: boolean }) => {
       const { error } = await supabase
-        .from("client_notes")
+        .from("client_notes" as any)
         .update({ is_pinned: isPinned })
         .eq("id", id);
       if (error) throw error;
@@ -115,7 +115,7 @@ const ClientNotes = ({ clienteId }: ClientNotesProps) => {
   // Delete note mutation
   const deleteNoteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("client_notes").delete().eq("id", id);
+      const { error } = await supabase.from("client_notes" as any).delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
