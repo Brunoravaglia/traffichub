@@ -463,7 +463,10 @@ const Conquistas = () => {
 
       {/* Achievement Detail Modal */}
       <Dialog open={!!selectedAchievement} onOpenChange={() => setSelectedAchievement(null)}>
-        <DialogContent className="sm:max-w-lg overflow-hidden p-0">
+        <DialogContent className="sm:max-w-lg overflow-hidden p-0" aria-describedby={undefined}>
+          <DialogHeader className="sr-only">
+            <DialogTitle>{selectedAchievement?.name || "Conquista"}</DialogTitle>
+          </DialogHeader>
           {selectedAchievement && (
             <>
               {/* Exportable Card */}
@@ -474,41 +477,13 @@ const Conquistas = () => {
                   "bg-gradient-to-br",
                   rarityConfig[selectedAchievement.rarity].color
                 )}>
-                  {/* Animated particles */}
-                  <div className="absolute inset-0">
-                    {[...Array(10)].map((_, i) => (
-                      <motion.div
-                        key={i}
-                        className="absolute w-1 h-1 rounded-full bg-white/30"
-                        initial={{ 
-                          x: Math.random() * 100 + "%", 
-                          y: Math.random() * 100 + "%"
-                        }}
-                        animate={{ 
-                          y: [null, "-50%"],
-                          opacity: [0, 1, 0],
-                        }}
-                        transition={{ 
-                          duration: 2 + Math.random() * 2, 
-                          repeat: Infinity,
-                          delay: Math.random() * 2,
-                        }}
-                      />
-                    ))}
-                  </div>
-
                   <div className="relative flex items-center gap-4">
-                    <motion.div
-                      initial={{ scale: 0, rotate: -180 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ type: "spring", stiffness: 200 }}
-                      className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"
-                    >
+                    <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
                       {(() => {
                         const IconComponent = getIcon(selectedAchievement.icon);
                         return <IconComponent className="w-10 h-10 text-white" />;
                       })()}
-                    </motion.div>
+                    </div>
 
                     <div className="flex-1">
                       <Badge className="bg-white/20 text-white border-white/30 mb-2">

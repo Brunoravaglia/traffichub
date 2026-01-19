@@ -1,9 +1,10 @@
-import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface ProgressBarProps {
   progress: number;
   size?: "sm" | "md" | "lg";
   showLabel?: boolean;
+  className?: string;
 }
 
 const sizeMap = {
@@ -12,21 +13,19 @@ const sizeMap = {
   lg: "h-4",
 };
 
-const ProgressBar = ({ progress, size = "md", showLabel = true }: ProgressBarProps) => {
+const ProgressBar = ({ progress, size = "md", showLabel = true, className }: ProgressBarProps) => {
   return (
-    <div className="w-full">
+    <div className={cn("w-full", className)}>
       {showLabel && (
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-medium text-muted-foreground">Progresso</span>
           <span className="text-sm font-bold text-primary">{progress}%</span>
         </div>
       )}
-      <div className={`w-full bg-secondary rounded-full overflow-hidden ${sizeMap[size]}`}>
-        <motion.div
-          className="h-full vcd-progress-bar"
-          initial={{ width: 0 }}
-          animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+      <div className={cn("w-full bg-secondary rounded-full overflow-hidden", sizeMap[size])}>
+        <div
+          className="h-full vcd-progress-bar transition-all duration-500 ease-out"
+          style={{ width: `${progress}%` }}
         />
       </div>
     </div>
