@@ -58,6 +58,22 @@ const ProductivityDashboard = () => {
         .lte("login_at", endDate.toISOString())
         .order("login_at", { ascending: true });
 
+      // For sessions without duration_seconds (still active), calculate from login_at
+      const processedSessions = (sessions || []).map(s => {
+        if (s.duration_seconds && s.duration_seconds > 0) {
+          return s;
+        }
+        // Calculate duration for active sessions
+        const loginTime = new Date(s.login_at);
+        const calculatedDuration = Math.floor((now.getTime() - loginTime.getTime()) / 1000);
+        // Cap at 12 hours max for a single session to avoid unrealistic values
+        const maxDuration = 12 * 60 * 60;
+        return {
+          ...s,
+          duration_seconds: Math.min(calculatedDuration, maxDuration),
+        };
+      });
+
       // Fetch client time tracking
       const { data: clientTime } = await supabase
         .from("client_time_tracking")
@@ -78,29 +94,29 @@ const ProductivityDashboard = () => {
         .from("gestores")
         .select("id, nome");
 
-      // Calculate total time worked
-      const totalSeconds = (sessions || []).reduce(
+      // Calculate total time worked (using processed sessions)
+      const totalSeconds = processedSessions.reduce(
         (acc, s) => acc + (s.duration_seconds || 0),
         0
       );
 
       // Calculate average session duration
-      const avgSessionSeconds = sessions?.length
-        ? totalSeconds / sessions.length
+      const avgSessionSeconds = processedSessions.length
+        ? totalSeconds / processedSessions.length
         : 0;
 
       // Calculate daily average
       const daysInPeriod = differenceInDays(endDate, startDate) + 1;
       const dailyAvgSeconds = totalSeconds / daysInPeriod;
 
-      // Generate daily chart data
+      // Generate daily chart data (using processed sessions)
       const dailyData: { date: string; hours: number; sessions: number }[] = [];
       for (let i = 0; i < daysInPeriod; i++) {
         const date = new Date(startDate);
         date.setDate(date.getDate() + i);
         const dateStr = format(date, "yyyy-MM-dd");
         
-        const daySessions = (sessions || []).filter(
+        const daySessions = processedSessions.filter(
           (s) => format(new Date(s.login_at), "yyyy-MM-dd") === dateStr
         );
         
@@ -153,7 +169,7 @@ const ProductivityDashboard = () => {
         totalSeconds,
         avgSessionSeconds,
         dailyAvgSeconds,
-        sessionCount: sessions?.length || 0,
+        sessionCount: processedSessions.length,
         clientTimeData,
         dailyData,
         comparison: {
