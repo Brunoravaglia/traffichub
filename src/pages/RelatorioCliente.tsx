@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
@@ -240,6 +240,8 @@ const defaultReportData: ReportData = {
 
 const RelatorioCliente = () => {
   const { id: clienteId } = useParams();
+  const [searchParams] = useSearchParams();
+  const templateIdFromUrl = searchParams.get("templateId");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { gestor } = useGestor();
@@ -247,8 +249,8 @@ const RelatorioCliente = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const rankingInputRef = useRef<HTMLInputElement>(null);
 
-  const [step, setStep] = useState<"template" | "editor">("template");
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | undefined>(undefined);
+  const [step, setStep] = useState<"template" | "editor">(templateIdFromUrl ? "editor" : "template");
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | undefined>(templateIdFromUrl || undefined);
   const [isPreview, setIsPreview] = useState(false);
   const [periodoInicio, setPeriodoInicio] = useState<Date>(new Date());
   const [periodoFim, setPeriodoFim] = useState<Date>(new Date());
@@ -265,6 +267,29 @@ const RelatorioCliente = () => {
   const [templateDescription, setTemplateDescription] = useState("");
   const [templateIsGlobal, setTemplateIsGlobal] = useState(false);
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+
+  // Fetch and auto-apply template from URL
+  const { data: urlTemplate } = useQuery({
+    queryKey: ["template-from-url", templateIdFromUrl],
+    queryFn: async () => {
+      if (!templateIdFromUrl) return null;
+      const { data, error } = await supabase
+        .from("report_templates")
+        .select("*")
+        .eq("id", templateIdFromUrl)
+        .single();
+      if (error) throw error;
+      return {
+        id: data.id,
+        nome: data.nome,
+        descricao: data.descricao || "",
+        is_global: data.is_global,
+        metrics: (data.layout as any)?.metrics || [],
+        sections: (data.layout as any)?.sections || {},
+      };
+    },
+    enabled: !!templateIdFromUrl,
+  });
 
   // Apply template to report data
   const applyTemplate = (template: any) => {
@@ -297,6 +322,14 @@ const RelatorioCliente = () => {
       description: `Usando "${template.nome}" como base para o relatório.` 
     });
   };
+
+  // Auto-apply template when loaded from URL
+  useEffect(() => {
+    if (urlTemplate && templateIdFromUrl) {
+      applyTemplate(urlTemplate);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlTemplate, templateIdFromUrl]);
 
   // Convert template metrics to metricsConfig format
   const applyMetricsFromTemplate = (metrics: any[]): ReportData["metricsConfig"] => {

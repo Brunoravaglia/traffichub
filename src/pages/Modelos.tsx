@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +34,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   FileText,
   Globe,
   User,
@@ -49,6 +59,9 @@ import {
   Trash2,
   Save,
   LayoutTemplate,
+  Filter,
+  Users,
+  ChevronRight,
 } from "lucide-react";
 import { useGestor } from "@/contexts/GestorContext";
 import { cn } from "@/lib/utils";
@@ -108,10 +121,17 @@ const DEFAULT_SECTIONS = {
 type PlatformFilter = "all" | "google" | "meta";
 
 const Modelos = () => {
+  const navigate = useNavigate();
   const { gestor } = useGestor();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  
+  // Client selection modal
+  const [clientSelectOpen, setClientSelectOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateConfig | null>(null);
+  const [clientSearch, setClientSearch] = useState("");
+  const [selectedGestorId, setSelectedGestorId] = useState<string>("all");
   const [platformFilter, setPlatformFilter] = useState<PlatformFilter>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -212,6 +232,62 @@ const Modelos = () => {
       toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
     },
   });
+
+  // Fetch gestores for client filter
+  const { data: allGestores } = useQuery({
+    queryKey: ["gestores-filter-modelos"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("gestores")
+        .select("id, nome, foto_url")
+        .order("nome");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch clients for selection modal
+  const gestorFilter = selectedGestorId !== "all" ? selectedGestorId : null;
+  const { data: clientes, isLoading: clientesLoading } = useQuery({
+    queryKey: ["clientes-modelos", gestorFilter],
+    queryFn: async () => {
+      let query = supabase
+        .from("clientes")
+        .select("id, nome, logo_url, gestor_id")
+        .order("nome");
+
+      if (gestorFilter) {
+        query = query.eq("gestor_id", gestorFilter);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const filteredClientes = clientes?.filter((c) =>
+    c.nome.toLowerCase().includes(clientSearch.toLowerCase())
+  );
+
+  // Handle using a template - opens client selection
+  const handleUseTemplate = (template: TemplateConfig) => {
+    setSelectedTemplate(template);
+    setClientSearch("");
+    // Set filter to logged gestor by default
+    if (gestor?.id) {
+      setSelectedGestorId(gestor.id);
+    }
+    setClientSelectOpen(true);
+  };
+
+  // Navigate to report creation with template
+  const handleSelectClient = (clienteId: string) => {
+    if (selectedTemplate?.id) {
+      navigate(`/cliente/${clienteId}/enviar-relatorio?templateId=${selectedTemplate.id}`);
+    }
+    setClientSelectOpen(false);
+  };
 
   const filteredTemplates = templates?.filter((t) => {
     const matchesSearch = t.nome.toLowerCase().includes(search.toLowerCase()) ||
@@ -569,6 +645,17 @@ const Modelos = () => {
                           </span>
                         </div>
                       </div>
+
+                      {/* Use Template Button */}
+                      <Button
+                        onClick={() => handleUseTemplate(template)}
+                        className="w-full mt-2 gap-2"
+                        size="sm"
+                      >
+                        <FileText className="w-4 h-4" />
+                        Usar este modelo
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                 </motion.div>
@@ -744,6 +831,115 @@ const Modelos = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Client Selection Modal */}
+      <Dialog open={clientSelectOpen} onOpenChange={setClientSelectOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-primary" />
+              Selecionar Cliente
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              Escolha o cliente para criar um relatório com o modelo "{selectedTemplate?.nome}"
+            </p>
+          </DialogHeader>
+
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border">
+            <div className="flex items-center gap-3 flex-1">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <Select
+                value={selectedGestorId}
+                onValueChange={setSelectedGestorId}
+              >
+                <SelectTrigger className="w-[180px] bg-background">
+                  <SelectValue placeholder="Gestor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      <span>Todos</span>
+                    </div>
+                  </SelectItem>
+                  {allGestores?.map((g) => (
+                    <SelectItem key={g.id} value={g.id}>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="w-4 h-4">
+                          <AvatarImage src={g.foto_url || undefined} />
+                          <AvatarFallback className="text-[8px] bg-primary/10 text-primary">
+                            {g.nome.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{g.nome}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar cliente..."
+                value={clientSearch}
+                onChange={(e) => setClientSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          {/* Client List */}
+          <div className="flex-1 overflow-y-auto py-2">
+            {clientesLoading ? (
+              <div className="flex justify-center py-12">
+                <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+              </div>
+            ) : filteredClientes && filteredClientes.length > 0 ? (
+              <div className="grid sm:grid-cols-2 gap-3">
+                {filteredClientes.map((cliente, index) => (
+                  <motion.div
+                    key={cliente.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                  >
+                    <Card
+                      className="cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all group"
+                      onClick={() => handleSelectClient(cliente.id)}
+                    >
+                      <CardContent className="p-3 flex items-center gap-3">
+                        <Avatar className="w-10 h-10 group-hover:scale-105 transition-transform">
+                          <AvatarImage src={cliente.logo_url || undefined} />
+                          <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                            {cliente.nome.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground truncate">
+                            {cliente.nome}
+                          </p>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            Criar relatório
+                            <ChevronRight className="w-3 h-3" />
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>Nenhum cliente encontrado</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
