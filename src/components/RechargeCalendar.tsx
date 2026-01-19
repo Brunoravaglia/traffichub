@@ -48,6 +48,8 @@ interface RechargeEvent {
 
 interface RechargeCalendarProps {
   gestorFilter?: string;
+  onDateSelect?: (date: Date) => void;
+  selectedDate?: Date;
 }
 
 const formatCurrency = (value: number): string => {
@@ -57,9 +59,18 @@ const formatCurrency = (value: number): string => {
   }).format(value);
 };
 
-const RechargeCalendarComponent = ({ gestorFilter }: RechargeCalendarProps) => {
+const RechargeCalendarComponent = ({ gestorFilter, onDateSelect, selectedDate: externalSelectedDate }: RechargeCalendarProps) => {
   const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [internalSelectedDate, setInternalSelectedDate] = useState<Date | undefined>(externalSelectedDate);
+
+  // Sync with external selected date
+  const selectedDate = externalSelectedDate ?? internalSelectedDate;
+
+  const handleDateSelect = (date: Date) => {
+    setInternalSelectedDate(date);
+    onDateSelect?.(date);
+  };
 
   const { data: rechargeData, isLoading } = useQuery({
     queryKey: ["recharge-calendar", gestorFilter],
@@ -230,12 +241,14 @@ const RechargeCalendarComponent = ({ gestorFilter }: RechargeCalendarProps) => {
                 <PopoverTrigger asChild>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
+                    onClick={() => handleDateSelect(day)}
                     className={cn(
                       "min-h-[80px] p-2 rounded-lg border border-transparent transition-all text-left",
                       isCurrentMonth
                         ? "bg-secondary/50 hover:bg-secondary"
                         : "bg-secondary/20 text-muted-foreground",
                       isCurrentDay && "border-primary ring-1 ring-primary",
+                      selectedDate && isSameDay(day, selectedDate) && "ring-2 ring-primary bg-primary/10",
                       dayEvents.length > 0 && "cursor-pointer"
                     )}
                   >

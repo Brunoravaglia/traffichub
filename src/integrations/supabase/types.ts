@@ -53,6 +53,60 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_notes: {
+        Row: {
+          cliente_id: string | null
+          content: string | null
+          created_at: string
+          gestor_id: string
+          has_reminder: boolean | null
+          id: string
+          note_date: string
+          reminder_shown: boolean | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          cliente_id?: string | null
+          content?: string | null
+          created_at?: string
+          gestor_id: string
+          has_reminder?: boolean | null
+          id?: string
+          note_date: string
+          reminder_shown?: boolean | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          cliente_id?: string | null
+          content?: string | null
+          created_at?: string
+          gestor_id?: string
+          has_reminder?: boolean | null
+          id?: string
+          note_date?: string
+          reminder_shown?: boolean | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_notes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_notes_gestor_id_fkey"
+            columns: ["gestor_id"]
+            isOneToOne: false
+            referencedRelation: "gestores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checklists: {
         Row: {
           cliente_id: string
