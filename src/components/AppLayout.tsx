@@ -90,6 +90,9 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             {/* Session Timer */}
             <SessionTimer />
             
+            {/* Notification Center */}
+            <NotificationCenter />
+            
             {/* User Info */}
             {gestor && (
               <div className="flex items-center gap-3">
@@ -121,9 +124,6 @@ const AppLayout = ({ children }: AppLayoutProps) => {
       
       {/* Onboarding Checklist */}
       <OnboardingChecklist />
-      
-      {/* Notification Center */}
-      <NotificationCenter />
       
       {/* Welcome Modal */}
       {gestor && (
