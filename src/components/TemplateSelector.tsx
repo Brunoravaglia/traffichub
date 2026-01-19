@@ -61,10 +61,13 @@ const DEFAULT_SECTIONS = {
   showResumo: true,
 };
 
+type PlatformFilter = "all" | "google" | "meta";
+
 export function TemplateSelector({ onSelect, selectedTemplateId }: TemplateSelectorProps) {
   const { gestor } = useGestor();
   const [search, setSearch] = useState("");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [platformFilter, setPlatformFilter] = useState<PlatformFilter>("all");
 
   const { data: templates, isLoading } = useQuery({
     queryKey: ["report-templates-selector", gestor?.id],
@@ -98,10 +101,28 @@ export function TemplateSelector({ onSelect, selectedTemplateId }: TemplateSelec
     refetchOnMount: true,
   });
 
-  const filteredTemplates = templates?.filter((t) =>
-    t.nome.toLowerCase().includes(search.toLowerCase()) ||
-    t.descricao.toLowerCase().includes(search.toLowerCase())
-  );
+  // Filter templates by search and platform
+  const filteredTemplates = templates?.filter((t) => {
+    const matchesSearch = t.nome.toLowerCase().includes(search.toLowerCase()) ||
+      t.descricao.toLowerCase().includes(search.toLowerCase());
+    
+    if (!matchesSearch) return false;
+    
+    if (platformFilter === "all") return true;
+    
+    // Check if template has metrics for the selected platform
+    const hasGoogle = t.sections?.showGoogleAds || t.metrics?.some(m => m.platform === "google" && m.visible);
+    const hasMeta = t.sections?.showMetaAds || t.metrics?.some(m => m.platform === "meta" && m.visible);
+    
+    if (platformFilter === "google") {
+      return hasGoogle && !hasMeta;
+    }
+    if (platformFilter === "meta") {
+      return hasMeta && !hasGoogle;
+    }
+    
+    return true;
+  });
 
   const getTemplateStats = (template: TemplateConfig) => {
     const googleMetrics = template.metrics?.filter(m => m.platform === "google" && m.visible).length || 0;
@@ -151,28 +172,72 @@ export function TemplateSelector({ onSelect, selectedTemplateId }: TemplateSelec
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
-            <Sparkles className="w-5 h-5 text-primary" />
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
+              <Sparkles className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">Escolha um Modelo</h3>
+              <p className="text-sm text-muted-foreground">
+                Selecione um template para agilizar a criação do relatório
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-lg font-semibold text-foreground">Escolha um Modelo</h3>
-            <p className="text-sm text-muted-foreground">
-              Selecione um template para agilizar a criação do relatório
-            </p>
+
+          {/* Search */}
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar modelos..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 bg-secondary/50 border-border focus:border-primary"
+            />
           </div>
         </div>
 
-        {/* Search */}
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar modelos..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 bg-secondary/50 border-border focus:border-primary"
-          />
+        {/* Platform Filters */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground mr-2">Filtrar por:</span>
+          <div className="flex gap-2">
+            <Button
+              variant={platformFilter === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setPlatformFilter("all")}
+              className={cn(
+                "transition-all",
+                platformFilter === "all" && "bg-primary text-primary-foreground"
+              )}
+            >
+              Ambos
+            </Button>
+            <Button
+              variant={platformFilter === "google" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setPlatformFilter("google")}
+              className={cn(
+                "transition-all",
+                platformFilter === "google" && "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+              )}
+            >
+              <div className="w-2 h-2 rounded-full bg-blue-400 mr-2" />
+              Só Google
+            </Button>
+            <Button
+              variant={platformFilter === "meta" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setPlatformFilter("meta")}
+              className={cn(
+                "transition-all",
+                platformFilter === "meta" && "bg-purple-600 hover:bg-purple-700 text-white border-purple-600"
+              )}
+            >
+              <div className="w-2 h-2 rounded-full bg-purple-400 mr-2" />
+              Só Meta
+            </Button>
+          </div>
         </div>
       </div>
 
