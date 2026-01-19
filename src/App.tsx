@@ -21,6 +21,7 @@ import GestorSettings from "./pages/GestorSettings";
 import Controle from "./pages/Controle";
 import RelatorioCliente from "./pages/RelatorioCliente";
 import SelecionarCliente from "./pages/SelecionarCliente";
+import Modelos from "./pages/Modelos";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/gerencial" element={<AppLayout><DashboardGerencial /></AppLayout>} />
             <Route path="/controle" element={<AppLayout><Controle /></AppLayout>} />
             <Route path="/relatorio-cliente" element={<AppLayout><SelecionarCliente /></AppLayout>} />
+            <Route path="/modelos" element={<AppLayout><Modelos /></AppLayout>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

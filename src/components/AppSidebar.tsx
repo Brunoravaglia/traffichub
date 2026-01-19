@@ -10,6 +10,7 @@ import {
   Settings,
   FileText,
   History,
+  LayoutTemplate,
 } from "lucide-react";
 import {
   Sidebar,
@@ -55,6 +56,7 @@ const AppSidebar = () => {
     ],
     relatorios: [
       { title: "Novo Relatório", icon: Plus, path: "/relatorio-cliente" },
+      { title: "Modelos", icon: LayoutTemplate, path: "/modelos" },
       { title: "Histórico", icon: History, path: "/historico" },
     ],
     gestores: [
