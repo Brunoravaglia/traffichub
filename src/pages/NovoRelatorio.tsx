@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Search, DollarSign, Eye, MousePointer, Target, TrendingUp, Award, Save, Edit3 } from "lucide-react";
+import { ArrowLeft, Search, DollarSign, Eye, MousePointer, Target, TrendingUp, Award, Save, Edit3, Wallet, Clock } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -43,6 +43,12 @@ const NovoRelatorio = () => {
   const [conversoesFacebook, setConversoesFacebook] = useState("");
   const [alcanceFacebook, setAlcanceFacebook] = useState("");
 
+  // Balance info (manual input)
+  const [saldoGoogle, setSaldoGoogle] = useState("");
+  const [diasGoogle, setDiasGoogle] = useState("");
+  const [saldoMeta, setSaldoMeta] = useState("");
+  const [diasMeta, setDiasMeta] = useState("");
+
   const { data: cliente } = useQuery({
     queryKey: ["cliente", id],
     queryFn: async () => {
@@ -50,22 +56,6 @@ const NovoRelatorio = () => {
         .from("clientes")
         .select("*, gestores(nome)")
         .eq("id", id)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
-
-  // Fetch client tracking data for balance info
-  const { data: clientTracking } = useQuery({
-    queryKey: ["client_tracking", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("client_tracking")
-        .select("google_saldo, meta_saldo, google_recarga_tipo, meta_recarga_tipo")
-        .eq("cliente_id", id)
         .maybeSingle();
 
       if (error) throw error;
@@ -227,11 +217,11 @@ const NovoRelatorio = () => {
     alcance_facebook: parseInt(alcanceFacebook) || 0,
     edited_at: isEditing ? new Date().toISOString() : null,
     edit_count: isEditing ? editCount + 1 : 0,
-    // Balance info from client tracking
-    saldo_google: clientTracking?.google_saldo ?? null,
-    saldo_meta: clientTracking?.meta_saldo ?? null,
-    google_recarga_tipo: clientTracking?.google_recarga_tipo ?? null,
-    meta_recarga_tipo: clientTracking?.meta_recarga_tipo ?? null,
+    // Balance info (manual)
+    saldo_google: saldoGoogle ? parseFloat(saldoGoogle) : null,
+    dias_google: diasGoogle ? parseInt(diasGoogle) : null,
+    saldo_meta: saldoMeta ? parseFloat(saldoMeta) : null,
+    dias_meta: diasMeta ? parseInt(diasMeta) : null,
   };
 
   return (
@@ -478,6 +468,79 @@ const NovoRelatorio = () => {
                     type="number"
                     placeholder="0"
                   />
+                </div>
+              </div>
+
+              {/* Balance Section - Optional */}
+              <div className="vcd-card">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                    <Wallet className="w-5 h-5 text-emerald-500" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">
+                      Saldo das Contas
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Deixe em branco para clientes recorrentes/cartão
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Google Balance */}
+                  <div className="space-y-4 p-4 rounded-xl bg-[#4285f4]/5 border border-[#4285f4]/20">
+                    <p className="text-sm font-medium text-[#4285f4] flex items-center gap-2">
+                      <Search className="w-4 h-4" />
+                      Google Ads
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <InputField
+                        icon={<Wallet className="w-4 h-4" />}
+                        label="Saldo (R$)"
+                        value={saldoGoogle}
+                        onChange={setSaldoGoogle}
+                        type="number"
+                        placeholder="0.00"
+                      />
+                      <InputField
+                        icon={<Clock className="w-4 h-4" />}
+                        label="Dias p/ Recarga"
+                        value={diasGoogle}
+                        onChange={setDiasGoogle}
+                        type="number"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Meta Balance */}
+                  <div className="space-y-4 p-4 rounded-xl bg-[#1877f2]/5 border border-[#1877f2]/20">
+                    <p className="text-sm font-medium text-[#1877f2] flex items-center gap-2">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                      </svg>
+                      Meta Ads
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <InputField
+                        icon={<Wallet className="w-4 h-4" />}
+                        label="Saldo (R$)"
+                        value={saldoMeta}
+                        onChange={setSaldoMeta}
+                        type="number"
+                        placeholder="0.00"
+                      />
+                      <InputField
+                        icon={<Clock className="w-4 h-4" />}
+                        label="Dias p/ Recarga"
+                        value={diasMeta}
+                        onChange={setDiasMeta}
+                        type="number"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
