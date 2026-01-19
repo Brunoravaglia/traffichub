@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useGestor } from "@/contexts/GestorContext";
 
@@ -28,12 +28,14 @@ interface GestorStats {
 
 export const useAchievements = () => {
   const { gestor, sessionDuration } = useGestor();
-  const queryClient = useQueryClient();
   const [newlyUnlocked, setNewlyUnlocked] = useState<Achievement | null>(null);
   const lastCheckRef = useRef<number>(0);
   const isCheckingRef = useRef<boolean>(false);
+  const hasInitializedRef = useRef<boolean>(false);
 
-  // Fetch all achievements
+  const gestorId = gestor?.id;
+
+  // Fetch all achievements - with long cache
   const { data: achievements = [] } = useQuery({
     queryKey: ["achievements"],
     queryFn: async () => {
@@ -44,43 +46,45 @@ export const useAchievements = () => {
       if (error) throw error;
       return data as Achievement[];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   // Fetch unlocked achievements
   const { data: unlockedAchievements = [], refetch: refetchUnlocked } = useQuery({
-    queryKey: ["gestor-achievements", gestor?.id],
+    queryKey: ["gestor-achievements", gestorId],
     queryFn: async () => {
-      if (!gestor?.id) return [];
+      if (!gestorId) return [];
       const { data, error } = await supabase
         .from("gestor_achievements")
         .select("achievement_id")
-        .eq("gestor_id", gestor.id);
+        .eq("gestor_id", gestorId);
       if (error) throw error;
       return data.map((ua) => ua.achievement_id);
     },
-    enabled: !!gestor?.id,
-    staleTime: 60 * 1000, // 1 minute
+    enabled: !!gestorId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchOnWindowFocus: false,
   });
 
-  // Fetch gestor stats for achievement checking - less frequently
+  // Fetch gestor stats - less frequently
   const { data: gestorStats } = useQuery({
-    queryKey: ["gestor-stats", gestor?.id],
+    queryKey: ["gestor-stats", gestorId],
     queryFn: async (): Promise<GestorStats | null> => {
-      if (!gestor?.id) return null;
+      if (!gestorId || !gestor) return null;
 
       // Get clients count
       const { count: clientsCount } = await supabase
         .from("clientes")
         .select("*", { count: "exact", head: true })
-        .eq("gestor_id", gestor.id);
+        .eq("gestor_id", gestorId);
 
       // Get reports count
       const { data: clientIds } = await supabase
         .from("clientes")
         .select("id")
-        .eq("gestor_id", gestor.id);
+        .eq("gestor_id", gestorId);
 
       let reportsCount = 0;
       if (clientIds && clientIds.length > 0) {
@@ -95,7 +99,7 @@ export const useAchievements = () => {
       const { data: sessions } = await supabase
         .from("gestor_sessions")
         .select("duration_seconds")
-        .eq("gestor_id", gestor.id);
+        .eq("gestor_id", gestorId);
 
       const totalSeconds = (sessions || []).reduce(
         (sum, s) => sum + (s.duration_seconds || 0),
@@ -129,7 +133,7 @@ export const useAchievements = () => {
       const { count: templatesCreated } = await supabase
         .from("report_templates")
         .select("*", { count: "exact", head: true })
-        .eq("gestor_id", gestor.id);
+        .eq("gestor_id", gestorId);
 
       return {
         clientsCount: clientsCount || 0,
@@ -142,20 +146,24 @@ export const useAchievements = () => {
         firstLogin: !!gestor.first_login_at,
       };
     },
-    enabled: !!gestor?.id,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes instead of 1
+    enabled: !!gestorId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 10 * 60 * 1000, // Refetch every 10 minutes
+    refetchOnWindowFocus: false,
   });
+
+  // Memoize unlocked set to prevent recreating on each render
+  const unlockedSet = useMemo(() => new Set(unlockedAchievements), [unlockedAchievements]);
 
   // Unlock achievement mutation
   const unlockMutation = useMutation({
     mutationFn: async (achievementId: string) => {
-      if (!gestor?.id) throw new Error("No gestor");
+      if (!gestorId) throw new Error("No gestor");
 
       const { error } = await supabase
         .from("gestor_achievements")
         .insert({
-          gestor_id: gestor.id,
+          gestor_id: gestorId,
           achievement_id: achievementId,
         });
 
@@ -166,18 +174,17 @@ export const useAchievements = () => {
     },
   });
 
-  // Check and unlock achievements - with debounce
+  // Check achievements function - stable reference
   const checkAchievements = useCallback(() => {
-    if (!gestor || !gestorStats || !achievements.length) return;
+    if (!gestorId || !gestorStats || !achievements.length) return;
     if (isCheckingRef.current) return;
     
-    // Debounce: only check every 30 seconds
+    // Debounce: only check every 60 seconds
     const now = Date.now();
-    if (now - lastCheckRef.current < 30000) return;
+    if (now - lastCheckRef.current < 60000) return;
     lastCheckRef.current = now;
     isCheckingRef.current = true;
 
-    const unlockedSet = new Set(unlockedAchievements);
     const currentHours = gestorStats.hoursLogged + Math.floor(sessionDuration / 3600);
 
     for (const achievement of achievements) {
@@ -221,16 +228,16 @@ export const useAchievements = () => {
     }
     
     isCheckingRef.current = false;
-  }, [gestor?.id, gestorStats, achievements, unlockedAchievements, sessionDuration, unlockMutation]);
+  }, [gestorId, gestorStats, achievements, unlockedSet, sessionDuration, unlockMutation]);
 
-  // Check achievements on mount and when stats change significantly
+  // Initial check only once when all data is ready
   useEffect(() => {
-    if (!gestor?.id || !gestorStats) return;
-
-    // Initial check after a delay
-    const timer = setTimeout(checkAchievements, 2000);
+    if (!gestorId || !gestorStats || hasInitializedRef.current) return;
+    
+    hasInitializedRef.current = true;
+    const timer = setTimeout(checkAchievements, 3000);
     return () => clearTimeout(timer);
-  }, [gestor?.id, gestorStats?.clientsCount, gestorStats?.reportsCount]);
+  }, [gestorId, gestorStats, checkAchievements]);
 
   const dismissNewlyUnlocked = useCallback(() => {
     setNewlyUnlocked(null);
