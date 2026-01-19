@@ -1,0 +1,414 @@
+import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
+import {
+  DollarSign,
+  TrendingUp,
+  AlertTriangle,
+  CheckCircle2,
+  Users,
+  Gauge,
+  Wallet,
+  Clock,
+} from "lucide-react";
+
+interface ClientTracking {
+  id: string;
+  cliente_id: string;
+  google_saldo: number;
+  google_valor_diario: number;
+  google_dias_restantes: number;
+  meta_saldo: number;
+  meta_valor_diario: number;
+  meta_dias_restantes: number;
+  pixel_installed: boolean;
+  clarity_installed: boolean;
+  meta_ads_active: boolean;
+  clientes?: {
+    nome: string;
+  };
+}
+
+const COLORS = {
+  google: "#4285f4",
+  meta: "#a855f7",
+  success: "#22c55e",
+  warning: "#f59e0b",
+  danger: "#ef4444",
+};
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+
+const ControleDashboard = () => {
+  const { data: trackingData, isLoading } = useQuery({
+    queryKey: ["client-tracking-dashboard"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("client_tracking")
+        .select(`
+          *,
+          clientes(nome)
+        `);
+      if (error) throw error;
+      return data as ClientTracking[];
+    },
+  });
+
+  if (isLoading || !trackingData) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="animate-pulse">
+            <CardContent className="h-28" />
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  // Calculate stats
+  const totalClientes = trackingData.length;
+  const totalGoogleSaldo = trackingData.reduce((acc, t) => acc + (t.google_saldo || 0), 0);
+  const totalMetaSaldo = trackingData.reduce((acc, t) => acc + (t.meta_saldo || 0), 0);
+  const totalSaldo = totalGoogleSaldo + totalMetaSaldo;
+
+  const clientesCriticos = trackingData.filter(
+    (t) => (t.google_dias_restantes <= 3 && t.google_saldo > 0) || 
+           (t.meta_dias_restantes <= 3 && t.meta_saldo > 0)
+  ).length;
+
+  const clientesAtencao = trackingData.filter(
+    (t) => ((t.google_dias_restantes > 3 && t.google_dias_restantes <= 7) && t.google_saldo > 0) || 
+           ((t.meta_dias_restantes > 3 && t.meta_dias_restantes <= 7) && t.meta_saldo > 0)
+  ).length;
+
+  const clientesSaudaveis = totalClientes - clientesCriticos - clientesAtencao;
+
+  // Pie chart data for health status
+  const healthData = [
+    { name: "Saudável", value: clientesSaudaveis, color: COLORS.success },
+    { name: "Atenção", value: clientesAtencao, color: COLORS.warning },
+    { name: "Crítico", value: clientesCriticos, color: COLORS.danger },
+  ].filter(d => d.value > 0);
+
+  // Bar chart data - Top 8 clients by total balance
+  const topClientes = [...trackingData]
+    .map(t => ({
+      nome: t.clientes?.nome?.substring(0, 12) || "Cliente",
+      google: t.google_saldo || 0,
+      meta: t.meta_saldo || 0,
+      total: (t.google_saldo || 0) + (t.meta_saldo || 0),
+    }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 8);
+
+  // Integration stats
+  const pixelInstalado = trackingData.filter(t => t.pixel_installed).length;
+  const clarityInstalado = trackingData.filter(t => t.clarity_installed).length;
+  const metaAtivo = trackingData.filter(t => t.meta_ads_active).length;
+
+  const integrationData = [
+    { name: "Pixel", value: pixelInstalado, total: totalClientes },
+    { name: "Clarity", value: clarityInstalado, total: totalClientes },
+    { name: "Meta Ads", value: metaAtivo, total: totalClientes },
+  ];
+
+  return (
+    <div className="space-y-6 mb-8">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0 }}
+        >
+          <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border-blue-500/20">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Saldo Total</p>
+                  <p className="text-2xl font-bold text-foreground mt-1">
+                    {formatCurrency(totalSaldo)}
+                  </p>
+                  <div className="flex items-center gap-2 mt-2 text-xs">
+                    <span className="text-blue-500">Google: {formatCurrency(totalGoogleSaldo)}</span>
+                    <span className="text-purple-500">Meta: {formatCurrency(totalMetaSaldo)}</span>
+                  </div>
+                </div>
+                <div className="p-3 rounded-xl bg-blue-500/10">
+                  <Wallet className="w-6 h-6 text-blue-500" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/5 border-green-500/20">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Clientes Monitorados</p>
+                  <p className="text-2xl font-bold text-foreground mt-1">{totalClientes}</p>
+                  <div className="flex items-center gap-1 mt-2">
+                    <Badge variant="secondary" className="bg-green-500/10 text-green-600 text-[10px]">
+                      {clientesSaudaveis} OK
+                    </Badge>
+                    {clientesAtencao > 0 && (
+                      <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600 text-[10px]">
+                        {clientesAtencao} Atenção
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <div className="p-3 rounded-xl bg-green-500/10">
+                  <Users className="w-6 h-6 text-green-500" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className={`bg-gradient-to-br ${clientesCriticos > 0 ? 'from-red-500/10 to-orange-500/5 border-red-500/20' : 'from-green-500/10 to-emerald-500/5 border-green-500/20'}`}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Saldo Crítico</p>
+                  <p className="text-2xl font-bold text-foreground mt-1">{clientesCriticos}</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {clientesCriticos > 0 ? "Clientes com ≤3 dias" : "Nenhum cliente crítico"}
+                  </p>
+                </div>
+                <div className={`p-3 rounded-xl ${clientesCriticos > 0 ? 'bg-red-500/10' : 'bg-green-500/10'}`}>
+                  {clientesCriticos > 0 ? (
+                    <AlertTriangle className="w-6 h-6 text-red-500" />
+                  ) : (
+                    <CheckCircle2 className="w-6 h-6 text-green-500" />
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/5 border-purple-500/20">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Gasto Diário Total</p>
+                  <p className="text-2xl font-bold text-foreground mt-1">
+                    {formatCurrency(
+                      trackingData.reduce((acc, t) => acc + (t.google_valor_diario || 0) + (t.meta_valor_diario || 0), 0)
+                    )}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Média por cliente: {formatCurrency(
+                      totalClientes > 0 
+                        ? trackingData.reduce((acc, t) => acc + (t.google_valor_diario || 0) + (t.meta_valor_diario || 0), 0) / totalClientes
+                        : 0
+                    )}
+                  </p>
+                </div>
+                <div className="p-3 rounded-xl bg-purple-500/10">
+                  <TrendingUp className="w-6 h-6 text-purple-500" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Bar Chart - Top Clients by Balance */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="lg:col-span-2"
+        >
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-primary" />
+                Saldo por Cliente
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {topClientes.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={topClientes} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis 
+                      dataKey="nome" 
+                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                      angle={-20}
+                      textAnchor="end"
+                      height={60}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                      tickFormatter={(value) => `R$${value/1000}k`}
+                    />
+                    <Tooltip
+                      formatter={(value: number) => formatCurrency(value)}
+                      labelStyle={{ color: 'hsl(var(--foreground))' }}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Bar dataKey="google" name="Google" fill={COLORS.google} radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="meta" name="Meta" fill={COLORS.meta} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+                  Nenhum dado disponível
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Pie Chart - Health Status */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Gauge className="w-4 h-4 text-primary" />
+                Saúde dos Saldos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {healthData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={healthData}
+                      cx="50%"
+                      cy="45%"
+                      innerRadius={50}
+                      outerRadius={80}
+                      paddingAngle={4}
+                      dataKey="value"
+                    >
+                      {healthData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={36}
+                      formatter={(value, entry: any) => (
+                        <span style={{ color: 'hsl(var(--muted-foreground))', fontSize: '12px' }}>
+                          {value}: {entry.payload.value}
+                        </span>
+                      )}
+                    />
+                    <Tooltip
+                      formatter={(value: number, name: string) => [`${value} clientes`, name]}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+                  Nenhum dado disponível
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Integration Progress */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+      >
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <Clock className="w-4 h-4 text-primary" />
+              Status das Integrações
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {integrationData.map((item) => {
+                const percentage = item.total > 0 ? Math.round((item.value / item.total) * 100) : 0;
+                return (
+                  <div key={item.name} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">{item.name}</span>
+                      <span className="font-medium text-foreground">
+                        {item.value}/{item.total} ({percentage}%)
+                      </span>
+                    </div>
+                    <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${percentage}%` }}
+                        transition={{ duration: 0.8, delay: 0.7 }}
+                        className="h-full bg-primary rounded-full"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  );
+};
+
+export default ControleDashboard;
