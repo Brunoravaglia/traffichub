@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,20 +9,76 @@ import SessionTimer from "./SessionTimer";
 import OnboardingChecklist from "./OnboardingChecklist";
 import WelcomeModal from "./WelcomeModal";
 import NotificationCenter from "./NotificationCenter";
+import SecurityLockScreen, { LOCK_INTERVAL_MS } from "./SecurityLockScreen";
+import AchievementUnlockOverlay from "./AchievementUnlockOverlay";
 import { useGestor } from "@/contexts/GestorContext";
+import { useAchievements } from "@/hooks/useAchievements";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface AppLayoutProps {
   children: React.ReactNode;
 }
 
 const AppLayout = ({ children }: AppLayoutProps) => {
-  const { gestor, isLoggedIn, logout, refreshGestor } = useGestor();
+  const { gestor, isLoggedIn, logout, refreshGestor, sessionId } = useGestor();
   const navigate = useNavigate();
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeShownSession, setWelcomeShownSession] = useState(() => {
     return sessionStorage.getItem("vcd_welcome_shown") === "true";
   });
+  const [isLocked, setIsLocked] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Achievements hook
+  const { newlyUnlocked, dismissNewlyUnlocked } = useAchievements();
+
+  // Check if we need to show lock screen
+  useEffect(() => {
+    if (!isLoggedIn || isPaused) return;
+
+    const checkLock = () => {
+      const lastUnlock = sessionStorage.getItem("vcd_last_unlock");
+      if (!lastUnlock) {
+        sessionStorage.setItem("vcd_last_unlock", Date.now().toString());
+        return;
+      }
+
+      const elapsed = Date.now() - parseInt(lastUnlock, 10);
+      if (elapsed >= LOCK_INTERVAL_MS) {
+        setIsLocked(true);
+      }
+    };
+
+    // Check immediately and then every 30 seconds
+    checkLock();
+    const interval = setInterval(checkLock, 30000);
+
+    return () => clearInterval(interval);
+  }, [isLoggedIn, isPaused]);
+
+  const handleUnlock = useCallback(() => {
+    setIsLocked(false);
+    setIsPaused(false);
+    sessionStorage.setItem("vcd_last_unlock", Date.now().toString());
+  }, []);
+
+  const handleLockTimeout = useCallback(async () => {
+    setIsLocked(false);
+    setIsPaused(true);
+    toast.warning("Sessão pausada por inatividade. Faça login novamente para continuar.");
+    
+    // Update session to mark pause time
+    if (sessionId) {
+      await supabase
+        .from("gestor_sessions")
+        .update({ logout_at: new Date().toISOString() })
+        .eq("id", sessionId);
+    }
+    
+    await logout();
+    navigate("/");
+  }, [logout, navigate, sessionId]);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -133,6 +189,20 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           gestorName={gestor.nome}
         />
       )}
+
+      {/* Security Lock Screen */}
+      {isLocked && (
+        <SecurityLockScreen
+          onUnlock={handleUnlock}
+          onTimeout={handleLockTimeout}
+        />
+      )}
+
+      {/* Achievement Unlock Overlay */}
+      <AchievementUnlockOverlay
+        achievement={newlyUnlocked}
+        onClose={dismissNewlyUnlocked}
+      />
     </SidebarProvider>
   );
 };
