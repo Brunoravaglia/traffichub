@@ -23,6 +23,8 @@ import RelatorioCliente from "./pages/RelatorioCliente";
 import SelecionarCliente from "./pages/SelecionarCliente";
 import Modelos from "./pages/Modelos";
 import Conquistas from "./pages/Conquistas";
+import Produtividade from "./pages/Produtividade";
+import PrevisaoSaldo from "./pages/PrevisaoSaldo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +58,8 @@ const App = () => (
             <Route path="/relatorio-cliente" element={<AppLayout><SelecionarCliente /></AppLayout>} />
             <Route path="/modelos" element={<AppLayout><Modelos /></AppLayout>} />
             <Route path="/conquistas" element={<AppLayout><Conquistas /></AppLayout>} />
+            <Route path="/produtividade" element={<AppLayout><Produtividade /></AppLayout>} />
+            <Route path="/previsao-saldo" element={<AppLayout><PrevisaoSaldo /></AppLayout>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

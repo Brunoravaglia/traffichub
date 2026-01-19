@@ -12,6 +12,8 @@ import {
   History,
   LayoutTemplate,
   Trophy,
+  Timer,
+  Flame,
 } from "lucide-react";
 import {
   Sidebar,
@@ -50,6 +52,8 @@ const AppSidebar = () => {
       { title: "Dashboard", icon: Home, path: "/dashboard" },
       { title: "Gerencial", icon: BarChart3, path: "/gerencial" },
       { title: "Controle", icon: FileText, path: "/controle" },
+      { title: "Produtividade", icon: Timer, path: "/produtividade" },
+      { title: "Previsão Saldo", icon: Flame, path: "/previsao-saldo" },
       { title: "Conquistas", icon: Trophy, path: "/conquistas" },
     ],
     clientes: [
