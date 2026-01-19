@@ -11,6 +11,7 @@ import {
   FileText,
   History,
   LayoutTemplate,
+  Trophy,
 } from "lucide-react";
 import {
   Sidebar,
@@ -49,6 +50,7 @@ const AppSidebar = () => {
       { title: "Dashboard", icon: Home, path: "/dashboard" },
       { title: "Gerencial", icon: BarChart3, path: "/gerencial" },
       { title: "Controle", icon: FileText, path: "/controle" },
+      { title: "Conquistas", icon: Trophy, path: "/conquistas" },
     ],
     clientes: [
       { title: "Ver Clientes", icon: Users, path: "/clientes" },
