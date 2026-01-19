@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Calendar, CreditCard, BarChart3, Palette, User, History, Save, Check, FileText, Settings, LayoutDashboard, ClipboardCheck } from "lucide-react";
+import { ArrowLeft, Calendar, CreditCard, BarChart3, Palette, User, History, Save, Check, FileText, Settings, LayoutDashboard, ClipboardCheck, StickyNote } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import EditClientForm from "./EditClientForm";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,6 +18,7 @@ import ChecklistCard from "./ChecklistCard";
 import PendenciasCard from "./PendenciasCard";
 import ReportCalendar from "./ReportCalendar";
 import ClientDashboard from "./ClientDashboard";
+import ClientNotes from "./ClientNotes";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
@@ -360,6 +361,10 @@ Você Digital - Checklist do Gestor de Tráfego
                 <ClipboardCheck className="w-4 h-4" />
                 Checklist Diário
               </TabsTrigger>
+              <TabsTrigger value="notas" className="gap-2">
+                <StickyNote className="w-4 h-4" />
+                Notas
+              </TabsTrigger>
             </TabsList>
 
             {/* Dados Tab */}
@@ -532,6 +537,11 @@ Você Digital - Checklist do Gestor de Tráfego
                   />
                 </div>
               </div>
+            </TabsContent>
+
+            {/* Notas Tab */}
+            <TabsContent value="notas">
+              <ClientNotes clienteId={id!} />
             </TabsContent>
           </Tabs>
         </div>

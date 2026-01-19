@@ -121,6 +121,54 @@ export type Database = {
           },
         ]
       }
+      client_notes: {
+        Row: {
+          cliente_id: string
+          content: string
+          created_at: string
+          gestor_id: string
+          id: string
+          is_pinned: boolean | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          cliente_id: string
+          content: string
+          created_at?: string
+          gestor_id: string
+          id?: string
+          is_pinned?: boolean | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          cliente_id?: string
+          content?: string
+          created_at?: string
+          gestor_id?: string
+          id?: string
+          is_pinned?: boolean | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_notes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_notes_gestor_id_fkey"
+            columns: ["gestor_id"]
+            isOneToOne: false
+            referencedRelation: "gestores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_reports: {
         Row: {
           cliente_id: string
