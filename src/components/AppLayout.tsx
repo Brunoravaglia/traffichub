@@ -9,11 +9,12 @@ import SessionTimer from "./SessionTimer";
 import OnboardingChecklist from "./OnboardingChecklist";
 import WelcomeModal from "./WelcomeModal";
 import NotificationCenter from "./NotificationCenter";
-import SecurityLockScreen, { LOCK_INTERVAL_MS } from "./SecurityLockScreen";
+import SecurityLockScreen from "./SecurityLockScreen";
 import AchievementUnlockOverlay from "./AchievementUnlockOverlay";
 import CalendarReminders from "./CalendarReminders";
 import { useGestor } from "@/contexts/GestorContext";
 import { useAchievements } from "@/hooks/useAchievements";
+import { useInactivityDetection } from "@/hooks/useInactivityDetection";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -34,35 +35,22 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   // Achievements hook
   const { newlyUnlocked, dismissNewlyUnlocked } = useAchievements();
 
-  // Check if we need to show lock screen
+  // Inactivity detection - triggers lock screen when user is inactive
+  const { isInactive, resetActivity } = useInactivityDetection(isLoggedIn && !isPaused);
+
+  // When inactivity is detected, show lock screen
   useEffect(() => {
-    if (!isLoggedIn || isPaused) return;
-
-    const checkLock = () => {
-      const lastUnlock = sessionStorage.getItem("vcd_last_unlock");
-      if (!lastUnlock) {
-        sessionStorage.setItem("vcd_last_unlock", Date.now().toString());
-        return;
-      }
-
-      const elapsed = Date.now() - parseInt(lastUnlock, 10);
-      if (elapsed >= LOCK_INTERVAL_MS) {
-        setIsLocked(true);
-      }
-    };
-
-    // Check immediately and then every 30 seconds
-    checkLock();
-    const interval = setInterval(checkLock, 30000);
-
-    return () => clearInterval(interval);
-  }, [isLoggedIn, isPaused]);
+    if (isInactive && !isLocked && !isPaused) {
+      setIsLocked(true);
+    }
+  }, [isInactive, isLocked, isPaused]);
 
   const handleUnlock = useCallback(() => {
     setIsLocked(false);
     setIsPaused(false);
-    sessionStorage.setItem("vcd_last_unlock", Date.now().toString());
-  }, []);
+    resetActivity();
+    sessionStorage.setItem("vcd_last_activity", Date.now().toString());
+  }, [resetActivity]);
 
   const handleLockTimeout = useCallback(async () => {
     setIsLocked(false);
