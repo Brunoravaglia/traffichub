@@ -169,6 +169,7 @@ interface ReportData {
     showCriativosGoogle: boolean;
     showCriativosMeta: boolean;
     showResumo: boolean;
+    showSaldoRestante: boolean;
   };
 }
 
@@ -241,6 +242,7 @@ const defaultReportData: ReportData = {
     showCriativosGoogle: true,
     showCriativosMeta: true,
     showResumo: true,
+    showSaldoRestante: true,
   },
 };
 
@@ -317,6 +319,7 @@ const RelatorioCliente = () => {
           showCriativosGoogle: template.sections.showCriativosGoogle ?? true,
           showCriativosMeta: template.sections.showCriativosMeta ?? true,
           showResumo: template.sections.showResumo ?? true,
+          showSaldoRestante: template.sections.showSaldoRestante ?? true,
         },
         metricsConfig: applyMetricsFromTemplate(template.metrics || []),
       }));
@@ -1016,6 +1019,18 @@ const RelatorioCliente = () => {
                       setReportData({
                         ...reportData,
                         sectionsConfig: { ...reportData.sectionsConfig, showResumo: checked },
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Mostrar Saldo Restante</Label>
+                  <Switch
+                    checked={reportData.sectionsConfig.showSaldoRestante}
+                    onCheckedChange={(checked) =>
+                      setReportData({
+                        ...reportData,
+                        sectionsConfig: { ...reportData.sectionsConfig, showSaldoRestante: checked },
                       })
                     }
                   />
@@ -2507,10 +2522,7 @@ const RelatorioCliente = () => {
                 )}
 
                 {/* Balances */}
-                {(reportData.google.saldoRestante > 0 ||
-                  reportData.google.diasParaRecarga > 0 ||
-                  reportData.meta.saldoRestante > 0 ||
-                  reportData.meta.diasParaRecarga > 0) && (
+                {reportData.sectionsConfig.showSaldoRestante && (
                   <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
                     <h3 className="text-lg font-bold mb-3 text-primary tracking-widest">SALDO RESTANTE</h3>
                     <div className="grid grid-cols-2 gap-4 text-sm">
