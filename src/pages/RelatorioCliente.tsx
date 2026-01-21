@@ -71,6 +71,8 @@ interface ReportData {
     impressoes: number;
     contatos: number;
     investido: number;
+    saldoRestante: number;
+    diasParaRecarga: number;
     custoPorLead: number;
     cpm: number;
     ctr: number;
@@ -91,6 +93,8 @@ interface ReportData {
     engajamento: number;
     conversas: number;
     investido: number;
+    saldoRestante: number;
+    diasParaRecarga: number;
     custoPorLead: number;
     cpm: number;
     custoPorSeguidor: number;
@@ -175,11 +179,13 @@ const defaultReportData: ReportData = {
   ],
   google: { 
     cliques: 0, impressoes: 0, contatos: 0, investido: 0, custoPorLead: 0, cpm: 0,
+    saldoRestante: 0, diasParaRecarga: 0,
     ctr: 0, cpc: 0, conversoes: 0, taxaConversao: 0, roas: 0, custoConversao: 0,
     alcance: 0, frequencia: 0, visualizacoesVideo: 0, taxaVisualizacao: 0, interacoes: 0, taxaInteracao: 0
   },
   meta: { 
     impressoes: 0, engajamento: 0, conversas: 0, investido: 0, custoPorLead: 0, cpm: 0, custoPorSeguidor: 0,
+    saldoRestante: 0, diasParaRecarga: 0,
     cliques: 0, ctr: 0, cpc: 0, alcance: 0, frequencia: 0, leads: 0, conversoes: 0, roas: 0,
     curtidasPagina: 0, seguidores: 0, compartilhamentos: 0, salvos: 0, comentarios: 0,
     visualizacoesVideo: 0, retencaoVideo: 0, mensagensIniciadas: 0, respostasMensagem: 0, agendamentos: 0, checkins: 0
@@ -440,6 +446,19 @@ const RelatorioCliente = () => {
           nome: `Relatório ${format(periodoInicio, "MMMM yyyy", { locale: ptBR })}`,
           periodo_inicio: format(periodoInicio, "yyyy-MM-dd"),
           periodo_fim: format(periodoFim, "yyyy-MM-dd"),
+          google_cliques: reportData.google.cliques,
+          google_impressoes: reportData.google.impressoes,
+          google_contatos: reportData.google.contatos,
+          google_investido: reportData.google.investido,
+          google_custo_por_lead: reportData.google.custoPorLead,
+          google_cpm: reportData.google.cpm,
+          meta_impressoes: reportData.meta.impressoes,
+          meta_engajamento: reportData.meta.engajamento,
+          meta_conversas: reportData.meta.conversas,
+          meta_investido: reportData.meta.investido,
+          meta_custo_por_lead: reportData.meta.custoPorLead,
+          meta_cpm: reportData.meta.cpm,
+          meta_custo_por_seguidor: reportData.meta.custoPorSeguidor,
           data_values: dataValues,
         }]);
       
@@ -1991,6 +2010,105 @@ const RelatorioCliente = () => {
               </CardContent>
             </Card>
 
+            {/* Saldos / Recarga */}
+            <Card className="md:col-span-2">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-primary" />
+                  Saldos Restantes
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 text-xs">
+                      <DollarSign className="w-4 h-4 text-muted-foreground" />
+                      Saldo Google (R$)
+                    </Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={reportData.google.saldoRestante}
+                      onChange={(e) =>
+                        setReportData({
+                          ...reportData,
+                          google: {
+                            ...reportData.google,
+                            saldoRestante: parseFloat(e.target.value) || 0,
+                          },
+                        })
+                      }
+                      placeholder="0,00"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 text-xs">
+                      <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                      Dias p/ Recarga Google
+                    </Label>
+                    <Input
+                      type="number"
+                      value={reportData.google.diasParaRecarga}
+                      onChange={(e) =>
+                        setReportData({
+                          ...reportData,
+                          google: {
+                            ...reportData.google,
+                            diasParaRecarga: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 text-xs">
+                      <DollarSign className="w-4 h-4 text-muted-foreground" />
+                      Saldo Meta (R$)
+                    </Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={reportData.meta.saldoRestante}
+                      onChange={(e) =>
+                        setReportData({
+                          ...reportData,
+                          meta: {
+                            ...reportData.meta,
+                            saldoRestante: parseFloat(e.target.value) || 0,
+                          },
+                        })
+                      }
+                      placeholder="0,00"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 text-xs">
+                      <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                      Dias p/ Recarga Meta
+                    </Label>
+                    <Input
+                      type="number"
+                      value={reportData.meta.diasParaRecarga}
+                      onChange={(e) =>
+                        setReportData({
+                          ...reportData,
+                          meta: {
+                            ...reportData.meta,
+                            diasParaRecarga: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Esses valores aparecem no rodapé do Preview/PDF.
+                </p>
+              </CardContent>
+            </Card>
+
             {/* Creatives - Google */}
             <Card>
               <CardHeader>
@@ -2385,6 +2503,53 @@ const RelatorioCliente = () => {
                       Resumo geral dos resultados
                     </h3>
                     <p className="text-gray-300 leading-relaxed text-sm">{reportData.resumo}</p>
+                  </div>
+                )}
+
+                {/* Balances */}
+                {(reportData.google.saldoRestante > 0 ||
+                  reportData.google.diasParaRecarga > 0 ||
+                  reportData.meta.saldoRestante > 0 ||
+                  reportData.meta.diasParaRecarga > 0) && (
+                  <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
+                    <h3 className="text-lg font-bold mb-3 text-primary tracking-widest">SALDO RESTANTE</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      {(reportData.google.saldoRestante > 0 || reportData.google.diasParaRecarga > 0) && (
+                        <div className="p-3 rounded-lg bg-white/5 border border-blue-500/30">
+                          <p className="font-semibold text-blue-400 mb-2">Google Ads</p>
+                          {reportData.google.saldoRestante > 0 && (
+                            <div className="flex items-center justify-between text-gray-300">
+                              <span>Saldo</span>
+                              <span className="font-bold text-white">{formatCurrency(reportData.google.saldoRestante)}</span>
+                            </div>
+                          )}
+                          {reportData.google.diasParaRecarga > 0 && (
+                            <div className="flex items-center justify-between text-gray-300 mt-1">
+                              <span>Próxima recarga</span>
+                              <span className="font-bold text-white">{reportData.google.diasParaRecarga} dias</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {(reportData.meta.saldoRestante > 0 || reportData.meta.diasParaRecarga > 0) && (
+                        <div className="p-3 rounded-lg bg-white/5 border border-purple-500/30">
+                          <p className="font-semibold text-purple-400 mb-2">Meta Ads</p>
+                          {reportData.meta.saldoRestante > 0 && (
+                            <div className="flex items-center justify-between text-gray-300">
+                              <span>Saldo</span>
+                              <span className="font-bold text-white">{formatCurrency(reportData.meta.saldoRestante)}</span>
+                            </div>
+                          )}
+                          {reportData.meta.diasParaRecarga > 0 && (
+                            <div className="flex items-center justify-between text-gray-300 mt-1">
+                              <span>Próxima recarga</span>
+                              <span className="font-bold text-white">{reportData.meta.diasParaRecarga} dias</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
