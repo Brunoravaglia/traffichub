@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 
 interface BalanceForecastChartProps {
   clienteId?: string;
+  gestorFilter?: string;
 }
 
 const formatCurrency = (value: number): string => {
@@ -20,15 +21,15 @@ const formatCurrency = (value: number): string => {
   }).format(value);
 };
 
-const BalanceForecastChart = ({ clienteId }: BalanceForecastChartProps) => {
+const BalanceForecastChart = ({ clienteId, gestorFilter }: BalanceForecastChartProps) => {
   const navigate = useNavigate();
   
   const { data: trackingData, isLoading } = useQuery({
-    queryKey: ["balance-forecast", clienteId],
+    queryKey: ["balance-forecast", clienteId, gestorFilter],
     queryFn: async () => {
       let query = supabase
         .from("client_tracking")
-        .select("*, clientes(id, nome, logo_url, investimento_mensal, redes_sociais)");
+        .select("*, clientes(id, nome, logo_url, investimento_mensal, redes_sociais, gestor_id)");
 
       if (clienteId) {
         query = query.eq("cliente_id", clienteId);
@@ -44,6 +45,11 @@ const BalanceForecastChart = ({ clienteId }: BalanceForecastChartProps) => {
 
     return trackingData
       .filter((t) => {
+        const cliente = t.clientes as any;
+        // Filter by gestor if specified
+        if (gestorFilter && gestorFilter !== "all" && cliente?.gestor_id !== gestorFilter) {
+          return false;
+        }
         const hasGoogleData = t.google_saldo && Number(t.google_saldo) > 0 && t.google_valor_diario && Number(t.google_valor_diario) > 0;
         const hasMetaData = t.meta_saldo && Number(t.meta_saldo) > 0 && t.meta_valor_diario && Number(t.meta_valor_diario) > 0;
         return hasGoogleData || hasMetaData;
@@ -85,7 +91,7 @@ const BalanceForecastChart = ({ clienteId }: BalanceForecastChartProps) => {
         };
       })
       .sort((a, b) => a.urgency - b.urgency);
-  }, [trackingData]);
+  }, [trackingData, gestorFilter]);
 
   const getUrgencyColor = (days: number | null) => {
     if (days === null) return "text-muted-foreground";
