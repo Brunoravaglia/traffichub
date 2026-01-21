@@ -351,7 +351,11 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
-const ClientTrackingTable = () => {
+interface ClientTrackingTableProps {
+  gestorFilter?: string;
+}
+
+const ClientTrackingTable = ({ gestorFilter }: ClientTrackingTableProps) => {
   const queryClient = useQueryClient();
   const [editingTracking, setEditingTracking] = useState<ClientTracking | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -360,12 +364,18 @@ const ClientTrackingTable = () => {
 
   // Fetch clients without tracking
   const { data: clientesSemTracking } = useQuery({
-    queryKey: ["clientes-sem-tracking"],
+    queryKey: ["clientes-sem-tracking", gestorFilter],
     queryFn: async () => {
-      const { data: clientes } = await supabase
+      let clientesQuery = supabase
         .from("clientes")
-        .select("id, nome")
+        .select("id, nome, gestor_id")
         .order("nome");
+
+      if (gestorFilter && gestorFilter !== "all") {
+        clientesQuery = clientesQuery.eq("gestor_id", gestorFilter);
+      }
+
+      const { data: clientes } = await clientesQuery;
 
       const { data: tracking } = await supabase
         .from("client_tracking")
@@ -378,18 +388,24 @@ const ClientTrackingTable = () => {
 
   // Fetch tracking data
   const { data: trackingData, isLoading } = useQuery({
-    queryKey: ["client-tracking"],
+    queryKey: ["client-tracking", gestorFilter],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("client_tracking")
         .select(`
           *,
-          clientes(nome, logo_url)
+          clientes(nome, logo_url, gestor_id)
         `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as ClientTracking[];
+      
+      // Filter by gestor if specified
+      const filteredData = gestorFilter && gestorFilter !== "all"
+        ? (data as any[])?.filter((t) => t.clientes?.gestor_id === gestorFilter)
+        : data;
+      
+      return filteredData as ClientTracking[];
     },
   });
 
