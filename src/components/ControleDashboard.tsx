@@ -43,7 +43,12 @@ interface ClientTracking {
   meta_ads_active: boolean;
   clientes?: {
     nome: string;
+    gestor_id: string;
   };
+}
+
+interface ControleDashboardProps {
+  gestorFilter?: string;
 }
 
 const COLORS = {
@@ -63,42 +68,70 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
-const ControleDashboard = () => {
+const ControleDashboard = ({ gestorFilter }: ControleDashboardProps) => {
   const now = new Date();
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
 
+  // Fetch all clients for gestor filtering
+  const { data: clientesData } = useQuery({
+    queryKey: ["clientes-for-filter", gestorFilter],
+    queryFn: async () => {
+      let query = supabase.from("clientes").select("id, gestor_id");
+      if (gestorFilter && gestorFilter !== "all") {
+        query = query.eq("gestor_id", gestorFilter);
+      }
+      const { data } = await query;
+      return data || [];
+    },
+  });
+
+  const clienteIds = clientesData?.map((c) => c.id) || [];
+
   const { data: trackingData, isLoading } = useQuery({
-    queryKey: ["client-tracking-dashboard"],
+    queryKey: ["client-tracking-dashboard", gestorFilter],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("client_tracking")
         .select(`
           *,
-          clientes(nome)
+          clientes(nome, gestor_id)
         `);
       if (error) throw error;
       return data as ClientTracking[];
     },
   });
 
-  // Fetch monthly investment from client_reports
+  // Filter tracking data by gestor
+  const filteredTrackingData = trackingData?.filter((t) => {
+    if (!gestorFilter || gestorFilter === "all") return true;
+    return t.clientes?.gestor_id === gestorFilter;
+  }) || [];
+
+  // Fetch monthly investment from client_reports - filtered by gestor's clients
   const { data: monthlyInvestment } = useQuery({
-    queryKey: ["monthly-investment", format(monthStart, "yyyy-MM")],
+    queryKey: ["monthly-investment", format(monthStart, "yyyy-MM"), gestorFilter, clienteIds],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("client_reports")
-        .select("google_investido, meta_investido")
+        .select("cliente_id, google_investido, meta_investido")
         .gte("periodo_inicio", format(monthStart, "yyyy-MM-dd"))
         .lte("periodo_fim", format(monthEnd, "yyyy-MM-dd"));
       
+      const { data, error } = await query;
       if (error) throw error;
       
-      const totalGoogle = data?.reduce((acc, r) => acc + (Number(r.google_investido) || 0), 0) || 0;
-      const totalMeta = data?.reduce((acc, r) => acc + (Number(r.meta_investido) || 0), 0) || 0;
+      // Filter by gestor's clients if filter is active
+      const filteredData = gestorFilter && gestorFilter !== "all" 
+        ? data?.filter((r) => clienteIds.includes(r.cliente_id))
+        : data;
+      
+      const totalGoogle = filteredData?.reduce((acc, r) => acc + (Number(r.google_investido) || 0), 0) || 0;
+      const totalMeta = filteredData?.reduce((acc, r) => acc + (Number(r.meta_investido) || 0), 0) || 0;
       
       return { google: totalGoogle, meta: totalMeta, total: totalGoogle + totalMeta };
     },
+    enabled: !gestorFilter || gestorFilter === "all" || clienteIds.length > 0,
   });
 
   if (isLoading || !trackingData) {
@@ -113,18 +146,18 @@ const ControleDashboard = () => {
     );
   }
 
-  // Calculate stats
-  const totalClientes = trackingData.length;
-  const totalGoogleSaldo = trackingData.reduce((acc, t) => acc + (t.google_saldo || 0), 0);
-  const totalMetaSaldo = trackingData.reduce((acc, t) => acc + (t.meta_saldo || 0), 0);
+  // Calculate stats using filtered data
+  const totalClientes = filteredTrackingData.length;
+  const totalGoogleSaldo = filteredTrackingData.reduce((acc, t) => acc + (t.google_saldo || 0), 0);
+  const totalMetaSaldo = filteredTrackingData.reduce((acc, t) => acc + (t.meta_saldo || 0), 0);
   const totalSaldo = totalGoogleSaldo + totalMetaSaldo;
 
-  const clientesCriticos = trackingData.filter(
+  const clientesCriticos = filteredTrackingData.filter(
     (t) => (t.google_dias_restantes <= 3 && t.google_saldo > 0) || 
            (t.meta_dias_restantes <= 3 && t.meta_saldo > 0)
   ).length;
 
-  const clientesAtencao = trackingData.filter(
+  const clientesAtencao = filteredTrackingData.filter(
     (t) => ((t.google_dias_restantes > 3 && t.google_dias_restantes <= 7) && t.google_saldo > 0) || 
            ((t.meta_dias_restantes > 3 && t.meta_dias_restantes <= 7) && t.meta_saldo > 0)
   ).length;
@@ -139,7 +172,7 @@ const ControleDashboard = () => {
   ].filter(d => d.value > 0);
 
   // Bar chart data - Top 8 clients by total balance
-  const topClientes = [...trackingData]
+  const topClientes = [...filteredTrackingData]
     .map(t => ({
       nome: t.clientes?.nome?.substring(0, 12) || "Cliente",
       google: t.google_saldo || 0,
@@ -150,9 +183,9 @@ const ControleDashboard = () => {
     .slice(0, 8);
 
   // Integration stats
-  const pixelInstalado = trackingData.filter(t => t.pixel_installed).length;
-  const clarityInstalado = trackingData.filter(t => t.clarity_installed).length;
-  const metaAtivo = trackingData.filter(t => t.meta_ads_active).length;
+  const pixelInstalado = filteredTrackingData.filter(t => t.pixel_installed).length;
+  const clarityInstalado = filteredTrackingData.filter(t => t.clarity_installed).length;
+  const metaAtivo = filteredTrackingData.filter(t => t.meta_ads_active).length;
 
   const integrationData = [
     { name: "Pixel", value: pixelInstalado, total: totalClientes },
@@ -286,13 +319,13 @@ const ControleDashboard = () => {
                   <p className="text-sm text-muted-foreground">Gasto Diário Total</p>
                   <p className="text-2xl font-bold text-foreground mt-1">
                     {formatCurrency(
-                      trackingData.reduce((acc, t) => acc + (t.google_valor_diario || 0) + (t.meta_valor_diario || 0), 0)
+                      filteredTrackingData.reduce((acc, t) => acc + (t.google_valor_diario || 0) + (t.meta_valor_diario || 0), 0)
                     )}
                   </p>
                   <p className="text-xs text-muted-foreground mt-2">
                     Média por cliente: {formatCurrency(
                       totalClientes > 0 
-                        ? trackingData.reduce((acc, t) => acc + (t.google_valor_diario || 0) + (t.meta_valor_diario || 0), 0) / totalClientes
+                        ? filteredTrackingData.reduce((acc, t) => acc + (t.google_valor_diario || 0) + (t.meta_valor_diario || 0), 0) / totalClientes
                         : 0
                     )}
                   </p>
