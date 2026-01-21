@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1105,13 +1106,12 @@ const RelatorioCliente = () => {
                       <MousePointer className="w-4 h-4 text-muted-foreground" />
                       Cliques
                     </Label>
-                    <Input
-                      type="number"
+                    <NumericInput
                       value={reportData.google.cliques}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setReportData({
                           ...reportData,
-                          google: { ...reportData.google, cliques: parseInt(e.target.value) || 0 },
+                          google: { ...reportData.google, cliques: value },
                         })
                       }
                     />
@@ -1121,13 +1121,12 @@ const RelatorioCliente = () => {
                       <Eye className="w-4 h-4 text-muted-foreground" />
                       Impressões
                     </Label>
-                    <Input
-                      type="number"
+                    <NumericInput
                       value={reportData.google.impressoes}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setReportData({
                           ...reportData,
-                          google: { ...reportData.google, impressoes: parseInt(e.target.value) || 0 },
+                          google: { ...reportData.google, impressoes: value },
                         })
                       }
                     />
@@ -1137,13 +1136,12 @@ const RelatorioCliente = () => {
                       <Mail className="w-4 h-4 text-muted-foreground" />
                       Contatos/Leads
                     </Label>
-                    <Input
-                      type="number"
+                    <NumericInput
                       value={reportData.google.contatos}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setReportData({
                           ...reportData,
-                          google: { ...reportData.google, contatos: parseInt(e.target.value) || 0 },
+                          google: { ...reportData.google, contatos: value },
                         })
                       }
                     />
@@ -1153,16 +1151,15 @@ const RelatorioCliente = () => {
                       <DollarSign className="w-4 h-4 text-muted-foreground" />
                       Investido (R$)
                     </Label>
-                    <Input
-                      type="number"
-                      step="0.01"
+                    <NumericInput
                       value={reportData.google.investido}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setReportData({
                           ...reportData,
-                          google: { ...reportData.google, investido: parseFloat(e.target.value) || 0 },
+                          google: { ...reportData.google, investido: value },
                         })
                       }
+                      isDecimal
                     />
                   </div>
                 </div>
@@ -1175,13 +1172,12 @@ const RelatorioCliente = () => {
                         <Target className="w-4 h-4 text-muted-foreground" />
                         Conversões
                       </Label>
-                      <Input
-                        type="number"
+                      <NumericInput
                         value={reportData.google.conversoes}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            google: { ...reportData.google, conversoes: parseInt(e.target.value) || 0 },
+                            google: { ...reportData.google, conversoes: value },
                           })
                         }
                       />
@@ -1190,48 +1186,45 @@ const RelatorioCliente = () => {
                   {reportData.metricsConfig.showGoogleCtr && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">CTR (%)</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
+                      <NumericInput
                         value={reportData.google.ctr}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            google: { ...reportData.google, ctr: parseFloat(e.target.value) || 0 },
+                            google: { ...reportData.google, ctr: value },
                           })
                         }
+                        isDecimal
                       />
                     </div>
                   )}
                   {reportData.metricsConfig.showGoogleCpc && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">CPC (R$)</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
+                      <NumericInput
                         value={reportData.google.cpc}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            google: { ...reportData.google, cpc: parseFloat(e.target.value) || 0 },
+                            google: { ...reportData.google, cpc: value },
                           })
                         }
+                        isDecimal
                       />
                     </div>
                   )}
                   {reportData.metricsConfig.showGoogleRoas && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">ROAS</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
+                      <NumericInput
                         value={reportData.google.roas}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            google: { ...reportData.google, roas: parseFloat(e.target.value) || 0 },
+                            google: { ...reportData.google, roas: value },
                           })
                         }
+                        isDecimal
                       />
                     </div>
                   )}
@@ -1241,13 +1234,12 @@ const RelatorioCliente = () => {
                         <Users className="w-4 h-4 text-muted-foreground" />
                         Alcance
                       </Label>
-                      <Input
-                        type="number"
+                      <NumericInput
                         value={reportData.google.alcance}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            google: { ...reportData.google, alcance: parseInt(e.target.value) || 0 },
+                            google: { ...reportData.google, alcance: value },
                           })
                         }
                       />
@@ -1256,29 +1248,27 @@ const RelatorioCliente = () => {
                   {reportData.metricsConfig.showGoogleFrequencia && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">Frequência</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
+                      <NumericInput
                         value={reportData.google.frequencia}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            google: { ...reportData.google, frequencia: parseFloat(e.target.value) || 0 },
+                            google: { ...reportData.google, frequencia: value },
                           })
                         }
+                        isDecimal
                       />
                     </div>
                   )}
                   {reportData.metricsConfig.showGoogleVisualizacoesVideo && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">Views de Vídeo</Label>
-                      <Input
-                        type="number"
+                      <NumericInput
                         value={reportData.google.visualizacoesVideo}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            google: { ...reportData.google, visualizacoesVideo: parseInt(e.target.value) || 0 },
+                            google: { ...reportData.google, visualizacoesVideo: value },
                           })
                         }
                       />
@@ -1287,13 +1277,12 @@ const RelatorioCliente = () => {
                   {reportData.metricsConfig.showGoogleInteracoes && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">Interações</Label>
-                      <Input
-                        type="number"
+                      <NumericInput
                         value={reportData.google.interacoes}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            google: { ...reportData.google, interacoes: parseInt(e.target.value) || 0 },
+                            google: { ...reportData.google, interacoes: value },
                           })
                         }
                       />
@@ -1472,13 +1461,12 @@ const RelatorioCliente = () => {
                       <Eye className="w-4 h-4 text-muted-foreground" />
                       Impressões
                     </Label>
-                    <Input
-                      type="number"
+                    <NumericInput
                       value={reportData.meta.impressoes}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setReportData({
                           ...reportData,
-                          meta: { ...reportData.meta, impressoes: parseInt(e.target.value) || 0 },
+                          meta: { ...reportData.meta, impressoes: value },
                         })
                       }
                     />
@@ -1488,13 +1476,12 @@ const RelatorioCliente = () => {
                       <TrendingUp className="w-4 h-4 text-muted-foreground" />
                       Engajamento
                     </Label>
-                    <Input
-                      type="number"
+                    <NumericInput
                       value={reportData.meta.engajamento}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setReportData({
                           ...reportData,
-                          meta: { ...reportData.meta, engajamento: parseInt(e.target.value) || 0 },
+                          meta: { ...reportData.meta, engajamento: value },
                         })
                       }
                     />
@@ -1504,13 +1491,12 @@ const RelatorioCliente = () => {
                       <MessageSquare className="w-4 h-4 text-muted-foreground" />
                       Conversas
                     </Label>
-                    <Input
-                      type="number"
+                    <NumericInput
                       value={reportData.meta.conversas}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setReportData({
                           ...reportData,
-                          meta: { ...reportData.meta, conversas: parseInt(e.target.value) || 0 },
+                          meta: { ...reportData.meta, conversas: value },
                         })
                       }
                     />
@@ -1520,16 +1506,15 @@ const RelatorioCliente = () => {
                       <DollarSign className="w-4 h-4 text-muted-foreground" />
                       Investido (R$)
                     </Label>
-                    <Input
-                      type="number"
-                      step="0.01"
+                    <NumericInput
                       value={reportData.meta.investido}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setReportData({
                           ...reportData,
-                          meta: { ...reportData.meta, investido: parseFloat(e.target.value) || 0 },
+                          meta: { ...reportData.meta, investido: value },
                         })
                       }
+                      isDecimal
                     />
                   </div>
                 </div>
@@ -1542,13 +1527,12 @@ const RelatorioCliente = () => {
                         <MousePointer className="w-4 h-4 text-muted-foreground" />
                         Cliques no Link
                       </Label>
-                      <Input
-                        type="number"
+                      <NumericInput
                         value={reportData.meta.cliques}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            meta: { ...reportData.meta, cliques: parseInt(e.target.value) || 0 },
+                            meta: { ...reportData.meta, cliques: value },
                           })
                         }
                       />
@@ -1560,13 +1544,12 @@ const RelatorioCliente = () => {
                         <Users className="w-4 h-4 text-muted-foreground" />
                         Alcance
                       </Label>
-                      <Input
-                        type="number"
+                      <NumericInput
                         value={reportData.meta.alcance}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            meta: { ...reportData.meta, alcance: parseInt(e.target.value) || 0 },
+                            meta: { ...reportData.meta, alcance: value },
                           })
                         }
                       />
@@ -1578,13 +1561,12 @@ const RelatorioCliente = () => {
                         <Target className="w-4 h-4 text-muted-foreground" />
                         Leads Gerados
                       </Label>
-                      <Input
-                        type="number"
+                      <NumericInput
                         value={reportData.meta.leads}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            meta: { ...reportData.meta, leads: parseInt(e.target.value) || 0 },
+                            meta: { ...reportData.meta, leads: value },
                           })
                         }
                       />
@@ -1593,13 +1575,12 @@ const RelatorioCliente = () => {
                   {reportData.metricsConfig.showMetaSeguidores && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">Novos Seguidores</Label>
-                      <Input
-                        type="number"
+                      <NumericInput
                         value={reportData.meta.seguidores}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            meta: { ...reportData.meta, seguidores: parseInt(e.target.value) || 0 },
+                            meta: { ...reportData.meta, seguidores: value },
                           })
                         }
                       />
@@ -1608,77 +1589,72 @@ const RelatorioCliente = () => {
                   {reportData.metricsConfig.showMetaCtr && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">CTR (%)</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
+                      <NumericInput
                         value={reportData.meta.ctr}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            meta: { ...reportData.meta, ctr: parseFloat(e.target.value) || 0 },
+                            meta: { ...reportData.meta, ctr: value },
                           })
                         }
+                        isDecimal
                       />
                     </div>
                   )}
                   {reportData.metricsConfig.showMetaCpc && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">CPC (R$)</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
+                      <NumericInput
                         value={reportData.meta.cpc}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            meta: { ...reportData.meta, cpc: parseFloat(e.target.value) || 0 },
+                            meta: { ...reportData.meta, cpc: value },
                           })
                         }
+                        isDecimal
                       />
                     </div>
                   )}
                   {reportData.metricsConfig.showMetaRoas && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">ROAS</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
+                      <NumericInput
                         value={reportData.meta.roas}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            meta: { ...reportData.meta, roas: parseFloat(e.target.value) || 0 },
+                            meta: { ...reportData.meta, roas: value },
                           })
                         }
+                        isDecimal
                       />
                     </div>
                   )}
                   {reportData.metricsConfig.showMetaFrequencia && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">Frequência</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
+                      <NumericInput
                         value={reportData.meta.frequencia}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            meta: { ...reportData.meta, frequencia: parseFloat(e.target.value) || 0 },
+                            meta: { ...reportData.meta, frequencia: value },
                           })
                         }
+                        isDecimal
                       />
                     </div>
                   )}
                   {reportData.metricsConfig.showMetaCurtidasPagina && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">Curtidas Página</Label>
-                      <Input
-                        type="number"
+                      <NumericInput
                         value={reportData.meta.curtidasPagina}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            meta: { ...reportData.meta, curtidasPagina: parseInt(e.target.value) || 0 },
+                            meta: { ...reportData.meta, curtidasPagina: value },
                           })
                         }
                       />
@@ -1687,13 +1663,12 @@ const RelatorioCliente = () => {
                   {reportData.metricsConfig.showMetaCompartilhamentos && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">Compartilhamentos</Label>
-                      <Input
-                        type="number"
+                      <NumericInput
                         value={reportData.meta.compartilhamentos}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            meta: { ...reportData.meta, compartilhamentos: parseInt(e.target.value) || 0 },
+                            meta: { ...reportData.meta, compartilhamentos: value },
                           })
                         }
                       />
@@ -1702,13 +1677,12 @@ const RelatorioCliente = () => {
                   {reportData.metricsConfig.showMetaSalvos && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">Salvos</Label>
-                      <Input
-                        type="number"
+                      <NumericInput
                         value={reportData.meta.salvos}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            meta: { ...reportData.meta, salvos: parseInt(e.target.value) || 0 },
+                            meta: { ...reportData.meta, salvos: value },
                           })
                         }
                       />
@@ -1717,13 +1691,12 @@ const RelatorioCliente = () => {
                   {reportData.metricsConfig.showMetaComentarios && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">Comentários</Label>
-                      <Input
-                        type="number"
+                      <NumericInput
                         value={reportData.meta.comentarios}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            meta: { ...reportData.meta, comentarios: parseInt(e.target.value) || 0 },
+                            meta: { ...reportData.meta, comentarios: value },
                           })
                         }
                       />
@@ -1732,13 +1705,12 @@ const RelatorioCliente = () => {
                   {reportData.metricsConfig.showMetaVisualizacoesVideo && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">Views Vídeo</Label>
-                      <Input
-                        type="number"
+                      <NumericInput
                         value={reportData.meta.visualizacoesVideo}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            meta: { ...reportData.meta, visualizacoesVideo: parseInt(e.target.value) || 0 },
+                            meta: { ...reportData.meta, visualizacoesVideo: value },
                           })
                         }
                       />
@@ -1747,13 +1719,12 @@ const RelatorioCliente = () => {
                   {reportData.metricsConfig.showMetaMensagensIniciadas && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">Mensagens Iniciadas</Label>
-                      <Input
-                        type="number"
+                      <NumericInput
                         value={reportData.meta.mensagensIniciadas}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            meta: { ...reportData.meta, mensagensIniciadas: parseInt(e.target.value) || 0 },
+                            meta: { ...reportData.meta, mensagensIniciadas: value },
                           })
                         }
                       />
@@ -1762,13 +1733,12 @@ const RelatorioCliente = () => {
                   {reportData.metricsConfig.showMetaAgendamentos && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">Agendamentos</Label>
-                      <Input
-                        type="number"
+                      <NumericInput
                         value={reportData.meta.agendamentos}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            meta: { ...reportData.meta, agendamentos: parseInt(e.target.value) || 0 },
+                            meta: { ...reportData.meta, agendamentos: value },
                           })
                         }
                       />
@@ -2040,20 +2010,19 @@ const RelatorioCliente = () => {
                       <DollarSign className="w-4 h-4 text-muted-foreground" />
                       Saldo Google (R$)
                     </Label>
-                    <Input
-                      type="number"
-                      step="0.01"
+                    <NumericInput
                       value={reportData.google.saldoRestante}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setReportData({
                           ...reportData,
                           google: {
                             ...reportData.google,
-                            saldoRestante: parseFloat(e.target.value) || 0,
+                            saldoRestante: value,
                           },
                         })
                       }
-                      placeholder="0,00"
+                      isDecimal
+                      placeholder="0"
                     />
                   </div>
                   <div className="space-y-2">
@@ -2061,15 +2030,14 @@ const RelatorioCliente = () => {
                       <CalendarIcon className="w-4 h-4 text-muted-foreground" />
                       Dias p/ Recarga Google
                     </Label>
-                    <Input
-                      type="number"
+                    <NumericInput
                       value={reportData.google.diasParaRecarga}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setReportData({
                           ...reportData,
                           google: {
                             ...reportData.google,
-                            diasParaRecarga: parseInt(e.target.value) || 0,
+                            diasParaRecarga: value,
                           },
                         })
                       }
@@ -2081,20 +2049,19 @@ const RelatorioCliente = () => {
                       <DollarSign className="w-4 h-4 text-muted-foreground" />
                       Saldo Meta (R$)
                     </Label>
-                    <Input
-                      type="number"
-                      step="0.01"
+                    <NumericInput
                       value={reportData.meta.saldoRestante}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setReportData({
                           ...reportData,
                           meta: {
                             ...reportData.meta,
-                            saldoRestante: parseFloat(e.target.value) || 0,
+                            saldoRestante: value,
                           },
                         })
                       }
-                      placeholder="0,00"
+                      isDecimal
+                      placeholder="0"
                     />
                   </div>
                   <div className="space-y-2">
@@ -2102,15 +2069,14 @@ const RelatorioCliente = () => {
                       <CalendarIcon className="w-4 h-4 text-muted-foreground" />
                       Dias p/ Recarga Meta
                     </Label>
-                    <Input
-                      type="number"
+                    <NumericInput
                       value={reportData.meta.diasParaRecarga}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setReportData({
                           ...reportData,
                           meta: {
                             ...reportData.meta,
-                            diasParaRecarga: parseInt(e.target.value) || 0,
+                            diasParaRecarga: value,
                           },
                         })
                       }
