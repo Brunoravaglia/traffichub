@@ -2521,8 +2521,12 @@ const RelatorioCliente = () => {
                   </div>
                 )}
 
-                {/* Balances */}
-                {reportData.sectionsConfig.showSaldoRestante && (
+                {/* Balances - only show if toggle is on AND there are values */}
+                {reportData.sectionsConfig.showSaldoRestante && 
+                  (reportData.google.saldoRestante > 0 || 
+                   reportData.google.diasParaRecarga > 0 || 
+                   reportData.meta.saldoRestante > 0 || 
+                   reportData.meta.diasParaRecarga > 0) && (
                   <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
                     <h3 className="text-lg font-bold mb-3 text-primary tracking-widest">SALDO RESTANTE</h3>
                     <div className="grid grid-cols-2 gap-4 text-sm">
