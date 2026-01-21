@@ -112,23 +112,38 @@ const ControleDashboard = ({ gestorFilter }: ControleDashboardProps) => {
   const { data: monthlyInvestment } = useQuery({
     queryKey: ["monthly-investment", format(monthStart, "yyyy-MM"), gestorFilter, clienteIds],
     queryFn: async () => {
+      // NOTE: alguns relatórios antigos salvavam o investido só dentro de `data_values`.
+      // Para não zerar o KPI, usamos fallback para `data_values.google/meta.investido`.
       let query = supabase
         .from("client_reports")
-        .select("cliente_id, google_investido, meta_investido")
+        .select("cliente_id, google_investido, meta_investido, data_values")
         .gte("periodo_inicio", format(monthStart, "yyyy-MM-dd"))
         .lte("periodo_fim", format(monthEnd, "yyyy-MM-dd"));
-      
+
       const { data, error } = await query;
       if (error) throw error;
-      
-      // Filter by gestor's clients if filter is active
-      const filteredData = gestorFilter && gestorFilter !== "all" 
-        ? data?.filter((r) => clienteIds.includes(r.cliente_id))
-        : data;
-      
-      const totalGoogle = filteredData?.reduce((acc, r) => acc + (Number(r.google_investido) || 0), 0) || 0;
-      const totalMeta = filteredData?.reduce((acc, r) => acc + (Number(r.meta_investido) || 0), 0) || 0;
-      
+
+      const filteredData =
+        gestorFilter && gestorFilter !== "all"
+          ? data?.filter((r) => clienteIds.includes(r.cliente_id))
+          : data;
+
+      const totalGoogle =
+        filteredData?.reduce((acc, r: any) => {
+          const fromColumn = Number(r.google_investido);
+          const fromJson = Number(r?.data_values?.google?.investido);
+          const value = (fromColumn || 0) > 0 ? fromColumn : (fromJson || 0);
+          return acc + value;
+        }, 0) || 0;
+
+      const totalMeta =
+        filteredData?.reduce((acc, r: any) => {
+          const fromColumn = Number(r.meta_investido);
+          const fromJson = Number(r?.data_values?.meta?.investido);
+          const value = (fromColumn || 0) > 0 ? fromColumn : (fromJson || 0);
+          return acc + value;
+        }, 0) || 0;
+
       return { google: totalGoogle, meta: totalMeta, total: totalGoogle + totalMeta };
     },
     enabled: !gestorFilter || gestorFilter === "all" || clienteIds.length > 0,
