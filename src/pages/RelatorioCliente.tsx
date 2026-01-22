@@ -50,12 +50,18 @@ import VCDLogo from "@/components/VCDLogo";
 import { cn } from "@/lib/utils";
 import TemplateSelector from "@/components/TemplateSelector";
 import { useGestor } from "@/contexts/GestorContext";
+import {
+  AspectRatioSelector,
+  aspectRatioOptionToCss,
+  type AspectRatioOption,
+} from "@/components/report/AspectRatioSelector";
 
 interface Creative {
   id: string;
   url: string;
   name: string;
   platform: "google" | "meta";
+  aspectRatio?: AspectRatioOption;
 }
 
 interface RankingCreative {
@@ -63,6 +69,7 @@ interface RankingCreative {
   url: string;
   result: string;
   position: 1 | 2 | 3;
+  aspectRatio?: AspectRatioOption;
 }
 
 interface ReportData {
@@ -2102,20 +2109,46 @@ const RelatorioCliente = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-3 gap-3">
-                  {reportData.criativos.filter(c => c.platform === "google").map((creative) => (
-                    <div
-                      key={creative.id}
-                      className="relative group rounded-lg overflow-hidden border border-border aspect-square"
-                    >
-                      <img src={creative.url} alt={creative.name} className="w-full h-full object-cover" />
-                      <button
-                        onClick={() => handleRemoveCreative(creative.id)}
-                        className="absolute top-2 right-2 p-1 bg-destructive/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive-foreground" />
-                      </button>
-                    </div>
-                  ))}
+                  {reportData.criativos.filter(c => c.platform === "google").map((creative) => {
+                    const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
+                    return (
+                      <div key={creative.id} className="space-y-2">
+                        <div
+                          className="relative group rounded-lg overflow-hidden border border-border"
+                          style={aspectCss ? { aspectRatio: aspectCss } : undefined}
+                        >
+                          <img
+                            src={creative.url}
+                            alt={creative.name}
+                            className={cn(
+                              "w-full object-contain",
+                              aspectCss ? "h-full" : "h-auto"
+                            )}
+                          />
+                          <button
+                            onClick={() => handleRemoveCreative(creative.id)}
+                            className="absolute top-2 right-2 p-1 bg-destructive/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive-foreground" />
+                          </button>
+                        </div>
+                        <AspectRatioSelector
+                          value={creative.aspectRatio || "auto"}
+                          onChange={(next) =>
+                            setReportData((prev) => ({
+                              ...prev,
+                              criativos: prev.criativos.map((c) =>
+                                c.id === creative.id
+                                  ? { ...c, aspectRatio: next === "auto" ? undefined : next }
+                                  : c
+                              ),
+                            }))
+                          }
+                          className="justify-start"
+                        />
+                      </div>
+                    );
+                  })}
                   {reportData.criativos.filter(c => c.platform === "google").length < 5 && (
                     <label className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-blue-500/50 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-blue-500 transition-colors cursor-pointer">
                       {uploadingImage ? (
@@ -2145,20 +2178,46 @@ const RelatorioCliente = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-3 gap-3">
-                  {reportData.criativos.filter(c => c.platform === "meta").map((creative) => (
-                    <div
-                      key={creative.id}
-                      className="relative group rounded-lg overflow-hidden border border-border aspect-square"
-                    >
-                      <img src={creative.url} alt={creative.name} className="w-full h-full object-cover" />
-                      <button
-                        onClick={() => handleRemoveCreative(creative.id)}
-                        className="absolute top-2 right-2 p-1 bg-destructive/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive-foreground" />
-                      </button>
-                    </div>
-                  ))}
+                  {reportData.criativos.filter(c => c.platform === "meta").map((creative) => {
+                    const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
+                    return (
+                      <div key={creative.id} className="space-y-2">
+                        <div
+                          className="relative group rounded-lg overflow-hidden border border-border"
+                          style={aspectCss ? { aspectRatio: aspectCss } : undefined}
+                        >
+                          <img
+                            src={creative.url}
+                            alt={creative.name}
+                            className={cn(
+                              "w-full object-contain",
+                              aspectCss ? "h-full" : "h-auto"
+                            )}
+                          />
+                          <button
+                            onClick={() => handleRemoveCreative(creative.id)}
+                            className="absolute top-2 right-2 p-1 bg-destructive/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive-foreground" />
+                          </button>
+                        </div>
+                        <AspectRatioSelector
+                          value={creative.aspectRatio || "auto"}
+                          onChange={(next) =>
+                            setReportData((prev) => ({
+                              ...prev,
+                              criativos: prev.criativos.map((c) =>
+                                c.id === creative.id
+                                  ? { ...c, aspectRatio: next === "auto" ? undefined : next }
+                                  : c
+                              ),
+                            }))
+                          }
+                          className="justify-start"
+                        />
+                      </div>
+                    );
+                  })}
                   {reportData.criativos.filter(c => c.platform === "meta").length < 5 && (
                     <label className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-purple-500/50 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-purple-500 transition-colors cursor-pointer">
                       {uploadingImage ? (
@@ -2195,6 +2254,7 @@ const RelatorioCliente = () => {
                   <div className="grid grid-cols-3 gap-4">
                     {([1, 2, 3] as const).map((position) => {
                       const ranking = reportData.criativosRanking.find(c => c.position === position);
+                      const aspectCss = aspectRatioOptionToCss(ranking?.aspectRatio);
                       return (
                         <div key={position} className="space-y-2">
                           <Label className="flex items-center gap-2">
@@ -2209,18 +2269,44 @@ const RelatorioCliente = () => {
                             TOP {position}
                           </Label>
                           {ranking?.url ? (
-                            <div className="relative group rounded-lg overflow-hidden border border-border aspect-square">
-                              <img src={ranking.url} alt={`TOP ${position}`} className="w-full h-full object-cover" />
-                              <button
-                                onClick={() => setReportData(prev => ({
-                                  ...prev,
-                                  criativosRanking: prev.criativosRanking.filter(c => c.position !== position)
-                                }))}
-                                className="absolute top-2 right-2 p-1 bg-destructive/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            <>
+                              <div
+                                className="relative group rounded-lg overflow-hidden border border-border"
+                                style={aspectCss ? { aspectRatio: aspectCss } : undefined}
                               >
-                                <Trash2 className="w-4 h-4 text-destructive-foreground" />
-                              </button>
-                            </div>
+                                <img
+                                  src={ranking.url}
+                                  alt={`TOP ${position}`}
+                                  className={cn(
+                                    "w-full object-contain",
+                                    aspectCss ? "h-full" : "h-auto"
+                                  )}
+                                />
+                                <button
+                                  onClick={() => setReportData(prev => ({
+                                    ...prev,
+                                    criativosRanking: prev.criativosRanking.filter(c => c.position !== position)
+                                  }))}
+                                  className="absolute top-2 right-2 p-1 bg-destructive/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <Trash2 className="w-4 h-4 text-destructive-foreground" />
+                                </button>
+                              </div>
+                              <AspectRatioSelector
+                                value={ranking.aspectRatio || "auto"}
+                                onChange={(next) =>
+                                  setReportData((prev) => ({
+                                    ...prev,
+                                    criativosRanking: prev.criativosRanking.map((c) =>
+                                      c.position === position
+                                        ? { ...c, aspectRatio: next === "auto" ? undefined : next }
+                                        : c
+                                    ),
+                                  }))
+                                }
+                                className="justify-start"
+                              />
+                            </>
                           ) : (
                             <label className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary transition-colors cursor-pointer">
                               {uploadingRanking ? (
@@ -2425,11 +2511,23 @@ const RelatorioCliente = () => {
                       CRIATIVOS GOOGLE
                     </h3>
                     <div className="flex flex-wrap gap-3 justify-center">
-                      {reportData.criativos.filter(c => c.platform === "google").slice(0, 5).map((creative) => (
-                        <div key={creative.id} className="rounded-lg overflow-hidden border border-blue-500/30 max-w-[140px]">
-                          <img src={creative.url} alt={creative.name} className="w-full h-auto object-contain" crossOrigin="anonymous" />
-                        </div>
-                      ))}
+                      {reportData.criativos.filter(c => c.platform === "google").slice(0, 5).map((creative) => {
+                        const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
+                        return (
+                          <div
+                            key={creative.id}
+                            className="rounded-lg overflow-hidden border border-blue-500/30 max-w-[140px]"
+                            style={aspectCss ? { aspectRatio: aspectCss } : undefined}
+                          >
+                            <img
+                              src={creative.url}
+                              alt={creative.name}
+                              className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
+                              crossOrigin="anonymous"
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -2441,11 +2539,23 @@ const RelatorioCliente = () => {
                       CRIATIVOS META
                     </h3>
                     <div className="flex flex-wrap gap-3 justify-center">
-                      {reportData.criativos.filter(c => c.platform === "meta").slice(0, 5).map((creative) => (
-                        <div key={creative.id} className="rounded-lg overflow-hidden border border-purple-500/30 max-w-[140px]">
-                          <img src={creative.url} alt={creative.name} className="w-full h-auto object-contain" crossOrigin="anonymous" />
-                        </div>
-                      ))}
+                      {reportData.criativos.filter(c => c.platform === "meta").slice(0, 5).map((creative) => {
+                        const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
+                        return (
+                          <div
+                            key={creative.id}
+                            className="rounded-lg overflow-hidden border border-purple-500/30 max-w-[140px]"
+                            style={aspectCss ? { aspectRatio: aspectCss } : undefined}
+                          >
+                            <img
+                              src={creative.url}
+                              alt={creative.name}
+                              className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
+                              crossOrigin="anonymous"
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -2457,22 +2567,33 @@ const RelatorioCliente = () => {
                       🏆 RANKING DE CRIATIVOS
                     </h3>
                     <div className="flex flex-wrap gap-4 justify-center">
-                      {reportData.criativosRanking.sort((a, b) => a.position - b.position).map((ranking) => (
-                        <div key={ranking.id} className="text-center max-w-[160px]">
-                          <div className={cn(
-                            "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2",
-                            ranking.position === 1 ? "bg-yellow-500 text-black" :
-                            ranking.position === 2 ? "bg-gray-400 text-black" :
-                            "bg-amber-700 text-white"
-                          )}>
-                            {ranking.position}
+                      {reportData.criativosRanking.sort((a, b) => a.position - b.position).map((ranking) => {
+                        const aspectCss = aspectRatioOptionToCss(ranking.aspectRatio);
+                        return (
+                          <div key={ranking.id} className="text-center max-w-[160px]">
+                            <div className={cn(
+                              "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2",
+                              ranking.position === 1 ? "bg-yellow-500 text-black" :
+                              ranking.position === 2 ? "bg-gray-400 text-black" :
+                              "bg-amber-700 text-white"
+                            )}>
+                              {ranking.position}
+                            </div>
+                            <div
+                              className="rounded-lg overflow-hidden border border-white/10 mb-2"
+                              style={aspectCss ? { aspectRatio: aspectCss } : undefined}
+                            >
+                              <img
+                                src={ranking.url}
+                                alt={`TOP ${ranking.position}`}
+                                className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
+                                crossOrigin="anonymous"
+                              />
+                            </div>
+                            <p className="text-sm font-semibold text-white">{ranking.result || "-"}</p>
                           </div>
-                          <div className="rounded-lg overflow-hidden border border-white/10 mb-2">
-                            <img src={ranking.url} alt={`TOP ${ranking.position}`} className="w-full h-auto object-contain" crossOrigin="anonymous" />
-                          </div>
-                          <p className="text-sm font-semibold text-white">{ranking.result || "-"}</p>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
