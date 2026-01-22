@@ -22,7 +22,7 @@ export function CreativeGalleryBlock({ config }: CreativeGalleryBlockProps) {
             <img 
               src={image.url} 
               alt={`Creative ${index + 1}`}
-              className="w-full aspect-[4/5] object-cover"
+              className="w-full h-auto object-contain"
             />
             {/* Overlay with stats */}
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-3 space-y-1">

@@ -601,21 +601,21 @@ const RelatorioCliente = () => {
       });
 
       const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const pdfWidth = 210; // A4 width in mm
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
       const ratio = pdfWidth / imgWidth;
       const scaledHeight = imgHeight * ratio;
 
-      // Fit to page without white borders
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, Math.min(scaledHeight, pdfHeight));
+      // Create PDF with custom height to fit all content (no page limit)
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: [pdfWidth, scaledHeight],
+      });
+
+      // Add image at full size - allows report to be as long as needed
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, scaledHeight);
 
       const clienteName = cliente?.nome || "Relatorio";
       const period = format(periodoInicio, "MMMM", { locale: ptBR });
@@ -2424,10 +2424,10 @@ const RelatorioCliente = () => {
                     <h3 className="text-lg font-bold mb-4 text-blue-400 tracking-widest">
                       CRIATIVOS GOOGLE
                     </h3>
-                    <div className="grid grid-cols-5 gap-2">
+                    <div className="flex flex-wrap gap-3 justify-center">
                       {reportData.criativos.filter(c => c.platform === "google").slice(0, 5).map((creative) => (
-                        <div key={creative.id} className="rounded-lg overflow-hidden border border-blue-500/30">
-                          <img src={creative.url} alt={creative.name} className="w-full aspect-square object-cover" crossOrigin="anonymous" />
+                        <div key={creative.id} className="rounded-lg overflow-hidden border border-blue-500/30 max-w-[140px]">
+                          <img src={creative.url} alt={creative.name} className="w-full h-auto object-contain" crossOrigin="anonymous" />
                         </div>
                       ))}
                     </div>
@@ -2440,10 +2440,10 @@ const RelatorioCliente = () => {
                     <h3 className="text-lg font-bold mb-4 text-purple-400 tracking-widest">
                       CRIATIVOS META
                     </h3>
-                    <div className="grid grid-cols-5 gap-2">
+                    <div className="flex flex-wrap gap-3 justify-center">
                       {reportData.criativos.filter(c => c.platform === "meta").slice(0, 5).map((creative) => (
-                        <div key={creative.id} className="rounded-lg overflow-hidden border border-purple-500/30">
-                          <img src={creative.url} alt={creative.name} className="w-full aspect-square object-cover" crossOrigin="anonymous" />
+                        <div key={creative.id} className="rounded-lg overflow-hidden border border-purple-500/30 max-w-[140px]">
+                          <img src={creative.url} alt={creative.name} className="w-full h-auto object-contain" crossOrigin="anonymous" />
                         </div>
                       ))}
                     </div>
@@ -2456,9 +2456,9 @@ const RelatorioCliente = () => {
                     <h3 className="text-lg font-bold mb-4 text-yellow-400 tracking-widest">
                       🏆 RANKING DE CRIATIVOS
                     </h3>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="flex flex-wrap gap-4 justify-center">
                       {reportData.criativosRanking.sort((a, b) => a.position - b.position).map((ranking) => (
-                        <div key={ranking.id} className="text-center">
+                        <div key={ranking.id} className="text-center max-w-[160px]">
                           <div className={cn(
                             "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2",
                             ranking.position === 1 ? "bg-yellow-500 text-black" :
@@ -2468,7 +2468,7 @@ const RelatorioCliente = () => {
                             {ranking.position}
                           </div>
                           <div className="rounded-lg overflow-hidden border border-white/10 mb-2">
-                            <img src={ranking.url} alt={`TOP ${ranking.position}`} className="w-full aspect-square object-cover" crossOrigin="anonymous" />
+                            <img src={ranking.url} alt={`TOP ${ranking.position}`} className="w-full h-auto object-contain" crossOrigin="anonymous" />
                           </div>
                           <p className="text-sm font-semibold text-white">{ranking.result || "-"}</p>
                         </div>
