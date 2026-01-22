@@ -55,6 +55,7 @@ import {
   aspectRatioOptionToCss,
   type AspectRatioOption,
 } from "@/components/report/AspectRatioSelector";
+import { CreativeGrid } from "@/components/report/CreativeGrid";
 
 interface Creative {
   id: string;
@@ -2107,62 +2108,14 @@ const RelatorioCliente = () => {
                   Criativos Google ({reportData.criativos.filter(c => c.platform === "google").length}/5)
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-3 gap-3">
-                  {reportData.criativos.filter(c => c.platform === "google").map((creative) => {
-                    const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
-                    return (
-                      <div key={creative.id} className="space-y-2">
-                        <div
-                          className="relative group rounded-lg overflow-hidden border border-border"
-                          style={aspectCss ? { aspectRatio: aspectCss } : undefined}
-                        >
-                          <img
-                            src={creative.url}
-                            alt={creative.name}
-                            className={cn(
-                              "w-full object-contain",
-                              aspectCss ? "h-full" : "h-auto"
-                            )}
-                          />
-                          <button
-                            onClick={() => handleRemoveCreative(creative.id)}
-                            className="absolute top-2 right-2 p-1 bg-destructive/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive-foreground" />
-                          </button>
-                        </div>
-                        <AspectRatioSelector
-                          value={creative.aspectRatio || "auto"}
-                          onChange={(next) =>
-                            setReportData((prev) => ({
-                              ...prev,
-                              criativos: prev.criativos.map((c) =>
-                                c.id === creative.id
-                                  ? { ...c, aspectRatio: next === "auto" ? undefined : next }
-                                  : c
-                              ),
-                            }))
-                          }
-                          className="justify-start"
-                        />
-                      </div>
-                    );
-                  })}
-                  {reportData.criativos.filter(c => c.platform === "google").length < 5 && (
-                    <label className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-blue-500/50 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-blue-500 transition-colors cursor-pointer">
-                      {uploadingImage ? (
-                        <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <>
-                          <Upload className="w-6 h-6" />
-                          <span className="text-xs">Upload</span>
-                        </>
-                      )}
-                      <input type="file" accept="image/*" onChange={(e) => handleUploadCreative(e, "google")} className="hidden" />
-                    </label>
-                  )}
-                </div>
+              <CardContent className="pt-0">
+                <CreativeGrid
+                  platform="google"
+                  creatives={reportData.criativos}
+                  onChange={(newCreatives) => setReportData((prev) => ({ ...prev, criativos: newCreatives }))}
+                  clienteId={clienteId!}
+                  maxCreatives={5}
+                />
               </CardContent>
             </Card>
 
@@ -2176,62 +2129,14 @@ const RelatorioCliente = () => {
                   Criativos Meta ({reportData.criativos.filter(c => c.platform === "meta").length}/5)
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-3 gap-3">
-                  {reportData.criativos.filter(c => c.platform === "meta").map((creative) => {
-                    const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
-                    return (
-                      <div key={creative.id} className="space-y-2">
-                        <div
-                          className="relative group rounded-lg overflow-hidden border border-border"
-                          style={aspectCss ? { aspectRatio: aspectCss } : undefined}
-                        >
-                          <img
-                            src={creative.url}
-                            alt={creative.name}
-                            className={cn(
-                              "w-full object-contain",
-                              aspectCss ? "h-full" : "h-auto"
-                            )}
-                          />
-                          <button
-                            onClick={() => handleRemoveCreative(creative.id)}
-                            className="absolute top-2 right-2 p-1 bg-destructive/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive-foreground" />
-                          </button>
-                        </div>
-                        <AspectRatioSelector
-                          value={creative.aspectRatio || "auto"}
-                          onChange={(next) =>
-                            setReportData((prev) => ({
-                              ...prev,
-                              criativos: prev.criativos.map((c) =>
-                                c.id === creative.id
-                                  ? { ...c, aspectRatio: next === "auto" ? undefined : next }
-                                  : c
-                              ),
-                            }))
-                          }
-                          className="justify-start"
-                        />
-                      </div>
-                    );
-                  })}
-                  {reportData.criativos.filter(c => c.platform === "meta").length < 5 && (
-                    <label className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-purple-500/50 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-purple-500 transition-colors cursor-pointer">
-                      {uploadingImage ? (
-                        <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <>
-                          <Upload className="w-6 h-6" />
-                          <span className="text-xs">Upload</span>
-                        </>
-                      )}
-                      <input type="file" accept="image/*" onChange={(e) => handleUploadCreative(e, "meta")} className="hidden" />
-                    </label>
-                  )}
-                </div>
+              <CardContent className="pt-0">
+                <CreativeGrid
+                  platform="meta"
+                  creatives={reportData.criativos}
+                  onChange={(newCreatives) => setReportData((prev) => ({ ...prev, criativos: newCreatives }))}
+                  clienteId={clienteId!}
+                  maxCreatives={5}
+                />
               </CardContent>
             </Card>
 
