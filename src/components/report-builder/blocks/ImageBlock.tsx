@@ -2,6 +2,11 @@ import { Upload } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  AspectRatioSelector,
+  aspectRatioOptionToCss,
+  type AspectRatioOption,
+} from "@/components/report/AspectRatioSelector";
 import type { ImageConfig } from "../types";
 
 interface ImageBlockProps {
@@ -12,6 +17,9 @@ interface ImageBlockProps {
 
 export function ImageBlock({ config, onUpdate, isEditing }: ImageBlockProps) {
   const [uploading, setUploading] = useState(false);
+
+  const aspectValue = ((config.aspectRatio as AspectRatioOption | undefined) ?? "auto") as AspectRatioOption;
+  const aspectCss = aspectRatioOptionToCss(config.aspectRatio);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -62,28 +70,43 @@ export function ImageBlock({ config, onUpdate, isEditing }: ImageBlockProps) {
   }
 
   return (
-    <div className="relative rounded-xl overflow-hidden">
-      <img 
-        src={config.url || '/placeholder.svg'} 
-        alt={config.caption || 'Report image'}
-        className="w-full object-contain max-h-96"
-      />
+    <div className="space-y-2">
+      <div className="relative rounded-xl overflow-hidden">
+        <div className="w-full" style={aspectCss ? { aspectRatio: aspectCss } : undefined}>
+          <img
+            src={config.url || "/placeholder.svg"}
+            alt={config.caption || "Report image"}
+            className={`w-full object-contain max-h-96 ${aspectCss ? "h-full" : "h-auto"}`}
+          />
+        </div>
+
+        {isEditing && (
+          <label className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer">
+            <span className="text-white text-sm">Trocar imagem</span>
+            <input
+              type="file"
+              className="hidden"
+              accept="image/*"
+              onChange={handleUpload}
+              disabled={uploading}
+            />
+          </label>
+        )}
+      </div>
+
+      {isEditing && onUpdate && (
+        <div className="flex justify-center">
+          <AspectRatioSelector
+            value={aspectValue}
+            onChange={(next) => onUpdate({ ...config, aspectRatio: next === "auto" ? undefined : next })}
+          />
+        </div>
+      )}
+
       {config.caption && (
-        <p className="text-center text-sm text-muted-foreground mt-2">
+        <p className="text-center text-sm text-muted-foreground">
           {config.caption}
         </p>
-      )}
-      {isEditing && (
-        <label className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer">
-          <span className="text-white text-sm">Trocar imagem</span>
-          <input 
-            type="file" 
-            className="hidden" 
-            accept="image/*"
-            onChange={handleUpload}
-            disabled={uploading}
-          />
-        </label>
       )}
     </div>
   );
