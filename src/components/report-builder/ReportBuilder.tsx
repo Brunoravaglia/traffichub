@@ -38,7 +38,7 @@ const getDefaultConfig = (type: ReportBlockType): Record<string, unknown> => {
         metrics: [
           { icon: 'click', label: 'Cliques', value: '0' },
           { icon: 'eye', label: 'Impressões', value: '0' },
-          { icon: 'message', label: 'Contatos', value: '0' },
+          { icon: 'message', label: 'Conversões', value: '0' },
           { icon: 'dollar', label: 'Custo por Lead', value: 'R$ 0' },
           { icon: 'dollar', label: 'Investidos', value: 'R$ 0' },
         ]

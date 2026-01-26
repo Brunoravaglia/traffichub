@@ -94,7 +94,7 @@ interface TemplateConfig {
 const DEFAULT_METRICS: MetricConfig[] = [
   { key: "google_cliques", label: "Cliques", icon: "click", platform: "google", visible: true },
   { key: "google_impressoes", label: "Impressões", icon: "eye", platform: "google", visible: true },
-  { key: "google_contatos", label: "Contatos/Leads", icon: "message", platform: "google", visible: true },
+  { key: "google_contatos", label: "Conversões", icon: "message", platform: "google", visible: true },
   { key: "google_investido", label: "Investido", icon: "dollar", platform: "google", visible: true },
   { key: "google_cpl", label: "Custo por Lead", icon: "target", platform: "google", visible: true },
   { key: "google_cpm", label: "CPM", icon: "trending", platform: "google", visible: false },

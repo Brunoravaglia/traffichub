@@ -670,7 +670,7 @@ const RelatorioCliente = () => {
         // Google metrics
         { key: "google_cliques", label: "Cliques", icon: "click", platform: "google", visible: true },
         { key: "google_impressoes", label: "Impressões", icon: "eye", platform: "google", visible: true },
-        { key: "google_contatos", label: "Contatos/Leads", icon: "message", platform: "google", visible: true },
+        { key: "google_contatos", label: "Conversões", icon: "message", platform: "google", visible: true },
         { key: "google_investido", label: "Investido", icon: "dollar", platform: "google", visible: true },
         { key: "google_cpl", label: "Custo por Lead", icon: "target", platform: "google", visible: reportData.metricsConfig.showGoogleCustoPorLead },
         { key: "google_cpm", label: "CPM", icon: "trending", platform: "google", visible: reportData.metricsConfig.showGoogleCpm },
@@ -1179,7 +1179,7 @@ const RelatorioCliente = () => {
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2 text-xs">
                       <Mail className="w-4 h-4 text-muted-foreground" />
-                      Contatos/Leads
+                      Conversões
                     </Label>
                     <NumericInput
                       value={reportData.google.contatos}
@@ -2438,29 +2438,45 @@ const RelatorioCliente = () => {
                       </div>
                       <div className="text-center p-3 rounded-lg bg-white/5">
                         <p className="text-2xl font-bold text-white">{formatNumber(reportData.google.contatos)}</p>
-                        <p className="text-xs text-gray-400">Contatos</p>
+                        <p className="text-xs text-gray-400">Conversões</p>
                       </div>
                       <div className="text-center p-3 rounded-lg bg-white/5">
                         <p className="text-2xl font-bold text-white">{formatCurrency(reportData.google.investido)}</p>
                         <p className="text-xs text-gray-400">Investidos</p>
                       </div>
                     </div>
-                    {(reportData.metricsConfig.showGoogleCustoPorLead || reportData.metricsConfig.showGoogleCpm) && (
-                      <div className="grid grid-cols-2 gap-3 mt-3">
-                        {reportData.metricsConfig.showGoogleCustoPorLead && (
-                          <div className="text-center p-3 rounded-lg bg-white/5">
-                            <p className="text-xl font-bold text-green-400">{formatCurrency(reportData.google.custoPorLead)}</p>
-                            <p className="text-xs text-gray-400">Custo por Lead</p>
-                          </div>
-                        )}
-                        {reportData.metricsConfig.showGoogleCpm && (
-                          <div className="text-center p-3 rounded-lg bg-white/5">
-                            <p className="text-xl font-bold text-yellow-400">{formatCurrency(reportData.google.cpm)}</p>
-                            <p className="text-xs text-gray-400">CPM</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    {/* Additional Google Metrics */}
+                    {(() => {
+                      const additionalMetrics = [];
+                      if (reportData.metricsConfig.showGoogleCustoPorLead) additionalMetrics.push({ label: "Custo por Lead", value: formatCurrency(reportData.google.custoPorLead), color: "text-green-400" });
+                      if (reportData.metricsConfig.showGoogleCpm) additionalMetrics.push({ label: "CPM", value: formatCurrency(reportData.google.cpm), color: "text-yellow-400" });
+                      if (reportData.metricsConfig.showGoogleCtr) additionalMetrics.push({ label: "CTR (%)", value: `${reportData.google.ctr.toFixed(2)}%`, color: "text-blue-400" });
+                      if (reportData.metricsConfig.showGoogleCpc) additionalMetrics.push({ label: "CPC", value: formatCurrency(reportData.google.cpc), color: "text-orange-400" });
+                      if (reportData.metricsConfig.showGoogleConversoes) additionalMetrics.push({ label: "Conversões Ads", value: formatNumber(reportData.google.conversoes), color: "text-emerald-400" });
+                      if (reportData.metricsConfig.showGoogleTaxaConversao) additionalMetrics.push({ label: "Taxa Conv.", value: `${reportData.google.taxaConversao.toFixed(2)}%`, color: "text-cyan-400" });
+                      if (reportData.metricsConfig.showGoogleRoas) additionalMetrics.push({ label: "ROAS", value: `${reportData.google.roas.toFixed(2)}x`, color: "text-pink-400" });
+                      if (reportData.metricsConfig.showGoogleCustoConversao) additionalMetrics.push({ label: "Custo/Conv.", value: formatCurrency(reportData.google.custoConversao), color: "text-red-400" });
+                      if (reportData.metricsConfig.showGoogleAlcance) additionalMetrics.push({ label: "Alcance", value: formatNumber(reportData.google.alcance), color: "text-indigo-400" });
+                      if (reportData.metricsConfig.showGoogleFrequencia) additionalMetrics.push({ label: "Frequência", value: reportData.google.frequencia.toFixed(2), color: "text-violet-400" });
+                      if (reportData.metricsConfig.showGoogleVisualizacoesVideo) additionalMetrics.push({ label: "Views Vídeo", value: formatNumber(reportData.google.visualizacoesVideo), color: "text-teal-400" });
+                      if (reportData.metricsConfig.showGoogleTaxaVisualizacao) additionalMetrics.push({ label: "Taxa View", value: `${reportData.google.taxaVisualizacao.toFixed(2)}%`, color: "text-sky-400" });
+                      if (reportData.metricsConfig.showGoogleInteracoes) additionalMetrics.push({ label: "Interações", value: formatNumber(reportData.google.interacoes), color: "text-lime-400" });
+                      if (reportData.metricsConfig.showGoogleTaxaInteracao) additionalMetrics.push({ label: "Taxa Inter.", value: `${reportData.google.taxaInteracao.toFixed(2)}%`, color: "text-amber-400" });
+                      
+                      if (additionalMetrics.length === 0) return null;
+                      
+                      const cols = additionalMetrics.length <= 2 ? 2 : additionalMetrics.length <= 3 ? 3 : 4;
+                      return (
+                        <div className={`grid grid-cols-${cols} gap-3 mt-3`} style={{ gridTemplateColumns: `repeat(${Math.min(cols, additionalMetrics.length)}, 1fr)` }}>
+                          {additionalMetrics.map((metric, idx) => (
+                            <div key={idx} className="text-center p-3 rounded-lg bg-white/5">
+                              <p className={`text-xl font-bold ${metric.color}`}>{metric.value}</p>
+                              <p className="text-xs text-gray-400">{metric.label}</p>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
 
@@ -2486,28 +2502,45 @@ const RelatorioCliente = () => {
                         <p className="text-xs text-gray-400">Investidos</p>
                       </div>
                     </div>
-                    {(reportData.metricsConfig.showMetaCustoPorLead || reportData.metricsConfig.showMetaCpm || reportData.metricsConfig.showMetaCustoPorSeguidor) && (
-                      <div className="grid grid-cols-3 gap-3 mt-3">
-                        {reportData.metricsConfig.showMetaCustoPorLead && (
-                          <div className="text-center p-3 rounded-lg bg-white/5">
-                            <p className="text-xl font-bold text-green-400">{formatCurrency(reportData.meta.custoPorLead)}</p>
-                            <p className="text-xs text-gray-400">Custo por Lead</p>
-                          </div>
-                        )}
-                        {reportData.metricsConfig.showMetaCpm && (
-                          <div className="text-center p-3 rounded-lg bg-white/5">
-                            <p className="text-xl font-bold text-yellow-400">{formatCurrency(reportData.meta.cpm)}</p>
-                            <p className="text-xs text-gray-400">CPM</p>
-                          </div>
-                        )}
-                        {reportData.metricsConfig.showMetaCustoPorSeguidor && (
-                          <div className="text-center p-3 rounded-lg bg-white/5">
-                            <p className="text-xl font-bold text-pink-400">{formatCurrency(reportData.meta.custoPorSeguidor)}</p>
-                            <p className="text-xs text-gray-400">Custo/Seguidor</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    {/* Additional Meta Metrics */}
+                    {(() => {
+                      const additionalMetrics = [];
+                      if (reportData.metricsConfig.showMetaCustoPorLead) additionalMetrics.push({ label: "Custo por Lead", value: formatCurrency(reportData.meta.custoPorLead), color: "text-green-400" });
+                      if (reportData.metricsConfig.showMetaCpm) additionalMetrics.push({ label: "CPM", value: formatCurrency(reportData.meta.cpm), color: "text-yellow-400" });
+                      if (reportData.metricsConfig.showMetaCustoPorSeguidor) additionalMetrics.push({ label: "Custo/Seguidor", value: formatCurrency(reportData.meta.custoPorSeguidor), color: "text-pink-400" });
+                      if (reportData.metricsConfig.showMetaCliques) additionalMetrics.push({ label: "Cliques Link", value: formatNumber(reportData.meta.cliques), color: "text-blue-400" });
+                      if (reportData.metricsConfig.showMetaCtr) additionalMetrics.push({ label: "CTR (%)", value: `${reportData.meta.ctr.toFixed(2)}%`, color: "text-cyan-400" });
+                      if (reportData.metricsConfig.showMetaCpc) additionalMetrics.push({ label: "CPC", value: formatCurrency(reportData.meta.cpc), color: "text-orange-400" });
+                      if (reportData.metricsConfig.showMetaAlcance) additionalMetrics.push({ label: "Alcance", value: formatNumber(reportData.meta.alcance), color: "text-indigo-400" });
+                      if (reportData.metricsConfig.showMetaFrequencia) additionalMetrics.push({ label: "Frequência", value: reportData.meta.frequencia.toFixed(2), color: "text-violet-400" });
+                      if (reportData.metricsConfig.showMetaLeads) additionalMetrics.push({ label: "Leads", value: formatNumber(reportData.meta.leads), color: "text-emerald-400" });
+                      if (reportData.metricsConfig.showMetaConversoes) additionalMetrics.push({ label: "Conversões", value: formatNumber(reportData.meta.conversoes), color: "text-teal-400" });
+                      if (reportData.metricsConfig.showMetaRoas) additionalMetrics.push({ label: "ROAS", value: `${reportData.meta.roas.toFixed(2)}x`, color: "text-rose-400" });
+                      if (reportData.metricsConfig.showMetaCurtidasPagina) additionalMetrics.push({ label: "Curtidas Página", value: formatNumber(reportData.meta.curtidasPagina), color: "text-red-400" });
+                      if (reportData.metricsConfig.showMetaSeguidores) additionalMetrics.push({ label: "Seguidores", value: formatNumber(reportData.meta.seguidores), color: "text-fuchsia-400" });
+                      if (reportData.metricsConfig.showMetaCompartilhamentos) additionalMetrics.push({ label: "Compartilhamentos", value: formatNumber(reportData.meta.compartilhamentos), color: "text-sky-400" });
+                      if (reportData.metricsConfig.showMetaSalvos) additionalMetrics.push({ label: "Salvos", value: formatNumber(reportData.meta.salvos), color: "text-amber-400" });
+                      if (reportData.metricsConfig.showMetaComentarios) additionalMetrics.push({ label: "Comentários", value: formatNumber(reportData.meta.comentarios), color: "text-lime-400" });
+                      if (reportData.metricsConfig.showMetaVisualizacoesVideo) additionalMetrics.push({ label: "Views Vídeo", value: formatNumber(reportData.meta.visualizacoesVideo), color: "text-cyan-400" });
+                      if (reportData.metricsConfig.showMetaRetencaoVideo) additionalMetrics.push({ label: "Retenção Vídeo", value: `${reportData.meta.retencaoVideo.toFixed(2)}%`, color: "text-teal-400" });
+                      if (reportData.metricsConfig.showMetaMensagensIniciadas) additionalMetrics.push({ label: "Mensagens", value: formatNumber(reportData.meta.mensagensIniciadas), color: "text-blue-400" });
+                      if (reportData.metricsConfig.showMetaAgendamentos) additionalMetrics.push({ label: "Agendamentos", value: formatNumber(reportData.meta.agendamentos), color: "text-green-400" });
+                      if (reportData.metricsConfig.showMetaCheckins) additionalMetrics.push({ label: "Check-ins", value: formatNumber(reportData.meta.checkins), color: "text-orange-400" });
+                      
+                      if (additionalMetrics.length === 0) return null;
+                      
+                      const cols = additionalMetrics.length <= 2 ? 2 : additionalMetrics.length <= 3 ? 3 : 4;
+                      return (
+                        <div className={`grid gap-3 mt-3`} style={{ gridTemplateColumns: `repeat(${Math.min(cols, additionalMetrics.length)}, 1fr)` }}>
+                          {additionalMetrics.map((metric, idx) => (
+                            <div key={idx} className="text-center p-3 rounded-lg bg-white/5">
+                              <p className={`text-xl font-bold ${metric.color}`}>{metric.value}</p>
+                              <p className="text-xs text-gray-400">{metric.label}</p>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
 
