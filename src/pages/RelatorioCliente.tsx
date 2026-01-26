@@ -56,6 +56,8 @@ import {
   type AspectRatioOption,
 } from "@/components/report/AspectRatioSelector";
 import { CreativeGrid } from "@/components/report/CreativeGrid";
+import { AdPanelGrid, type AdPanelImage } from "@/components/report/AdPanelGrid";
+import { CustomSectionGrid, type CustomSection } from "@/components/report/CustomSectionGrid";
 
 interface Creative {
   id: string;
@@ -179,7 +181,11 @@ interface ReportData {
     showCriativosMeta: boolean;
     showResumo: boolean;
     showSaldoRestante: boolean;
+    showPaineisAnuncio: boolean;
+    showCustomSections: boolean;
   };
+  paineisAnuncio: AdPanelImage[];
+  customSections: CustomSection[];
 }
 
 const defaultReportData: ReportData = {
@@ -252,7 +258,11 @@ const defaultReportData: ReportData = {
     showCriativosMeta: true,
     showResumo: true,
     showSaldoRestante: true,
+    showPaineisAnuncio: false,
+    showCustomSections: false,
   },
+  paineisAnuncio: [],
+  customSections: [],
 };
 
 const RelatorioCliente = () => {
@@ -329,6 +339,8 @@ const RelatorioCliente = () => {
           showCriativosMeta: template.sections.showCriativosMeta ?? true,
           showResumo: template.sections.showResumo ?? true,
           showSaldoRestante: template.sections.showSaldoRestante ?? true,
+          showPaineisAnuncio: template.sections.showPaineisAnuncio ?? false,
+          showCustomSections: template.sections.showCustomSections ?? false,
         },
         metricsConfig: applyMetricsFromTemplate(template.metrics || []),
       }));
@@ -1040,6 +1052,31 @@ const RelatorioCliente = () => {
                       setReportData({
                         ...reportData,
                         sectionsConfig: { ...reportData.sectionsConfig, showSaldoRestante: checked },
+                      })
+                    }
+                  />
+                </div>
+                <Separator className="my-2" />
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Mostrar Painéis de Anúncio</Label>
+                  <Switch
+                    checked={reportData.sectionsConfig.showPaineisAnuncio}
+                    onCheckedChange={(checked) =>
+                      setReportData({
+                        ...reportData,
+                        sectionsConfig: { ...reportData.sectionsConfig, showPaineisAnuncio: checked },
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Mostrar Seções Personalizadas</Label>
+                  <Switch
+                    checked={reportData.sectionsConfig.showCustomSections}
+                    onCheckedChange={(checked) =>
+                      setReportData({
+                        ...reportData,
+                        sectionsConfig: { ...reportData.sectionsConfig, showCustomSections: checked },
                       })
                     }
                   />
@@ -2243,6 +2280,71 @@ const RelatorioCliente = () => {
               )}
             </Card>
 
+            {/* Ad Panels - Google */}
+            {reportData.sectionsConfig.showPaineisAnuncio && (
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <div className="w-6 h-6 bg-blue-500/20 rounded flex items-center justify-center">
+                        <span className="text-blue-500 text-xs font-bold">G</span>
+                      </div>
+                      Painéis Google Ads ({reportData.paineisAnuncio.filter(p => p.platform === "google").length}/3)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <AdPanelGrid
+                      platform="google"
+                      images={reportData.paineisAnuncio}
+                      onChange={(newPanels) => setReportData((prev) => ({ ...prev, paineisAnuncio: newPanels }))}
+                      clienteId={clienteId!}
+                      maxImages={3}
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Ad Panels - Meta */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <div className="w-6 h-6 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded flex items-center justify-center">
+                        <span className="text-purple-500 text-xs font-bold">M</span>
+                      </div>
+                      Painéis Meta Ads ({reportData.paineisAnuncio.filter(p => p.platform === "meta").length}/3)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <AdPanelGrid
+                      platform="meta"
+                      images={reportData.paineisAnuncio}
+                      onChange={(newPanels) => setReportData((prev) => ({ ...prev, paineisAnuncio: newPanels }))}
+                      clienteId={clienteId!}
+                      maxImages={3}
+                    />
+                  </CardContent>
+                </Card>
+              </>
+            )}
+
+            {/* Custom Sections */}
+            {reportData.sectionsConfig.showCustomSections && (
+              <Card className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    Seções Personalizadas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CustomSectionGrid
+                    sections={reportData.customSections}
+                    onChange={(newSections) => setReportData((prev) => ({ ...prev, customSections: newSections }))}
+                    clienteId={clienteId!}
+                  />
+                </CardContent>
+              </Card>
+            )}
+
             {/* Summary */}
             <Card className="md:col-span-2">
               <CardHeader>
@@ -2501,6 +2603,94 @@ const RelatorioCliente = () => {
                       })}
                     </div>
                   </div>
+                )}
+
+                {/* Ad Panels Google */}
+                {reportData.sectionsConfig.showPaineisAnuncio && reportData.paineisAnuncio.filter(p => p.platform === "google").length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold mb-4 text-blue-400 tracking-widest">
+                      PAINÉIS GOOGLE ADS
+                    </h3>
+                    <div className="flex flex-wrap gap-3 justify-center">
+                      {reportData.paineisAnuncio.filter(p => p.platform === "google").map((panel) => {
+                        const aspectCss = aspectRatioOptionToCss(panel.aspectRatio);
+                        return (
+                          <div
+                            key={panel.id}
+                            className="rounded-lg overflow-hidden border border-blue-500/30 max-w-[200px]"
+                            style={aspectCss ? { aspectRatio: aspectCss } : undefined}
+                          >
+                            <img
+                              src={panel.url}
+                              alt={panel.name}
+                              className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
+                              crossOrigin="anonymous"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Ad Panels Meta */}
+                {reportData.sectionsConfig.showPaineisAnuncio && reportData.paineisAnuncio.filter(p => p.platform === "meta").length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold mb-4 text-purple-400 tracking-widest">
+                      PAINÉIS META ADS
+                    </h3>
+                    <div className="flex flex-wrap gap-3 justify-center">
+                      {reportData.paineisAnuncio.filter(p => p.platform === "meta").map((panel) => {
+                        const aspectCss = aspectRatioOptionToCss(panel.aspectRatio);
+                        return (
+                          <div
+                            key={panel.id}
+                            className="rounded-lg overflow-hidden border border-purple-500/30 max-w-[200px]"
+                            style={aspectCss ? { aspectRatio: aspectCss } : undefined}
+                          >
+                            <img
+                              src={panel.url}
+                              alt={panel.name}
+                              className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
+                              crossOrigin="anonymous"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Custom Sections */}
+                {reportData.sectionsConfig.showCustomSections && reportData.customSections.length > 0 && (
+                  <>
+                    {reportData.customSections.filter(s => s.images.length > 0).map((section) => (
+                      <div key={section.id} className="mb-6">
+                        <h3 className="text-lg font-bold mb-4 text-primary tracking-widest uppercase">
+                          {section.title}
+                        </h3>
+                        <div className="flex flex-wrap gap-3 justify-center">
+                          {section.images.map((image) => {
+                            const aspectCss = aspectRatioOptionToCss(image.aspectRatio);
+                            return (
+                              <div
+                                key={image.id}
+                                className="rounded-lg overflow-hidden border border-white/20 max-w-[200px]"
+                                style={aspectCss ? { aspectRatio: aspectCss } : undefined}
+                              >
+                                <img
+                                  src={image.url}
+                                  alt={image.name}
+                                  className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
+                                  crossOrigin="anonymous"
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </>
                 )}
 
                 {/* Summary */}
