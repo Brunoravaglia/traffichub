@@ -12,99 +12,29 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  useSortable,
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { Trash2, Upload, GripVertical, Plus, X, Pencil, Check } from "lucide-react";
+import { Upload, Plus, X, Pencil, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  AspectRatioSelector,
-  aspectRatioOptionToCss,
-  type AspectRatioOption,
-} from "./AspectRatioSelector";
+import { ResizableImage } from "./ResizableImage";
 
 export interface CustomSectionImage {
   id: string;
   url: string;
   name: string;
-  aspectRatio?: AspectRatioOption;
+  width?: number;
+  height?: number;
 }
 
 export interface CustomSection {
   id: string;
   title: string;
   images: CustomSectionImage[];
-}
-
-interface SortableImageProps {
-  image: CustomSectionImage;
-  onRemove: (id: string) => void;
-  onAspectRatioChange: (id: string, ratio: AspectRatioOption | undefined) => void;
-}
-
-function SortableImage({ image, onRemove, onAspectRatioChange }: SortableImageProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: image.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 10 : undefined,
-    opacity: isDragging ? 0.8 : 1,
-  };
-
-  const aspectCss = aspectRatioOptionToCss(image.aspectRatio);
-
-  return (
-    <div ref={setNodeRef} style={style} className="space-y-2">
-      <div
-        className={cn(
-          "relative group rounded-lg overflow-hidden border border-border",
-          isDragging && "ring-2 ring-primary shadow-lg"
-        )}
-        style={aspectCss ? { aspectRatio: aspectCss } : undefined}
-      >
-        <img
-          src={image.url}
-          alt={image.name}
-          className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
-        />
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-        
-        <button
-          {...attributes}
-          {...listeners}
-          className="absolute top-2 left-2 p-1.5 bg-background/90 rounded-md opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
-        >
-          <GripVertical className="w-4 h-4 text-muted-foreground" />
-        </button>
-
-        <button
-          onClick={() => onRemove(image.id)}
-          className="absolute top-2 right-2 p-1 bg-destructive/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-        >
-          <Trash2 className="w-4 h-4 text-destructive-foreground" />
-        </button>
-      </div>
-      <AspectRatioSelector
-        value={image.aspectRatio || "auto"}
-        onChange={(next) => onAspectRatioChange(image.id, next === "auto" ? undefined : next)}
-        className="justify-start"
-      />
-    </div>
-  );
 }
 
 interface CustomSectionCardProps {
@@ -224,10 +154,10 @@ function CustomSectionCard({ section, onUpdate, onRemove, clienteId, maxImages =
     onUpdate({ ...section, images: section.images.filter((i) => i.id !== id) });
   };
 
-  const handleAspectRatioChange = (id: string, ratio: AspectRatioOption | undefined) => {
+  const handleResizeImage = (id: string, width: number, height: number) => {
     onUpdate({
       ...section,
-      images: section.images.map((i) => (i.id === id ? { ...i, aspectRatio: ratio } : i)),
+      images: section.images.map((i) => (i.id === id ? { ...i, width, height } : i)),
     });
   };
 
@@ -280,7 +210,7 @@ function CustomSectionCard({ section, onUpdate, onRemove, clienteId, maxImages =
       <CardContent>
         <div
           className={cn(
-            "grid grid-cols-3 gap-3 p-3 rounded-lg transition-colors",
+            "flex flex-wrap gap-4 p-4 rounded-lg transition-colors min-h-[200px]",
             isDragOver && "bg-muted/50 ring-2 ring-primary/50"
           )}
           onDrop={handleDrop}
@@ -290,11 +220,15 @@ function CustomSectionCard({ section, onUpdate, onRemove, clienteId, maxImages =
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={section.images.map((i) => i.id)} strategy={rectSortingStrategy}>
               {section.images.map((image) => (
-                <SortableImage
+                <ResizableImage
                   key={image.id}
-                  image={image}
+                  id={image.id}
+                  url={image.url}
+                  name={image.name}
+                  width={image.width}
+                  height={image.height}
                   onRemove={handleRemoveImage}
-                  onAspectRatioChange={handleAspectRatioChange}
+                  onResize={handleResizeImage}
                 />
               ))}
             </SortableContext>

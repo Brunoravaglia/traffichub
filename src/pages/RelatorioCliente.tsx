@@ -2670,23 +2670,23 @@ const RelatorioCliente = () => {
                           {section.title}
                         </h3>
                         <div className="flex flex-wrap gap-3 justify-center">
-                          {section.images.map((image) => {
-                            const aspectCss = aspectRatioOptionToCss(image.aspectRatio);
-                            return (
-                              <div
-                                key={image.id}
-                                className="rounded-lg overflow-hidden border border-white/20 max-w-[200px]"
-                                style={aspectCss ? { aspectRatio: aspectCss } : undefined}
-                              >
-                                <img
-                                  src={image.url}
-                                  alt={image.name}
-                                  className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
-                                  crossOrigin="anonymous"
-                                />
-                              </div>
-                            );
-                          })}
+                          {section.images.map((image) => (
+                            <div
+                              key={image.id}
+                              className="rounded-lg overflow-hidden border border-white/20"
+                              style={{ 
+                                width: image.width ? `${image.width}px` : '200px',
+                                height: image.height ? `${image.height}px` : 'auto'
+                              }}
+                            >
+                              <img
+                                src={image.url}
+                                alt={image.name}
+                                className="w-full h-full object-contain"
+                                crossOrigin="anonymous"
+                              />
+                            </div>
+                          ))}
                         </div>
                       </div>
                     ))}
