@@ -91,6 +91,7 @@ interface ReportData {
     conversoes: number;
     taxaConversao: number;
     roas: number;
+    roasValor: number;
     custoConversao: number;
     alcance: number;
     frequencia: number;
@@ -98,6 +99,7 @@ interface ReportData {
     taxaVisualizacao: number;
     interacoes: number;
     taxaInteracao: number;
+    compras: number;
   };
   meta: {
     impressoes: number;
@@ -117,6 +119,7 @@ interface ReportData {
     leads: number;
     conversoes: number;
     roas: number;
+    roasValor: number;
     curtidasPagina: number;
     seguidores: number;
     compartilhamentos: number;
@@ -128,6 +131,7 @@ interface ReportData {
     respostasMensagem: number;
     agendamentos: number;
     checkins: number;
+    compras: number;
   };
   resumo: string;
   criativos: Creative[];
@@ -142,6 +146,7 @@ interface ReportData {
     showGoogleConversoes: boolean;
     showGoogleTaxaConversao: boolean;
     showGoogleRoas: boolean;
+    showGoogleRoasValor: boolean;
     showGoogleCustoConversao: boolean;
     showGoogleAlcance: boolean;
     showGoogleFrequencia: boolean;
@@ -149,6 +154,7 @@ interface ReportData {
     showGoogleTaxaVisualizacao: boolean;
     showGoogleInteracoes: boolean;
     showGoogleTaxaInteracao: boolean;
+    showGoogleCompras: boolean;
     // Meta metrics visibility
     showMetaCustoPorLead: boolean;
     showMetaCpm: boolean;
@@ -161,6 +167,7 @@ interface ReportData {
     showMetaLeads: boolean;
     showMetaConversoes: boolean;
     showMetaRoas: boolean;
+    showMetaRoasValor: boolean;
     showMetaCurtidasPagina: boolean;
     showMetaSeguidores: boolean;
     showMetaCompartilhamentos: boolean;
@@ -172,6 +179,7 @@ interface ReportData {
     showMetaRespostasMensagem: boolean;
     showMetaAgendamentos: boolean;
     showMetaCheckins: boolean;
+    showMetaCompras: boolean;
   };
   sectionsConfig: {
     showObjetivos: boolean;
@@ -196,15 +204,17 @@ const defaultReportData: ReportData = {
   google: { 
     cliques: 0, impressoes: 0, contatos: 0, investido: 0, custoPorLead: 0, cpm: 0,
     saldoRestante: 0, diasParaRecarga: 0,
-    ctr: 0, cpc: 0, conversoes: 0, taxaConversao: 0, roas: 0, custoConversao: 0,
-    alcance: 0, frequencia: 0, visualizacoesVideo: 0, taxaVisualizacao: 0, interacoes: 0, taxaInteracao: 0
+    ctr: 0, cpc: 0, conversoes: 0, taxaConversao: 0, roas: 0, roasValor: 0, custoConversao: 0,
+    alcance: 0, frequencia: 0, visualizacoesVideo: 0, taxaVisualizacao: 0, interacoes: 0, taxaInteracao: 0,
+    compras: 0
   },
   meta: { 
     impressoes: 0, engajamento: 0, conversas: 0, investido: 0, custoPorLead: 0, cpm: 0, custoPorSeguidor: 0,
     saldoRestante: 0, diasParaRecarga: 0,
-    cliques: 0, ctr: 0, cpc: 0, alcance: 0, frequencia: 0, leads: 0, conversoes: 0, roas: 0,
+    cliques: 0, ctr: 0, cpc: 0, alcance: 0, frequencia: 0, leads: 0, conversoes: 0, roas: 0, roasValor: 0,
     curtidasPagina: 0, seguidores: 0, compartilhamentos: 0, salvos: 0, comentarios: 0,
-    visualizacoesVideo: 0, retencaoVideo: 0, mensagensIniciadas: 0, respostasMensagem: 0, agendamentos: 0, checkins: 0
+    visualizacoesVideo: 0, retencaoVideo: 0, mensagensIniciadas: 0, respostasMensagem: 0, agendamentos: 0, checkins: 0,
+    compras: 0
   },
   resumo: "",
   criativos: [],
@@ -219,6 +229,7 @@ const defaultReportData: ReportData = {
     showGoogleConversoes: true,
     showGoogleTaxaConversao: false,
     showGoogleRoas: false,
+    showGoogleRoasValor: false,
     showGoogleCustoConversao: false,
     showGoogleAlcance: false,
     showGoogleFrequencia: false,
@@ -226,6 +237,7 @@ const defaultReportData: ReportData = {
     showGoogleTaxaVisualizacao: false,
     showGoogleInteracoes: false,
     showGoogleTaxaInteracao: false,
+    showGoogleCompras: false,
     // Meta - defaults
     showMetaCustoPorLead: true,
     showMetaCpm: false,
@@ -238,6 +250,7 @@ const defaultReportData: ReportData = {
     showMetaLeads: true,
     showMetaConversoes: false,
     showMetaRoas: false,
+    showMetaRoasValor: false,
     showMetaCurtidasPagina: false,
     showMetaSeguidores: false,
     showMetaCompartilhamentos: false,
@@ -249,6 +262,7 @@ const defaultReportData: ReportData = {
     showMetaRespostasMensagem: false,
     showMetaAgendamentos: false,
     showMetaCheckins: false,
+    showMetaCompras: false,
   },
   sectionsConfig: {
     showObjetivos: true,
@@ -1333,6 +1347,41 @@ const RelatorioCliente = () => {
                       />
                     </div>
                   )}
+                  {reportData.metricsConfig.showGoogleCompras && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">
+                        <DollarSign className="w-4 h-4 text-muted-foreground" />
+                        Compras
+                      </Label>
+                      <NumericInput
+                        value={reportData.google.compras}
+                        onChange={(value) =>
+                          setReportData({
+                            ...reportData,
+                            google: { ...reportData.google, compras: value },
+                          })
+                        }
+                      />
+                    </div>
+                  )}
+                  {reportData.metricsConfig.showGoogleRoasValor && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">
+                        <DollarSign className="w-4 h-4 text-muted-foreground" />
+                        ROAS (R$)
+                      </Label>
+                      <NumericInput
+                        value={reportData.google.roasValor}
+                        onChange={(value) =>
+                          setReportData({
+                            ...reportData,
+                            google: { ...reportData.google, roasValor: value },
+                          })
+                        }
+                        isDecimal
+                      />
+                    </div>
+                  )}
                 </div>
                 
                 {/* Google Metrics Config */}
@@ -1479,6 +1528,30 @@ const RelatorioCliente = () => {
                           setReportData({
                             ...reportData,
                             metricsConfig: { ...reportData.metricsConfig, showGoogleInteracoes: checked },
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                      <Label className="text-xs">Compras</Label>
+                      <Switch
+                        checked={reportData.metricsConfig.showGoogleCompras}
+                        onCheckedChange={(checked) =>
+                          setReportData({
+                            ...reportData,
+                            metricsConfig: { ...reportData.metricsConfig, showGoogleCompras: checked },
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                      <Label className="text-xs">ROAS (R$)</Label>
+                      <Switch
+                        checked={reportData.metricsConfig.showGoogleRoasValor}
+                        onCheckedChange={(checked) =>
+                          setReportData({
+                            ...reportData,
+                            metricsConfig: { ...reportData.metricsConfig, showGoogleRoasValor: checked },
                           })
                         }
                       />
@@ -1789,6 +1862,41 @@ const RelatorioCliente = () => {
                       />
                     </div>
                   )}
+                  {reportData.metricsConfig.showMetaCompras && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">
+                        <DollarSign className="w-4 h-4 text-muted-foreground" />
+                        Compras
+                      </Label>
+                      <NumericInput
+                        value={reportData.meta.compras}
+                        onChange={(value) =>
+                          setReportData({
+                            ...reportData,
+                            meta: { ...reportData.meta, compras: value },
+                          })
+                        }
+                      />
+                    </div>
+                  )}
+                  {reportData.metricsConfig.showMetaRoasValor && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">
+                        <DollarSign className="w-4 h-4 text-muted-foreground" />
+                        ROAS (R$)
+                      </Label>
+                      <NumericInput
+                        value={reportData.meta.roasValor}
+                        onChange={(value) =>
+                          setReportData({
+                            ...reportData,
+                            meta: { ...reportData.meta, roasValor: value },
+                          })
+                        }
+                        isDecimal
+                      />
+                    </div>
+                  )}
                 </div>
                 
                 {/* Meta Metrics Config */}
@@ -2031,6 +2139,30 @@ const RelatorioCliente = () => {
                           setReportData({
                             ...reportData,
                             metricsConfig: { ...reportData.metricsConfig, showMetaAgendamentos: checked },
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                      <Label className="text-xs">Compras</Label>
+                      <Switch
+                        checked={reportData.metricsConfig.showMetaCompras}
+                        onCheckedChange={(checked) =>
+                          setReportData({
+                            ...reportData,
+                            metricsConfig: { ...reportData.metricsConfig, showMetaCompras: checked },
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                      <Label className="text-xs">ROAS (R$)</Label>
+                      <Switch
+                        checked={reportData.metricsConfig.showMetaRoasValor}
+                        onCheckedChange={(checked) =>
+                          setReportData({
+                            ...reportData,
+                            metricsConfig: { ...reportData.metricsConfig, showMetaRoasValor: checked },
                           })
                         }
                       />
@@ -2445,7 +2577,6 @@ const RelatorioCliente = () => {
                         <p className="text-xs text-gray-400">Investidos</p>
                       </div>
                     </div>
-                    {/* Additional Google Metrics */}
                     {(() => {
                       const additionalMetrics = [];
                       if (reportData.metricsConfig.showGoogleCustoPorLead) additionalMetrics.push({ label: "Custo por Lead", value: formatCurrency(reportData.google.custoPorLead), color: "text-green-400" });
@@ -2455,6 +2586,7 @@ const RelatorioCliente = () => {
                       if (reportData.metricsConfig.showGoogleConversoes) additionalMetrics.push({ label: "Conversões Ads", value: formatNumber(reportData.google.conversoes), color: "text-emerald-400" });
                       if (reportData.metricsConfig.showGoogleTaxaConversao) additionalMetrics.push({ label: "Taxa Conv.", value: `${reportData.google.taxaConversao.toFixed(2)}%`, color: "text-cyan-400" });
                       if (reportData.metricsConfig.showGoogleRoas) additionalMetrics.push({ label: "ROAS", value: `${reportData.google.roas.toFixed(2)}x`, color: "text-pink-400" });
+                      if (reportData.metricsConfig.showGoogleRoasValor) additionalMetrics.push({ label: "ROAS (R$)", value: formatCurrency(reportData.google.roasValor), color: "text-fuchsia-400" });
                       if (reportData.metricsConfig.showGoogleCustoConversao) additionalMetrics.push({ label: "Custo/Conv.", value: formatCurrency(reportData.google.custoConversao), color: "text-red-400" });
                       if (reportData.metricsConfig.showGoogleAlcance) additionalMetrics.push({ label: "Alcance", value: formatNumber(reportData.google.alcance), color: "text-indigo-400" });
                       if (reportData.metricsConfig.showGoogleFrequencia) additionalMetrics.push({ label: "Frequência", value: reportData.google.frequencia.toFixed(2), color: "text-violet-400" });
@@ -2462,6 +2594,7 @@ const RelatorioCliente = () => {
                       if (reportData.metricsConfig.showGoogleTaxaVisualizacao) additionalMetrics.push({ label: "Taxa View", value: `${reportData.google.taxaVisualizacao.toFixed(2)}%`, color: "text-sky-400" });
                       if (reportData.metricsConfig.showGoogleInteracoes) additionalMetrics.push({ label: "Interações", value: formatNumber(reportData.google.interacoes), color: "text-lime-400" });
                       if (reportData.metricsConfig.showGoogleTaxaInteracao) additionalMetrics.push({ label: "Taxa Inter.", value: `${reportData.google.taxaInteracao.toFixed(2)}%`, color: "text-amber-400" });
+                      if (reportData.metricsConfig.showGoogleCompras) additionalMetrics.push({ label: "Compras", value: formatNumber(reportData.google.compras), color: "text-emerald-400" });
                       
                       if (additionalMetrics.length === 0) return null;
                       
@@ -2516,6 +2649,7 @@ const RelatorioCliente = () => {
                       if (reportData.metricsConfig.showMetaLeads) additionalMetrics.push({ label: "Leads", value: formatNumber(reportData.meta.leads), color: "text-emerald-400" });
                       if (reportData.metricsConfig.showMetaConversoes) additionalMetrics.push({ label: "Conversões", value: formatNumber(reportData.meta.conversoes), color: "text-teal-400" });
                       if (reportData.metricsConfig.showMetaRoas) additionalMetrics.push({ label: "ROAS", value: `${reportData.meta.roas.toFixed(2)}x`, color: "text-rose-400" });
+                      if (reportData.metricsConfig.showMetaRoasValor) additionalMetrics.push({ label: "ROAS (R$)", value: formatCurrency(reportData.meta.roasValor), color: "text-fuchsia-400" });
                       if (reportData.metricsConfig.showMetaCurtidasPagina) additionalMetrics.push({ label: "Curtidas Página", value: formatNumber(reportData.meta.curtidasPagina), color: "text-red-400" });
                       if (reportData.metricsConfig.showMetaSeguidores) additionalMetrics.push({ label: "Seguidores", value: formatNumber(reportData.meta.seguidores), color: "text-fuchsia-400" });
                       if (reportData.metricsConfig.showMetaCompartilhamentos) additionalMetrics.push({ label: "Compartilhamentos", value: formatNumber(reportData.meta.compartilhamentos), color: "text-sky-400" });
@@ -2526,6 +2660,7 @@ const RelatorioCliente = () => {
                       if (reportData.metricsConfig.showMetaMensagensIniciadas) additionalMetrics.push({ label: "Mensagens", value: formatNumber(reportData.meta.mensagensIniciadas), color: "text-blue-400" });
                       if (reportData.metricsConfig.showMetaAgendamentos) additionalMetrics.push({ label: "Agendamentos", value: formatNumber(reportData.meta.agendamentos), color: "text-green-400" });
                       if (reportData.metricsConfig.showMetaCheckins) additionalMetrics.push({ label: "Check-ins", value: formatNumber(reportData.meta.checkins), color: "text-orange-400" });
+                      if (reportData.metricsConfig.showMetaCompras) additionalMetrics.push({ label: "Compras", value: formatNumber(reportData.meta.compras), color: "text-emerald-400" });
                       
                       if (additionalMetrics.length === 0) return null;
                       
