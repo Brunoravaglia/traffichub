@@ -25,6 +25,7 @@ import {
   aspectRatioOptionToCss,
   type AspectRatioOption,
 } from "./AspectRatioSelector";
+import { ScaleSelector, type ScaleOption } from "./ScaleSelector";
 
 export interface AdPanelImage {
   id: string;
@@ -32,15 +33,17 @@ export interface AdPanelImage {
   name: string;
   platform: "google" | "meta";
   aspectRatio?: AspectRatioOption;
+  scale?: ScaleOption;
 }
 
 interface SortableAdPanelProps {
   image: AdPanelImage;
   onRemove: (id: string) => void;
   onAspectRatioChange: (id: string, ratio: AspectRatioOption | undefined) => void;
+  onScaleChange: (id: string, scale: ScaleOption) => void;
 }
 
-function SortableAdPanel({ image, onRemove, onAspectRatioChange }: SortableAdPanelProps) {
+function SortableAdPanel({ image, onRemove, onAspectRatioChange, onScaleChange }: SortableAdPanelProps) {
   const {
     attributes,
     listeners,
@@ -58,15 +61,21 @@ function SortableAdPanel({ image, onRemove, onAspectRatioChange }: SortableAdPan
   };
 
   const aspectCss = aspectRatioOptionToCss(image.aspectRatio);
+  const scale = parseInt(image.scale || "100") / 100;
 
   return (
     <div ref={setNodeRef} style={style} className="space-y-2">
       <div
         className={cn(
-          "relative group rounded-lg overflow-hidden border border-border",
+          "relative group rounded-lg overflow-hidden border border-border origin-top-left",
           isDragging && "ring-2 ring-primary shadow-lg"
         )}
-        style={aspectCss ? { aspectRatio: aspectCss } : undefined}
+        style={{ 
+          aspectRatio: aspectCss || undefined,
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+          width: `${100 / scale}%`,
+        }}
       >
         <img
           src={image.url}
@@ -90,11 +99,20 @@ function SortableAdPanel({ image, onRemove, onAspectRatioChange }: SortableAdPan
           <Trash2 className="w-4 h-4 text-destructive-foreground" />
         </button>
       </div>
-      <AspectRatioSelector
-        value={image.aspectRatio || "auto"}
-        onChange={(next) => onAspectRatioChange(image.id, next === "auto" ? undefined : next)}
-        className="justify-start"
-      />
+      <div className="flex flex-col gap-1">
+        <AspectRatioSelector
+          value={image.aspectRatio || "auto"}
+          onChange={(next) => onAspectRatioChange(image.id, next === "auto" ? undefined : next)}
+          className="justify-start"
+        />
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">Escala:</span>
+          <ScaleSelector
+            value={image.scale || "100"}
+            onChange={(newScale) => onScaleChange(image.id, newScale)}
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -227,6 +245,10 @@ export function AdPanelGrid({
     onChange(images.map((i) => (i.id === id ? { ...i, aspectRatio: ratio } : i)));
   };
 
+  const handleScaleChange = (id: string, scale: ScaleOption) => {
+    onChange(images.map((i) => (i.id === id ? { ...i, scale } : i)));
+  };
+
   const borderColor = platform === "google" ? "border-blue-500/50" : "border-purple-500/50";
   const hoverBorderColor = platform === "google" ? "hover:border-blue-500" : "hover:border-purple-500";
   const ringColor = platform === "google" ? "ring-blue-500/50" : "ring-purple-500/50";
@@ -249,6 +271,7 @@ export function AdPanelGrid({
               image={image}
               onRemove={handleRemove}
               onAspectRatioChange={handleAspectRatioChange}
+              onScaleChange={handleScaleChange}
             />
           ))}
         </SortableContext>
