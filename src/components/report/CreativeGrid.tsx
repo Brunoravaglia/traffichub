@@ -12,93 +12,21 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  useSortable,
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { Trash2, Upload, GripVertical } from "lucide-react";
+import { Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import {
-  AspectRatioSelector,
-  aspectRatioOptionToCss,
-  type AspectRatioOption,
-} from "./AspectRatioSelector";
+import { ResizableImage } from "./ResizableImage";
 
-interface Creative {
+export interface Creative {
   id: string;
   url: string;
   name: string;
   platform: "google" | "meta";
-  aspectRatio?: AspectRatioOption;
-}
-
-interface SortableCreativeProps {
-  creative: Creative;
-  onRemove: (id: string) => void;
-  onAspectRatioChange: (id: string, ratio: AspectRatioOption | undefined) => void;
-}
-
-function SortableCreative({ creative, onRemove, onAspectRatioChange }: SortableCreativeProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: creative.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 10 : undefined,
-    opacity: isDragging ? 0.8 : 1,
-  };
-
-  const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
-
-  return (
-    <div ref={setNodeRef} style={style} className="space-y-2">
-      <div
-        className={cn(
-          "relative group rounded-lg overflow-hidden border border-border",
-          isDragging && "ring-2 ring-primary shadow-lg"
-        )}
-        style={aspectCss ? { aspectRatio: aspectCss } : undefined}
-      >
-        <img
-          src={creative.url}
-          alt={creative.name}
-          className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
-        />
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-        
-        {/* Drag handle */}
-        <button
-          {...attributes}
-          {...listeners}
-          className="absolute top-2 left-2 p-1.5 bg-background/90 rounded-md opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
-        >
-          <GripVertical className="w-4 h-4 text-muted-foreground" />
-        </button>
-
-        {/* Remove button */}
-        <button
-          onClick={() => onRemove(creative.id)}
-          className="absolute top-2 right-2 p-1 bg-destructive/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-        >
-          <Trash2 className="w-4 h-4 text-destructive-foreground" />
-        </button>
-      </div>
-      <AspectRatioSelector
-        value={creative.aspectRatio || "auto"}
-        onChange={(next) => onAspectRatioChange(creative.id, next === "auto" ? undefined : next)}
-        className="justify-start"
-      />
-    </div>
-  );
+  width?: number;
+  height?: number;
 }
 
 interface CreativeGridProps {
@@ -225,18 +153,16 @@ export function CreativeGrid({
     onChange(creatives.filter((c) => c.id !== id));
   };
 
-  const handleAspectRatioChange = (id: string, ratio: AspectRatioOption | undefined) => {
-    onChange(creatives.map((c) => (c.id === id ? { ...c, aspectRatio: ratio } : c)));
+  const handleResize = (id: string, width: number, height: number) => {
+    onChange(creatives.map((c) => (c.id === id ? { ...c, width, height } : c)));
   };
 
   const borderColor = platform === "google" ? "border-blue-500/50" : "border-purple-500/50";
-  const hoverBorderColor = platform === "google" ? "hover:border-blue-500" : "hover:border-purple-500";
-  const textColor = platform === "google" ? "text-blue-500" : "text-purple-500";
 
   return (
     <div
       className={cn(
-        "grid grid-cols-3 gap-3 p-3 rounded-lg transition-colors",
+        "flex flex-wrap gap-4 p-3 rounded-lg transition-colors",
         isDragOver && `bg-muted/50 ring-2 ${platform === "google" ? "ring-blue-500/50" : "ring-purple-500/50"}`
       )}
       onDrop={handleDrop}
@@ -246,11 +172,15 @@ export function CreativeGrid({
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={platformCreatives.map((c) => c.id)} strategy={rectSortingStrategy}>
           {platformCreatives.map((creative) => (
-            <SortableCreative
+            <ResizableImage
               key={creative.id}
-              creative={creative}
+              id={creative.id}
+              url={creative.url}
+              name={creative.name}
+              width={creative.width}
+              height={creative.height}
               onRemove={handleRemove}
-              onAspectRatioChange={handleAspectRatioChange}
+              onResize={handleResize}
             />
           ))}
         </SortableContext>
@@ -259,10 +189,9 @@ export function CreativeGrid({
       {canAddMore && (
         <label
           className={cn(
-            "aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-2 text-muted-foreground transition-colors cursor-pointer",
+            "w-[200px] h-[150px] rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-2 text-muted-foreground transition-colors cursor-pointer",
             borderColor,
-            hoverBorderColor,
-            `hover:${textColor}`,
+            platform === "google" ? "hover:border-blue-500 hover:text-blue-500" : "hover:border-purple-500 hover:text-purple-500",
             isDragOver && `${borderColor} bg-muted/30`
           )}
         >
