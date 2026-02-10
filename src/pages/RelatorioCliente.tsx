@@ -100,6 +100,12 @@ interface ReportData {
     interacoes: number;
     taxaInteracao: number;
     compras: number;
+    visitasProduto: number;
+    adicoesCarrinho: number;
+    vendas: number;
+    custoPorVisita: number;
+    custoPorAdicaoCarrinho: number;
+    custoPorVenda: number;
   };
   meta: {
     impressoes: number;
@@ -132,6 +138,12 @@ interface ReportData {
     agendamentos: number;
     checkins: number;
     compras: number;
+    visitasProduto: number;
+    adicoesCarrinho: number;
+    vendas: number;
+    custoPorVisita: number;
+    custoPorAdicaoCarrinho: number;
+    custoPorVenda: number;
   };
   resumo: string;
   criativos: Creative[];
@@ -155,6 +167,12 @@ interface ReportData {
     showGoogleInteracoes: boolean;
     showGoogleTaxaInteracao: boolean;
     showGoogleCompras: boolean;
+    showGoogleVisitasProduto: boolean;
+    showGoogleAdicoesCarrinho: boolean;
+    showGoogleVendas: boolean;
+    showGoogleCustoPorVisita: boolean;
+    showGoogleCustoPorAdicaoCarrinho: boolean;
+    showGoogleCustoPorVenda: boolean;
     // Meta metrics visibility
     showMetaCustoPorLead: boolean;
     showMetaCpm: boolean;
@@ -180,7 +198,14 @@ interface ReportData {
     showMetaAgendamentos: boolean;
     showMetaCheckins: boolean;
     showMetaCompras: boolean;
+    showMetaVisitasProduto: boolean;
+    showMetaAdicoesCarrinho: boolean;
+    showMetaVendas: boolean;
+    showMetaCustoPorVisita: boolean;
+    showMetaCustoPorAdicaoCarrinho: boolean;
+    showMetaCustoPorVenda: boolean;
   };
+  autoFillSaldos: boolean;
   sectionsConfig: {
     showObjetivos: boolean;
     showGoogleAds: boolean;
@@ -206,7 +231,7 @@ const defaultReportData: ReportData = {
     saldoRestante: 0, diasParaRecarga: 0,
     ctr: 0, cpc: 0, conversoes: 0, taxaConversao: 0, roas: 0, roasValor: 0, custoConversao: 0,
     alcance: 0, frequencia: 0, visualizacoesVideo: 0, taxaVisualizacao: 0, interacoes: 0, taxaInteracao: 0,
-    compras: 0
+    compras: 0, visitasProduto: 0, adicoesCarrinho: 0, vendas: 0, custoPorVisita: 0, custoPorAdicaoCarrinho: 0, custoPorVenda: 0
   },
   meta: { 
     impressoes: 0, engajamento: 0, conversas: 0, investido: 0, custoPorLead: 0, cpm: 0, custoPorSeguidor: 0,
@@ -214,7 +239,7 @@ const defaultReportData: ReportData = {
     cliques: 0, ctr: 0, cpc: 0, alcance: 0, frequencia: 0, leads: 0, conversoes: 0, roas: 0, roasValor: 0,
     curtidasPagina: 0, seguidores: 0, compartilhamentos: 0, salvos: 0, comentarios: 0,
     visualizacoesVideo: 0, retencaoVideo: 0, mensagensIniciadas: 0, respostasMensagem: 0, agendamentos: 0, checkins: 0,
-    compras: 0
+    compras: 0, visitasProduto: 0, adicoesCarrinho: 0, vendas: 0, custoPorVisita: 0, custoPorAdicaoCarrinho: 0, custoPorVenda: 0
   },
   resumo: "",
   criativos: [],
@@ -238,6 +263,12 @@ const defaultReportData: ReportData = {
     showGoogleInteracoes: false,
     showGoogleTaxaInteracao: false,
     showGoogleCompras: false,
+    showGoogleVisitasProduto: false,
+    showGoogleAdicoesCarrinho: false,
+    showGoogleVendas: false,
+    showGoogleCustoPorVisita: false,
+    showGoogleCustoPorAdicaoCarrinho: false,
+    showGoogleCustoPorVenda: false,
     // Meta - defaults
     showMetaCustoPorLead: true,
     showMetaCpm: false,
@@ -263,7 +294,14 @@ const defaultReportData: ReportData = {
     showMetaAgendamentos: false,
     showMetaCheckins: false,
     showMetaCompras: false,
+    showMetaVisitasProduto: false,
+    showMetaAdicoesCarrinho: false,
+    showMetaVendas: false,
+    showMetaCustoPorVisita: false,
+    showMetaCustoPorAdicaoCarrinho: false,
+    showMetaCustoPorVenda: false,
   },
+  autoFillSaldos: false,
   sectionsConfig: {
     showObjetivos: true,
     showGoogleAds: true,
@@ -439,6 +477,40 @@ const RelatorioCliente = () => {
     },
     enabled: !!clienteId,
   });
+
+  // Fetch client tracking data for auto-fill
+  const { data: clientTracking } = useQuery({
+    queryKey: ["client-tracking", clienteId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("client_tracking")
+        .select("*")
+        .eq("cliente_id", clienteId)
+        .single();
+      if (error) return null;
+      return data;
+    },
+    enabled: !!clienteId,
+  });
+
+  // Auto-fill saldos from client tracking when toggle is on
+  useEffect(() => {
+    if (reportData.autoFillSaldos && clientTracking) {
+      setReportData(prev => ({
+        ...prev,
+        google: {
+          ...prev.google,
+          saldoRestante: clientTracking.google_saldo || 0,
+          diasParaRecarga: clientTracking.google_dias_restantes || 0,
+        },
+        meta: {
+          ...prev.meta,
+          saldoRestante: clientTracking.meta_saldo || 0,
+          diasParaRecarga: clientTracking.meta_dias_restantes || 0,
+        },
+      }));
+    }
+  }, [reportData.autoFillSaldos, clientTracking]);
 
   // Auto-calculate CPL and CPM
   const calculateMetrics = () => {
@@ -1382,6 +1454,75 @@ const RelatorioCliente = () => {
                       />
                     </div>
                   )}
+                  {reportData.metricsConfig.showGoogleVisitasProduto && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">Visitas Produto</Label>
+                      <NumericInput
+                        value={reportData.google.visitasProduto}
+                        onChange={(value) =>
+                          setReportData({ ...reportData, google: { ...reportData.google, visitasProduto: value } })
+                        }
+                      />
+                    </div>
+                  )}
+                  {reportData.metricsConfig.showGoogleAdicoesCarrinho && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">Adições ao Carrinho</Label>
+                      <NumericInput
+                        value={reportData.google.adicoesCarrinho}
+                        onChange={(value) =>
+                          setReportData({ ...reportData, google: { ...reportData.google, adicoesCarrinho: value } })
+                        }
+                      />
+                    </div>
+                  )}
+                  {reportData.metricsConfig.showGoogleVendas && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">Vendas</Label>
+                      <NumericInput
+                        value={reportData.google.vendas}
+                        onChange={(value) =>
+                          setReportData({ ...reportData, google: { ...reportData.google, vendas: value } })
+                        }
+                      />
+                    </div>
+                  )}
+                  {reportData.metricsConfig.showGoogleCustoPorVisita && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">Custo/Visita (R$)</Label>
+                      <NumericInput
+                        value={reportData.google.custoPorVisita}
+                        onChange={(value) =>
+                          setReportData({ ...reportData, google: { ...reportData.google, custoPorVisita: value } })
+                        }
+                        isDecimal
+                      />
+                    </div>
+                  )}
+                  {reportData.metricsConfig.showGoogleCustoPorAdicaoCarrinho && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">Custo/Add Carrinho (R$)</Label>
+                      <NumericInput
+                        value={reportData.google.custoPorAdicaoCarrinho}
+                        onChange={(value) =>
+                          setReportData({ ...reportData, google: { ...reportData.google, custoPorAdicaoCarrinho: value } })
+                        }
+                        isDecimal
+                      />
+                    </div>
+                  )}
+                  {reportData.metricsConfig.showGoogleCustoPorVenda && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">Custo/Venda (R$)</Label>
+                      <NumericInput
+                        value={reportData.google.custoPorVenda}
+                        onChange={(value) =>
+                          setReportData({ ...reportData, google: { ...reportData.google, custoPorVenda: value } })
+                        }
+                        isDecimal
+                      />
+                    </div>
+                  )}
                 </div>
                 
                 {/* Google Metrics Config */}
@@ -1553,6 +1694,60 @@ const RelatorioCliente = () => {
                             ...reportData,
                             metricsConfig: { ...reportData.metricsConfig, showGoogleRoasValor: checked },
                           })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                      <Label className="text-xs">Visitas Produto</Label>
+                      <Switch
+                        checked={reportData.metricsConfig.showGoogleVisitasProduto}
+                        onCheckedChange={(checked) =>
+                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showGoogleVisitasProduto: checked } })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                      <Label className="text-xs">Add Carrinho</Label>
+                      <Switch
+                        checked={reportData.metricsConfig.showGoogleAdicoesCarrinho}
+                        onCheckedChange={(checked) =>
+                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showGoogleAdicoesCarrinho: checked } })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                      <Label className="text-xs">Vendas</Label>
+                      <Switch
+                        checked={reportData.metricsConfig.showGoogleVendas}
+                        onCheckedChange={(checked) =>
+                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showGoogleVendas: checked } })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                      <Label className="text-xs">Custo/Visita</Label>
+                      <Switch
+                        checked={reportData.metricsConfig.showGoogleCustoPorVisita}
+                        onCheckedChange={(checked) =>
+                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showGoogleCustoPorVisita: checked } })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                      <Label className="text-xs">Custo/Add Carrinho</Label>
+                      <Switch
+                        checked={reportData.metricsConfig.showGoogleCustoPorAdicaoCarrinho}
+                        onCheckedChange={(checked) =>
+                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showGoogleCustoPorAdicaoCarrinho: checked } })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                      <Label className="text-xs">Custo/Venda</Label>
+                      <Switch
+                        checked={reportData.metricsConfig.showGoogleCustoPorVenda}
+                        onCheckedChange={(checked) =>
+                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showGoogleCustoPorVenda: checked } })
                         }
                       />
                     </div>
@@ -1897,6 +2092,75 @@ const RelatorioCliente = () => {
                       />
                     </div>
                   )}
+                  {reportData.metricsConfig.showMetaVisitasProduto && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">Visitas Produto</Label>
+                      <NumericInput
+                        value={reportData.meta.visitasProduto}
+                        onChange={(value) =>
+                          setReportData({ ...reportData, meta: { ...reportData.meta, visitasProduto: value } })
+                        }
+                      />
+                    </div>
+                  )}
+                  {reportData.metricsConfig.showMetaAdicoesCarrinho && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">Adições ao Carrinho</Label>
+                      <NumericInput
+                        value={reportData.meta.adicoesCarrinho}
+                        onChange={(value) =>
+                          setReportData({ ...reportData, meta: { ...reportData.meta, adicoesCarrinho: value } })
+                        }
+                      />
+                    </div>
+                  )}
+                  {reportData.metricsConfig.showMetaVendas && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">Vendas</Label>
+                      <NumericInput
+                        value={reportData.meta.vendas}
+                        onChange={(value) =>
+                          setReportData({ ...reportData, meta: { ...reportData.meta, vendas: value } })
+                        }
+                      />
+                    </div>
+                  )}
+                  {reportData.metricsConfig.showMetaCustoPorVisita && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">Custo/Visita (R$)</Label>
+                      <NumericInput
+                        value={reportData.meta.custoPorVisita}
+                        onChange={(value) =>
+                          setReportData({ ...reportData, meta: { ...reportData.meta, custoPorVisita: value } })
+                        }
+                        isDecimal
+                      />
+                    </div>
+                  )}
+                  {reportData.metricsConfig.showMetaCustoPorAdicaoCarrinho && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">Custo/Add Carrinho (R$)</Label>
+                      <NumericInput
+                        value={reportData.meta.custoPorAdicaoCarrinho}
+                        onChange={(value) =>
+                          setReportData({ ...reportData, meta: { ...reportData.meta, custoPorAdicaoCarrinho: value } })
+                        }
+                        isDecimal
+                      />
+                    </div>
+                  )}
+                  {reportData.metricsConfig.showMetaCustoPorVenda && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">Custo/Venda (R$)</Label>
+                      <NumericInput
+                        value={reportData.meta.custoPorVenda}
+                        onChange={(value) =>
+                          setReportData({ ...reportData, meta: { ...reportData.meta, custoPorVenda: value } })
+                        }
+                        isDecimal
+                      />
+                    </div>
+                  )}
                 </div>
                 
                 {/* Meta Metrics Config */}
@@ -2167,6 +2431,60 @@ const RelatorioCliente = () => {
                         }
                       />
                     </div>
+                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                      <Label className="text-xs">Visitas Produto</Label>
+                      <Switch
+                        checked={reportData.metricsConfig.showMetaVisitasProduto}
+                        onCheckedChange={(checked) =>
+                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showMetaVisitasProduto: checked } })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                      <Label className="text-xs">Add Carrinho</Label>
+                      <Switch
+                        checked={reportData.metricsConfig.showMetaAdicoesCarrinho}
+                        onCheckedChange={(checked) =>
+                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showMetaAdicoesCarrinho: checked } })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                      <Label className="text-xs">Vendas</Label>
+                      <Switch
+                        checked={reportData.metricsConfig.showMetaVendas}
+                        onCheckedChange={(checked) =>
+                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showMetaVendas: checked } })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                      <Label className="text-xs">Custo/Visita</Label>
+                      <Switch
+                        checked={reportData.metricsConfig.showMetaCustoPorVisita}
+                        onCheckedChange={(checked) =>
+                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showMetaCustoPorVisita: checked } })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                      <Label className="text-xs">Custo/Add Carrinho</Label>
+                      <Switch
+                        checked={reportData.metricsConfig.showMetaCustoPorAdicaoCarrinho}
+                        onCheckedChange={(checked) =>
+                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showMetaCustoPorAdicaoCarrinho: checked } })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                      <Label className="text-xs">Custo/Venda</Label>
+                      <Switch
+                        checked={reportData.metricsConfig.showMetaCustoPorVenda}
+                        onCheckedChange={(checked) =>
+                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showMetaCustoPorVenda: checked } })
+                        }
+                      />
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -2181,6 +2499,18 @@ const RelatorioCliente = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
+                  <div>
+                    <Label className="text-sm font-medium">Preencher automaticamente</Label>
+                    <p className="text-xs text-muted-foreground">Puxar saldo e dias da ficha do cliente</p>
+                  </div>
+                  <Switch
+                    checked={reportData.autoFillSaldos}
+                    onCheckedChange={(checked) =>
+                      setReportData({ ...reportData, autoFillSaldos: checked })
+                    }
+                  />
+                </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2 text-xs">
@@ -2595,6 +2925,12 @@ const RelatorioCliente = () => {
                       if (reportData.metricsConfig.showGoogleInteracoes) additionalMetrics.push({ label: "Interações", value: formatNumber(reportData.google.interacoes), color: "text-lime-400" });
                       if (reportData.metricsConfig.showGoogleTaxaInteracao) additionalMetrics.push({ label: "Taxa Inter.", value: `${reportData.google.taxaInteracao.toFixed(2)}%`, color: "text-amber-400" });
                       if (reportData.metricsConfig.showGoogleCompras) additionalMetrics.push({ label: "Compras", value: formatNumber(reportData.google.compras), color: "text-emerald-400" });
+                      if (reportData.metricsConfig.showGoogleVisitasProduto) additionalMetrics.push({ label: "Visitas Produto", value: formatNumber(reportData.google.visitasProduto), color: "text-sky-400" });
+                      if (reportData.metricsConfig.showGoogleAdicoesCarrinho) additionalMetrics.push({ label: "Add Carrinho", value: formatNumber(reportData.google.adicoesCarrinho), color: "text-orange-400" });
+                      if (reportData.metricsConfig.showGoogleVendas) additionalMetrics.push({ label: "Vendas", value: formatNumber(reportData.google.vendas), color: "text-green-400" });
+                      if (reportData.metricsConfig.showGoogleCustoPorVisita) additionalMetrics.push({ label: "Custo/Visita", value: formatCurrency(reportData.google.custoPorVisita), color: "text-cyan-400" });
+                      if (reportData.metricsConfig.showGoogleCustoPorAdicaoCarrinho) additionalMetrics.push({ label: "Custo/Add Carrinho", value: formatCurrency(reportData.google.custoPorAdicaoCarrinho), color: "text-yellow-400" });
+                      if (reportData.metricsConfig.showGoogleCustoPorVenda) additionalMetrics.push({ label: "Custo/Venda", value: formatCurrency(reportData.google.custoPorVenda), color: "text-red-400" });
                       
                       if (additionalMetrics.length === 0) return null;
                       
@@ -2661,6 +2997,12 @@ const RelatorioCliente = () => {
                       if (reportData.metricsConfig.showMetaAgendamentos) additionalMetrics.push({ label: "Agendamentos", value: formatNumber(reportData.meta.agendamentos), color: "text-green-400" });
                       if (reportData.metricsConfig.showMetaCheckins) additionalMetrics.push({ label: "Check-ins", value: formatNumber(reportData.meta.checkins), color: "text-orange-400" });
                       if (reportData.metricsConfig.showMetaCompras) additionalMetrics.push({ label: "Compras", value: formatNumber(reportData.meta.compras), color: "text-emerald-400" });
+                      if (reportData.metricsConfig.showMetaVisitasProduto) additionalMetrics.push({ label: "Visitas Produto", value: formatNumber(reportData.meta.visitasProduto), color: "text-sky-400" });
+                      if (reportData.metricsConfig.showMetaAdicoesCarrinho) additionalMetrics.push({ label: "Add Carrinho", value: formatNumber(reportData.meta.adicoesCarrinho), color: "text-orange-400" });
+                      if (reportData.metricsConfig.showMetaVendas) additionalMetrics.push({ label: "Vendas", value: formatNumber(reportData.meta.vendas), color: "text-green-400" });
+                      if (reportData.metricsConfig.showMetaCustoPorVisita) additionalMetrics.push({ label: "Custo/Visita", value: formatCurrency(reportData.meta.custoPorVisita), color: "text-cyan-400" });
+                      if (reportData.metricsConfig.showMetaCustoPorAdicaoCarrinho) additionalMetrics.push({ label: "Custo/Add Carrinho", value: formatCurrency(reportData.meta.custoPorAdicaoCarrinho), color: "text-yellow-400" });
+                      if (reportData.metricsConfig.showMetaCustoPorVenda) additionalMetrics.push({ label: "Custo/Venda", value: formatCurrency(reportData.meta.custoPorVenda), color: "text-red-400" });
                       
                       if (additionalMetrics.length === 0) return null;
                       
