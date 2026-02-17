@@ -10,7 +10,7 @@ import {
   Users, 
   FileText,
   TrendingUp,
-  ChevronRight,
+  ChevronDown,
   Timer,
   Briefcase,
   Trophy
@@ -53,6 +53,16 @@ const formatDuration = (seconds: number): string => {
   return `${minutes}min`;
 };
 
+const StatBox = ({ icon: Icon, value, label, color }: { icon: React.ElementType; value: string | number; label: string; color: string }) => (
+  <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-secondary/40 border border-border/30 min-w-0">
+    <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", color)}>
+      <Icon className="w-4 h-4" />
+    </div>
+    <span className="text-lg font-bold text-foreground leading-none">{value}</span>
+    <span className="text-[11px] text-muted-foreground leading-none">{label}</span>
+  </div>
+);
+
 const Gestores = () => {
   const navigate = useNavigate();
   const { gestor: currentGestor, refreshGestor } = useGestor();
@@ -63,7 +73,6 @@ const Gestores = () => {
   const { data: gestores, isLoading } = useQuery({
     queryKey: ["gestores-with-stats"],
     queryFn: async () => {
-      // Fetch gestores
       const { data: gestoresData, error: gestoresError } = await supabase
         .from("gestores")
         .select("*")
@@ -71,16 +80,13 @@ const Gestores = () => {
 
       if (gestoresError) throw gestoresError;
 
-      // Fetch stats for each gestor
       const gestoresWithStats: GestorWithStats[] = await Promise.all(
         gestoresData.map(async (gestor) => {
-          // Get client count
           const { count: clientCount } = await supabase
             .from("clientes")
             .select("*", { count: "exact", head: true })
             .eq("gestor_id", gestor.id);
 
-          // Get report count (reports from clients of this gestor)
           const { data: clientIds } = await supabase
             .from("clientes")
             .select("id")
@@ -95,7 +101,6 @@ const Gestores = () => {
             reportCount = count || 0;
           }
 
-          // Get session time for the week
           const weekAgo = new Date();
           weekAgo.setDate(weekAgo.getDate() - 7);
           
@@ -107,7 +112,6 @@ const Gestores = () => {
 
           const tempoSemana = sessions?.reduce((acc, s) => acc + (s.duration_seconds || 0), 0) || 0;
 
-          // Get achievement count
           const { count: achievementCount } = await supabase
             .from("gestor_achievements")
             .select("*", { count: "exact", head: true })
@@ -131,51 +135,35 @@ const Gestores = () => {
     },
   });
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.08 },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20, scale: 0.95 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: { duration: 0.4, ease: "easeOut" as const },
-    },
-  };
-
   const getActivityLevel = (seconds: number) => {
     const hours = seconds / 3600;
-    if (hours >= 20) return { label: "Alta", color: "bg-green-500", textColor: "text-green-500" };
-    if (hours >= 10) return { label: "Média", color: "bg-yellow-500", textColor: "text-yellow-500" };
-    if (hours > 0) return { label: "Baixa", color: "bg-orange-500", textColor: "text-orange-500" };
-    return { label: "Inativo", color: "bg-muted", textColor: "text-muted-foreground" };
+    if (hours >= 20) return { label: "Alta", dotColor: "bg-green-500" };
+    if (hours >= 10) return { label: "Média", dotColor: "bg-yellow-500" };
+    if (hours > 0) return { label: "Baixa", dotColor: "bg-orange-500" };
+    return { label: "Inativo", dotColor: "bg-muted-foreground/50" };
   };
 
   return (
-    <div className="min-h-full bg-background p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-full bg-background p-4 sm:p-6 lg:p-8">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
+          className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4"
         >
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">
               Gestores de Tráfego
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground mt-1">
               Acompanhe a atividade e produtividade da sua equipe
             </p>
           </div>
           <Button
             onClick={() => navigate("/novo-gestor")}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground vcd-button-glow"
+            size="lg"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             <UserPlus className="w-4 h-4 mr-2" />
             Novo Gestor
@@ -188,10 +176,10 @@ const Gestores = () => {
           </div>
         ) : gestores && gestores.length > 0 ? (
           <motion.div
-            variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid md:grid-cols-2 xl:grid-cols-3 gap-6"
+            variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.07 } } }}
+            className="space-y-4"
           >
             {gestores.map((gestor) => {
               const links = gestor.links || [];
@@ -201,35 +189,28 @@ const Gestores = () => {
               return (
                 <motion.div
                   key={gestor.id}
-                  variants={itemVariants}
+                  variants={{
+                    hidden: { opacity: 0, y: 16 },
+                    visible: { opacity: 1, y: 0, transition: { duration: 0.35 } },
+                  }}
                   layout
                   className={cn(
-                    "relative rounded-2xl border-2 transition-all duration-300 overflow-hidden",
-                    "bg-gradient-to-br from-card via-card to-card/50",
+                    "rounded-2xl border transition-all duration-300 overflow-hidden",
+                    "bg-card",
                     isExpanded 
-                      ? "border-primary shadow-lg shadow-primary/10" 
-                      : "border-border hover:border-primary/30 hover:shadow-md"
+                      ? "border-primary/40 shadow-lg shadow-primary/5" 
+                      : "border-border hover:border-primary/20"
                   )}
                 >
-                  {/* Activity Indicator Bar */}
-                  <div className="absolute top-0 left-0 right-0 h-1">
-                    <div 
-                      className={cn("h-full transition-all", activityLevel.color)}
-                      style={{ 
-                        width: `${Math.min(100, (gestor.tempo_semana_segundos / (40 * 3600)) * 100)}%` 
-                      }}
-                    />
-                  </div>
-
-                  {/* Main Card Content */}
+                  {/* Main Row */}
                   <div 
-                    className="p-5 cursor-pointer"
+                    className="p-5 sm:p-6 cursor-pointer"
                     onClick={() => setExpandedGestorId(isExpanded ? null : gestor.id)}
                   >
-                    <div className="flex items-start gap-4">
-                      {/* Avatar */}
+                    {/* Top: Avatar + Name + Badge */}
+                    <div className="flex items-center gap-4 mb-5">
                       {gestor.foto_url ? (
-                        <div className="w-14 h-14 rounded-xl overflow-hidden bg-secondary border border-border flex-shrink-0 ring-2 ring-background shadow-md">
+                        <div className="w-14 h-14 rounded-full overflow-hidden bg-secondary border-2 border-border flex-shrink-0">
                           <img
                             src={gestor.foto_url}
                             alt={gestor.nome}
@@ -237,7 +218,7 @@ const Gestores = () => {
                           />
                         </div>
                       ) : (
-                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center flex-shrink-0 ring-2 ring-background shadow-md">
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center flex-shrink-0 border-2 border-primary/20">
                           <span className="text-xl font-bold text-primary-foreground">
                             {gestor.nome.charAt(0).toUpperCase()}
                           </span>
@@ -245,84 +226,58 @@ const Gestores = () => {
                       )}
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="text-lg font-semibold text-foreground truncate">
                             {gestor.nome}
                           </h3>
                           {currentGestor?.id === gestor.id && (
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary">
+                            <Badge variant="secondary" className="text-[10px] px-2 py-0 bg-primary/10 text-primary border-primary/20">
                               Você
                             </Badge>
                           )}
                         </div>
-                        
-                        <div className="flex items-center gap-3 mt-1.5">
-                          <Badge 
-                            variant="secondary" 
-                            className={cn(
-                              "text-xs px-2 py-0.5",
-                              activityLevel.textColor,
-                              "bg-opacity-10"
-                            )}
-                          >
-                            <div className={cn("w-1.5 h-1.5 rounded-full mr-1.5", activityLevel.color)} />
-                            {activityLevel.label}
-                          </Badge>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <div className={cn("w-2 h-2 rounded-full", activityLevel.dotColor)} />
+                          <span className="text-xs text-muted-foreground">
+                            Atividade {activityLevel.label}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Expand Indicator */}
-                      <ChevronRight 
+                      <ChevronDown 
                         className={cn(
-                          "w-5 h-5 text-muted-foreground transition-transform duration-200",
-                          isExpanded && "rotate-90"
+                          "w-5 h-5 text-muted-foreground transition-transform duration-200 flex-shrink-0",
+                          isExpanded && "rotate-180"
                         )} 
                       />
                     </div>
 
-                    {/* Quick Stats Row */}
-                    <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border/50">
-                      <div className="flex items-center gap-2 text-sm">
-                        <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                          <Timer className="w-4 h-4 text-blue-500" />
-                        </div>
-                        <div>
-                          <p className="text-foreground font-semibold">
-                            {formatDuration(gestor.tempo_semana_segundos)}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground">esta semana</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 text-sm">
-                        <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center">
-                          <Users className="w-4 h-4 text-green-500" />
-                        </div>
-                        <div>
-                          <p className="text-foreground font-semibold">{gestor.total_clientes}</p>
-                          <p className="text-[10px] text-muted-foreground">clientes</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 text-sm">
-                        <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                          <FileText className="w-4 h-4 text-purple-500" />
-                        </div>
-                        <div>
-                          <p className="text-foreground font-semibold">{gestor.total_relatorios}</p>
-                          <p className="text-[10px] text-muted-foreground">relatórios</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 text-sm">
-                        <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center">
-                          <Trophy className="w-4 h-4 text-yellow-500" />
-                        </div>
-                        <div>
-                          <p className="text-foreground font-semibold">{gestor.total_conquistas}</p>
-                          <p className="text-[10px] text-muted-foreground">conquistas</p>
-                        </div>
-                      </div>
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <StatBox
+                        icon={Timer}
+                        value={formatDuration(gestor.tempo_semana_segundos)}
+                        label="esta semana"
+                        color="bg-blue-500/10 text-blue-500"
+                      />
+                      <StatBox
+                        icon={Users}
+                        value={gestor.total_clientes}
+                        label="clientes"
+                        color="bg-green-500/10 text-green-500"
+                      />
+                      <StatBox
+                        icon={FileText}
+                        value={gestor.total_relatorios}
+                        label="relatórios"
+                        color="bg-purple-500/10 text-purple-500"
+                      />
+                      <StatBox
+                        icon={Trophy}
+                        value={gestor.total_conquistas}
+                        label="conquistas"
+                        color="bg-yellow-500/10 text-yellow-500"
+                      />
                     </div>
                   </div>
 
@@ -333,61 +288,57 @@ const Gestores = () => {
                       height: isExpanded ? "auto" : 0,
                       opacity: isExpanded ? 1 : 0 
                     }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.25 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-5 pb-5 space-y-4 border-t border-border/50">
-                      {/* Contact Info */}
-                      {gestor.telefone && (
-                        <div className="flex items-center gap-2 pt-4 text-muted-foreground text-sm">
-                          <Phone className="w-4 h-4 text-primary/70" />
-                          <span>{gestor.telefone}</span>
-                        </div>
-                      )}
-
-                      {/* Links */}
-                      {links.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {links.map((link, index) => (
-                            <a
-                              key={index}
-                              href={link.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                            >
-                              <LinkIcon className="w-3 h-3" />
-                              {link.nome}
-                            </a>
-                          ))}
-                        </div>
-                      )}
+                    <div className="px-5 sm:px-6 pb-6 space-y-5 border-t border-border/50 pt-5">
+                      {/* Contact & Links */}
+                      <div className="flex flex-wrap items-center gap-3">
+                        {gestor.telefone && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/50 px-3 py-1.5 rounded-full">
+                            <Phone className="w-3.5 h-3.5 text-primary/70" />
+                            <span>{gestor.telefone}</span>
+                          </div>
+                        )}
+                        {links.map((link, index) => (
+                          <a
+                            key={index}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                          >
+                            <LinkIcon className="w-3 h-3" />
+                            {link.nome}
+                          </a>
+                        ))}
+                      </div>
 
                       {/* Detailed Stats */}
-                      <div className="grid grid-cols-2 gap-3 pt-2">
-                        <div className="p-3 rounded-xl bg-secondary/50 border border-border/50">
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                            <Clock className="w-3 h-3" />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-4 rounded-xl bg-secondary/30 border border-border/30">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                            <Clock className="w-3.5 h-3.5" />
                             Tempo Online (7 dias)
                           </div>
-                          <p className="text-lg font-bold text-foreground">
+                          <p className="text-xl font-bold text-foreground">
                             {formatDuration(gestor.tempo_semana_segundos)}
                           </p>
                         </div>
-                        <div className="p-3 rounded-xl bg-secondary/50 border border-border/50">
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                            <TrendingUp className="w-3 h-3" />
+                        <div className="p-4 rounded-xl bg-secondary/30 border border-border/30">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                            <TrendingUp className="w-3.5 h-3.5" />
                             Média Diária
                           </div>
-                          <p className="text-lg font-bold text-foreground">
+                          <p className="text-xl font-bold text-foreground">
                             {formatDuration(Math.round(gestor.tempo_semana_segundos / 7))}
                           </p>
                         </div>
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex gap-2 pt-2">
+                      <div className="flex gap-3 pt-1">
                         <Dialog 
                           open={editingGestorId === gestor.id} 
                           onOpenChange={(open) => setEditingGestorId(open ? gestor.id : null)}
@@ -395,7 +346,7 @@ const Gestores = () => {
                           <DialogTrigger asChild>
                             <Button
                               variant="outline"
-                              size="sm"
+                              size="default"
                               className="flex-1"
                               onClick={(e) => e.stopPropagation()}
                             >
@@ -421,7 +372,7 @@ const Gestores = () => {
                         </Dialog>
                         <Button
                           variant="default"
-                          size="sm"
+                          size="default"
                           className="flex-1"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -455,7 +406,7 @@ const Gestores = () => {
             </p>
             <Button
               onClick={() => navigate("/novo-gestor")}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground vcd-button-glow"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               <UserPlus className="w-4 h-4 mr-2" />
               Cadastrar Gestor
