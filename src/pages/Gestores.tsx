@@ -12,7 +12,8 @@ import {
   TrendingUp,
   ChevronRight,
   Timer,
-  Briefcase
+  Briefcase,
+  Trophy
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +38,7 @@ interface GestorWithStats {
   total_clientes: number;
   total_relatorios: number;
   tempo_semana_segundos: number;
+  total_conquistas: number;
 }
 
 const formatDuration = (seconds: number): string => {
@@ -105,6 +107,12 @@ const Gestores = () => {
 
           const tempoSemana = sessions?.reduce((acc, s) => acc + (s.duration_seconds || 0), 0) || 0;
 
+          // Get achievement count
+          const { count: achievementCount } = await supabase
+            .from("gestor_achievements")
+            .select("*", { count: "exact", head: true })
+            .eq("gestor_id", gestor.id);
+
           return {
             id: gestor.id,
             nome: gestor.nome,
@@ -114,6 +122,7 @@ const Gestores = () => {
             total_clientes: clientCount || 0,
             total_relatorios: reportCount,
             tempo_semana_segundos: tempoSemana,
+            total_conquistas: achievementCount || 0,
           };
         })
       );
@@ -302,6 +311,16 @@ const Gestores = () => {
                         <div>
                           <p className="text-foreground font-semibold">{gestor.total_relatorios}</p>
                           <p className="text-[10px] text-muted-foreground">relatórios</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                          <Trophy className="w-4 h-4 text-yellow-500" />
+                        </div>
+                        <div>
+                          <p className="text-foreground font-semibold">{gestor.total_conquistas}</p>
+                          <p className="text-[10px] text-muted-foreground">conquistas</p>
                         </div>
                       </div>
                     </div>
