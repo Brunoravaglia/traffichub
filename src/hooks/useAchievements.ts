@@ -31,7 +31,7 @@ export const useAchievements = () => {
   const [newlyUnlocked, setNewlyUnlocked] = useState<Achievement | null>(null);
   const lastCheckRef = useRef<number>(0);
   const isCheckingRef = useRef<boolean>(false);
-  const hasInitializedRef = useRef<boolean>(false);
+  
 
   const gestorId = gestor?.id;
 
@@ -175,17 +175,18 @@ export const useAchievements = () => {
   });
 
   // Check achievements function - stable reference
-  const checkAchievements = useCallback(() => {
+  const checkAchievements = useCallback(async () => {
     if (!gestorId || !gestorStats || !achievements.length) return;
     if (isCheckingRef.current) return;
     
-    // Debounce: only check every 60 seconds
+    // Debounce: only check every 30 seconds
     const now = Date.now();
-    if (now - lastCheckRef.current < 60000) return;
+    if (now - lastCheckRef.current < 30000) return;
     lastCheckRef.current = now;
     isCheckingRef.current = true;
 
     const currentHours = gestorStats.hoursLogged + Math.floor(sessionDuration / 3600);
+    const toUnlock: Achievement[] = [];
 
     for (const achievement of achievements) {
       if (unlockedSet.has(achievement.id)) continue;
@@ -220,23 +221,38 @@ export const useAchievements = () => {
       }
 
       if (shouldUnlock) {
-        unlockMutation.mutate(achievement.id);
-        setNewlyUnlocked(achievement);
-        isCheckingRef.current = false;
-        return; // Only show one at a time
+        toUnlock.push(achievement);
       }
+    }
+
+    // Unlock all pending achievements at once
+    if (toUnlock.length > 0) {
+      for (const achievement of toUnlock) {
+        try {
+          await unlockMutation.mutateAsync(achievement.id);
+        } catch {
+          // ignore duplicates
+        }
+      }
+      // Show the rarest one as notification
+      const rarityOrder = { legendary: 4, epic: 3, rare: 2, common: 1 };
+      const best = toUnlock.sort((a, b) => (rarityOrder[b.rarity] || 0) - (rarityOrder[a.rarity] || 0))[0];
+      setNewlyUnlocked(best);
     }
     
     isCheckingRef.current = false;
   }, [gestorId, gestorStats, achievements, unlockedSet, sessionDuration, unlockMutation]);
 
-  // Initial check only once when all data is ready
+  // Check on load and periodically
   useEffect(() => {
-    if (!gestorId || !gestorStats || hasInitializedRef.current) return;
+    if (!gestorId || !gestorStats) return;
     
-    hasInitializedRef.current = true;
-    const timer = setTimeout(checkAchievements, 3000);
-    return () => clearTimeout(timer);
+    const timer = setTimeout(checkAchievements, 2000);
+    const interval = setInterval(checkAchievements, 5 * 60 * 1000); // Re-check every 5 min
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
   }, [gestorId, gestorStats, checkAchievements]);
 
   const dismissNewlyUnlocked = useCallback(() => {
