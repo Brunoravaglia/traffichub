@@ -3,6 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 
 const SAVE_INTERVAL = 30000; // Save every 30 seconds
 
+interface Agencia {
+  id: string;
+  nome: string;
+  slug: string;
+  logo_url: string | null;
+}
+
 interface Gestor {
   id: string;
   nome: string;
@@ -13,10 +20,12 @@ interface Gestor {
   dados_completos: boolean;
   first_login_at: string | null;
   welcome_modal_dismissed: boolean | null;
+  agencia_id: string | null;
 }
 
 interface GestorContextType {
   gestor: Gestor | null;
+  agencia: Agencia | null;
   sessionId: string | null;
   sessionStartTime: Date | null;
   sessionDuration: number;
@@ -27,6 +36,7 @@ interface GestorContextType {
   updatePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
   refreshGestor: () => Promise<void>;
   markWelcomeSeen: () => Promise<void>;
+  setAgenciaBySlug: (slug: string) => Promise<{ success: boolean; agency?: Agencia; error?: string }>;
 }
 
 const GestorContext = createContext<GestorContextType | undefined>(undefined);
@@ -41,6 +51,7 @@ export const useGestor = () => {
 
 export const GestorProvider = ({ children }: { children: ReactNode }) => {
   const [gestor, setGestor] = useState<Gestor | null>(null);
+  const [agencia, setAgencia] = useState<Agencia | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const [sessionDuration, setSessionDuration] = useState(0);
@@ -52,7 +63,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
   const saveSessionDuration = useCallback(async (isLogout = false) => {
     const currentSessionId = sessionStorage.getItem("vcd_session_id");
     const currentSessionStart = sessionStorage.getItem("vcd_session_start");
-    
+
     if (!currentSessionId || !currentSessionStart) return;
 
     const startTime = new Date(currentSessionStart);
@@ -79,7 +90,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         .from("gestor_sessions")
         .update(updateData)
         .eq("id", currentSessionId);
-      
+
       console.log(`[Session] Saved duration: ${durationSeconds}s (logout: ${isLogout})`);
     } catch (error) {
       console.error("[Session] Error saving duration:", error);
@@ -95,21 +106,62 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
     if (storedGestorId && storedSessionId && storedSessionStart) {
       setSessionId(storedSessionId);
       setSessionStartTime(new Date(storedSessionStart));
-      
+
       // Fetch gestor data
       supabase
         .from("gestores")
         .select(
-          "id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed"
+          "id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id"
         )
         .eq("id", storedGestorId)
         .single()
-        .then(({ data }) => {
+        .then((result) => {
+          const { data } = result as { data: Gestor | null };
           if (data) {
             setGestor(data);
             setIsFirstLogin(!data.first_login_at);
+
+            // If gestor has agency, fetch agency data
+            if (data.agencia_id) {
+              supabase
+                .from("agencias")
+                .select("*")
+                .eq("id", data.agencia_id)
+                .single()
+                .then(({ data: agencyData }) => {
+                  if (agencyData) setAgencia(agencyData as Agencia);
+                });
+            }
           }
         });
+    }
+
+    // Auto-detect agency from subdomain
+    const hostname = window.location.hostname;
+    const parts = hostname.split('.');
+    if (parts.length > 2 && parts[0] !== 'www' && parts[0] !== 'vurp') {
+      const slug = parts[0];
+      supabase
+        .from("agencias")
+        .select("*")
+        .eq("slug", slug)
+        .single()
+        .then(({ data }) => {
+          if (data) setAgencia(data as Agencia);
+        });
+    } else {
+      // Check if agency was manually selected and stored
+      const storedAgencySlug = sessionStorage.getItem("vurp_agency_slug");
+      if (storedAgencySlug) {
+        supabase
+          .from("agencias")
+          .select("*")
+          .eq("slug", storedAgencySlug)
+          .single()
+          .then(({ data }) => {
+            if (data) setAgencia(data as Agencia);
+          });
+      }
     }
   }, []);
 
@@ -173,7 +225,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
     const handleBeforeUnload = () => {
       const storedStart = sessionStorage.getItem("vcd_session_start");
       const storedSessionId = sessionStorage.getItem("vcd_session_id");
-      
+
       if (!storedStart || !storedSessionId) return;
 
       const startTime = new Date(storedStart);
@@ -190,10 +242,10 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       };
 
       const data = JSON.stringify({ duration_seconds: durationSeconds });
-      
+
       // sendBeacon is the most reliable way to send data on page close
       const blob = new Blob([data], { type: "application/json" });
-      
+
       // Create a FormData-like structure with headers embedded in URL
       try {
         // Try fetch with keepalive first (more reliable with headers)
@@ -219,7 +271,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       const { data: gestorData, error } = await supabase
         .from("gestores")
         .select(
-          "id, nome, foto_url, telefone, senha, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed"
+          "id, nome, foto_url, telefone, senha, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id"
         )
         .eq("id", gestorId)
         .single();
@@ -247,7 +299,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const now = new Date();
-      
+
       // Store in state and sessionStorage
       setGestor({
         id: gestorData.id,
@@ -259,6 +311,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         dados_completos: gestorData.dados_completos,
         first_login_at: gestorData.first_login_at,
         welcome_modal_dismissed: gestorData.welcome_modal_dismissed,
+        agencia_id: gestorData.agencia_id,
       });
       setIsFirstLogin(isFirstTimeLogin);
       setSessionId(sessionData.id);
@@ -280,11 +333,28 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const setAgenciaBySlug = async (slug: string): Promise<{ success: boolean; agency?: Agencia; error?: string }> => {
+    const { data, error } = await supabase
+      .from("agencias")
+      .select("*")
+      .eq("slug", slug.toLowerCase())
+      .single();
+
+    if (error || !data) {
+      return { success: false, error: "Agência não encontrada" };
+    }
+
+    setAgencia(data as Agencia);
+    sessionStorage.setItem("vurp_agency_slug", (data as Agencia).slug);
+    return { success: true, agency: data as Agencia };
+  };
+
   const logout = async () => {
     // Save final duration with logout timestamp
     await saveSessionDuration(true);
 
     setGestor(null);
+    setAgencia(null);
     setSessionId(null);
     setSessionStartTime(null);
     setSessionDuration(0);
@@ -292,6 +362,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
     lastSavedDurationRef.current = 0;
 
     sessionStorage.removeItem("vcd_gestor_id");
+    sessionStorage.removeItem("vurp_agency_slug");
     sessionStorage.removeItem("vcd_session_id");
     sessionStorage.removeItem("vcd_session_start");
     sessionStorage.removeItem("vcd_unlocked");
@@ -301,12 +372,12 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
 
   const markWelcomeSeen = async () => {
     if (!gestor) return;
-    
+
     await supabase
       .from("gestores")
       .update({ first_login_at: new Date().toISOString() })
       .eq("id", gestor.id);
-    
+
     setIsFirstLogin(false);
     setGestor({ ...gestor, first_login_at: new Date().toISOString() });
   };
@@ -334,13 +405,13 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
     const { data } = await supabase
       .from("gestores")
       .select(
-        "id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed"
+        "id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id"
       )
       .eq("id", gestor.id)
       .single();
 
     if (data) {
-      setGestor(data);
+      setGestor(data as Gestor);
     }
   }, [gestor]);
 
@@ -348,6 +419,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
     <GestorContext.Provider
       value={{
         gestor,
+        agencia,
         sessionId,
         sessionStartTime,
         sessionDuration,
@@ -358,6 +430,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         updatePassword,
         refreshGestor,
         markWelcomeSeen,
+        setAgenciaBySlug,
       }}
     >
       {children}

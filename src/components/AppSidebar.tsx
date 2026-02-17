@@ -16,6 +16,7 @@ import {
   Flame,
   Calendar,
 } from "lucide-react";
+import { useGestor } from "@/contexts/GestorContext";
 import {
   Sidebar,
   SidebarContent,
@@ -41,6 +42,7 @@ const AppSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { state } = useSidebar();
+  const { agencia } = useGestor();
   const isCollapsed = state === "collapsed";
 
   const isActive = (path: string) => {
@@ -80,8 +82,21 @@ const AppSidebar = () => {
     <Sidebar collapsible="icon" className="border-r border-border/50">
       {/* Header */}
       <SidebarHeader className="border-b border-border/50 p-4">
-        <div className="flex items-center gap-3">
-          <VCDLogo size="sm" showText={!isCollapsed} />
+        <div className="flex items-center gap-3 overflow-hidden">
+          {agencia?.logo_url ? (
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden border border-primary/20">
+                <img src={agencia.logo_url} alt={agencia.nome} className="h-full w-full object-contain" />
+              </div>
+              {!isCollapsed && (
+                <span className="font-bold text-sm truncate max-w-[150px] text-foreground">
+                  {agencia.nome}
+                </span>
+              )}
+            </div>
+          ) : (
+            <VCDLogo size="sm" showText={!isCollapsed} />
+          )}
         </div>
       </SidebarHeader>
 
@@ -102,7 +117,7 @@ const AppSidebar = () => {
                     className={cn(
                       "transition-all duration-200",
                       isActive(item.path) &&
-                        "bg-primary/10 text-primary border-l-2 border-primary"
+                      "bg-primary/10 text-primary border-l-2 border-primary"
                     )}
                   >
                     <item.icon className="h-4 w-4" />
@@ -138,7 +153,7 @@ const AppSidebar = () => {
                         className={cn(
                           "transition-all duration-200",
                           isActive(item.path) &&
-                            "bg-primary/10 text-primary border-l-2 border-primary"
+                          "bg-primary/10 text-primary border-l-2 border-primary"
                         )}
                       >
                         <item.icon className="h-4 w-4" />
@@ -176,7 +191,7 @@ const AppSidebar = () => {
                         className={cn(
                           "transition-all duration-200",
                           isActive(item.path) &&
-                            "bg-primary/10 text-primary border-l-2 border-primary"
+                          "bg-primary/10 text-primary border-l-2 border-primary"
                         )}
                       >
                         <item.icon className="h-4 w-4" />
@@ -213,7 +228,7 @@ const AppSidebar = () => {
                         className={cn(
                           "transition-all duration-200",
                           isActive(item.path) &&
-                            "bg-primary/10 text-primary border-l-2 border-primary"
+                          "bg-primary/10 text-primary border-l-2 border-primary"
                         )}
                       >
                         <item.icon className="h-4 w-4" />
@@ -241,7 +256,7 @@ const AppSidebar = () => {
                 className={cn(
                   "transition-all duration-200",
                   isActive(item.path) &&
-                    "bg-primary/10 text-primary border-l-2 border-primary"
+                  "bg-primary/10 text-primary border-l-2 border-primary"
                 )}
               >
                 <item.icon className="h-4 w-4" />

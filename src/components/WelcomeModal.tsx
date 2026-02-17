@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import VCDLogo from "./VCDLogo";
+import { useGestor } from "@/contexts/GestorContext";
 
 interface WelcomeModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface WelcomeModalProps {
 
 const WelcomeModal = ({ isOpen, onClose, gestorName }: WelcomeModalProps) => {
   const [dontShowAgain, setDontShowAgain] = useState(false);
+  const { agencia } = useGestor();
 
   const features = [
     { icon: CheckCircle2, text: "Gerencie checklists de mídia paga" },
@@ -53,23 +55,27 @@ const WelcomeModal = ({ isOpen, onClose, gestorName }: WelcomeModalProps) => {
 
             <div className="relative z-10">
               <div className="flex justify-center mb-4">
-                <VCDLogo size="lg" showText={false} />
+                {agencia?.logo_url ? (
+                  <img src={agencia.logo_url} alt={agencia.nome} className="h-16 w-auto object-contain" />
+                ) : (
+                  <VCDLogo size="lg" showText={false} />
+                )}
               </div>
               <motion.h2
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-2xl font-bold text-foreground mb-2"
+                className="text-2xl font-bold text-foreground mb-2 text-center"
               >
-                Bem-vindo, {gestorName}! <PartyPopper className="w-6 h-6 inline-block ml-1 text-primary" />
+                Bem-vindo à {agencia?.nome || "Vurp"}, {gestorName}! <PartyPopper className="w-6 h-6 inline-block ml-1 text-primary" />
               </motion.h2>
               <motion.p
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="text-muted-foreground"
+                className="text-muted-foreground text-center"
               >
-                Este é seu primeiro acesso ao Vurp
+                Este é seu primeiro acesso ao {agencia?.nome || "Vurp"}
               </motion.p>
             </div>
           </div>
