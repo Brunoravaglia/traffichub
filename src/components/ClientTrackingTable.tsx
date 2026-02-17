@@ -570,11 +570,11 @@ const ClientTrackingTable = ({ gestorFilter }: ClientTrackingTableProps) => {
               {trackingData?.map((tracking) => (
                 <TableRow key={tracking.id} className="hover:bg-muted/30">
                   <TableCell className="sticky left-0 bg-card z-10 font-medium">
-                    {tracking.clientes?.nome || "—"}
+                    {tracking.clientes?.nome || "-"}
                   </TableCell>
-                  <TableCell className="font-mono text-xs">{tracking.gtm_id || "—"}</TableCell>
-                  <TableCell className="font-mono text-xs">{tracking.ga4_id || "—"}</TableCell>
-                  <TableCell>{tracking.google_ads_status || "—"}</TableCell>
+                  <TableCell className="font-mono text-xs">{tracking.gtm_id || "-"}</TableCell>
+                  <TableCell className="font-mono text-xs">{tracking.ga4_id || "-"}</TableCell>
+                  <TableCell>{tracking.google_ads_status || "-"}</TableCell>
                   <TableCell><StatusBadge value={tracking.clarity_installed} type="boolean" /></TableCell>
                   <TableCell><StatusBadge value={tracking.meta_ads_active} type="boolean" /></TableCell>
                   <TableCell><StatusBadge value={tracking.pixel_installed} type="boolean" /></TableCell>
@@ -610,7 +610,7 @@ const ClientTrackingTable = ({ gestorFilter }: ClientTrackingTableProps) => {
                         <ExternalLink className="w-3 h-3" />
                       </a>
                     ) : (
-                      "—"
+                      "-"
                     )}
                   </TableCell>
                   <TableCell>

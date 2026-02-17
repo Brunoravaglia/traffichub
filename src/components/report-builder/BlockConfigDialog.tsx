@@ -145,7 +145,7 @@ export function BlockConfigDialog({ block, open, onClose, onSave }: BlockConfigD
           </div>
         );
 
-      case 'metric-row':
+      case 'metric-row': {
         const metrics = (config.metrics as any[]) || [];
         return (
           <div className="space-y-4">
@@ -230,8 +230,9 @@ export function BlockConfigDialog({ block, open, onClose, onSave }: BlockConfigD
             </div>
           </div>
         );
+      }
 
-      case 'objectives':
+      case 'objectives': {
         const objectives = (config.objectives as string[]) || [];
         return (
           <div className="space-y-4">
@@ -280,6 +281,7 @@ export function BlockConfigDialog({ block, open, onClose, onSave }: BlockConfigD
             </div>
           </div>
         );
+      }
 
       case 'balance-info':
         return (
@@ -410,7 +412,7 @@ export function BlockConfigDialog({ block, open, onClose, onSave }: BlockConfigD
           </div>
         );
 
-      case 'creative-gallery':
+      case 'creative-gallery': {
         const images = (config.images as any[]) || [];
         return (
           <div className="space-y-4">
@@ -507,8 +509,9 @@ export function BlockConfigDialog({ block, open, onClose, onSave }: BlockConfigD
             </div>
           </div>
         );
+      }
 
-      case 'chart':
+      case 'chart': {
         const chartData = (config.data as any[]) || [];
         return (
           <div className="space-y-4">
@@ -584,6 +587,7 @@ export function BlockConfigDialog({ block, open, onClose, onSave }: BlockConfigD
             </div>
           </div>
         );
+      }
 
       default:
         return <p className="text-muted-foreground">Configurações não disponíveis</p>;

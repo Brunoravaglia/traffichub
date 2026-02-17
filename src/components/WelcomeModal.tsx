@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { X, Sparkles, Rocket, CheckCircle2 } from "lucide-react";
+import { X, Sparkles, Rocket, CheckCircle2, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -61,7 +61,7 @@ const WelcomeModal = ({ isOpen, onClose, gestorName }: WelcomeModalProps) => {
                 transition={{ delay: 0.2 }}
                 className="text-2xl font-bold text-foreground mb-2"
               >
-                Bem-vindo, {gestorName}! 🎉
+                Bem-vindo, {gestorName}! <PartyPopper className="w-6 h-6 inline-block ml-1 text-primary" />
               </motion.h2>
               <motion.p
                 initial={{ opacity: 0, y: 10 }}
@@ -69,7 +69,7 @@ const WelcomeModal = ({ isOpen, onClose, gestorName }: WelcomeModalProps) => {
                 transition={{ delay: 0.3 }}
                 className="text-muted-foreground"
               >
-                Este é seu primeiro acesso ao Traffic Hub
+                Este é seu primeiro acesso ao Vurp
               </motion.p>
             </div>
           </div>

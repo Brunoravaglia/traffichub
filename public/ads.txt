@@ -1,0 +1,6 @@
+# ads.txt — Vurp
+# Este arquivo é obrigatório para monetização com o Google AdSense.
+# Substitua "pub-XXXXXXXXXXXXXXXX" pelo seu ID de publicador do AdSense
+# quando sua conta for aprovada.
+
+google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0

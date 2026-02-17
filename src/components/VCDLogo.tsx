@@ -8,9 +8,9 @@ interface VCDLogoProps {
 }
 
 const sizeMap = {
-  sm: { container: 32, text: "text-sm" },
-  md: { container: 48, text: "text-xl" },
-  lg: { container: 64, text: "text-2xl" },
+  sm: { container: 40, text: "text-base" },
+  md: { container: 56, text: "text-xl" },
+  lg: { container: 72, text: "text-3xl" },
 };
 
 const VCDLogo = ({ size = "md", className = "", showText = false }: VCDLogoProps) => {
@@ -29,7 +29,7 @@ const VCDLogo = ({ size = "md", className = "", showText = false }: VCDLogoProps
       >
         <img
           src={brandMark}
-          alt="Traffic Hub"
+          alt="Vurp"
           className="w-full h-full object-contain"
           loading="lazy"
         />
@@ -37,7 +37,7 @@ const VCDLogo = ({ size = "md", className = "", showText = false }: VCDLogoProps
 
       {showText && (
         <div className="flex flex-col">
-          <span className="font-bold text-foreground text-sm leading-tight">Traffic Hub</span>
+          <span className="font-bold text-foreground text-sm leading-tight">Vurp</span>
           <span className="text-xs text-muted-foreground leading-tight">Performance</span>
         </div>
       )}

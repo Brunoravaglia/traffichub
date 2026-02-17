@@ -1,0 +1,44 @@
+# Vurp
+> Plataforma SaaS completa para gestores de tráfego pago
+
+## O que é o Vurp?
+Vurp é uma plataforma web brasileira projetada especificamente para gestores de tráfego pago (media buyers). O sistema centraliza a gestão de clientes, checklists de mídia paga, relatórios profissionais, controle financeiro e produtividade em um único lugar.
+
+## Público-alvo
+- Gestores de tráfego pago independentes (freelancers)
+- Agências de marketing digital
+- Equipes de performance marketing
+
+## Funcionalidades principais
+- **Checklist Inteligente**: Checklists personalizáveis por cliente com tarefas recorrentes
+- **Relatórios Profissionais**: Relatórios multi-plataforma (Google Ads, Meta Ads, TikTok Ads, LinkedIn Ads) com exportação em PDF
+- **Gamificação**: Sistema de conquistas que incentiva produtividade
+- **Calendário de Entregas**: Organização de prazos e recargas
+- **Controle Financeiro**: Acompanhamento de investimentos e previsão de saldo por cliente
+- **Dashboard Gerencial**: Visão panorâmica de todos os clientes e métricas
+- **Gestão Multi-Gestor**: Suporte para equipes com múltiplos gestores
+- **Modelos Customizáveis**: Templates reutilizáveis de relatórios
+
+## Planos e preços (BRL)
+- **Solo**: R$27,90/mês — até 5 contas, 1 gestor
+- **Agência**: R$97/mês — até 50 contas, 3 gestores
+- **Agência Pro**: R$197/mês — até 50 contas, 5 gestores, suporte prioritário
+
+## Plataformas de anúncio suportadas
+- Google Ads
+- Meta Ads (Facebook + Instagram)
+- TikTok Ads
+- LinkedIn Ads
+
+## Tecnologia
+- Frontend: React, TypeScript, Vite, Tailwind CSS
+- Backend: Supabase (PostgreSQL, Auth, Storage, Edge Functions)
+- Pagamento: Stripe (PIX, Boleto, Cartão)
+
+## Links
+- Site: https://vurp.com.br
+- Funcionalidades: https://vurp.com.br/features
+- Preços: https://vurp.com.br/pricing
+- FAQ: https://vurp.com.br/faq
+- Suporte: https://vurp.com.br/support
+- Cadastro: https://vurp.com.br/signup

@@ -45,6 +45,7 @@ import {
   BarChart3,
   Sparkles,
   FileText,
+  Trophy,
 } from "lucide-react";
 import VCDLogo from "@/components/VCDLogo";
 import { cn } from "@/lib/utils";
@@ -226,14 +227,14 @@ const defaultReportData: ReportData = {
     "Aumentar a visibilidade e reconhecimento da marca",
     "Aumentar o Número de Leads Qualificados",
   ],
-  google: { 
+  google: {
     cliques: 0, impressoes: 0, contatos: 0, investido: 0, custoPorLead: 0, cpm: 0,
     saldoRestante: 0, diasParaRecarga: 0,
     ctr: 0, cpc: 0, conversoes: 0, taxaConversao: 0, roas: 0, roasValor: 0, custoConversao: 0,
     alcance: 0, frequencia: 0, visualizacoesVideo: 0, taxaVisualizacao: 0, interacoes: 0, taxaInteracao: 0,
     compras: 0, visitasProduto: 0, adicoesCarrinho: 0, vendas: 0, custoPorVisita: 0, custoPorAdicaoCarrinho: 0, custoPorVenda: 0
   },
-  meta: { 
+  meta: {
     impressoes: 0, engajamento: 0, conversas: 0, investido: 0, custoPorLead: 0, cpm: 0, custoPorSeguidor: 0,
     saldoRestante: 0, diasParaRecarga: 0,
     cliques: 0, ctr: 0, cpc: 0, alcance: 0, frequencia: 0, leads: 0, conversoes: 0, roas: 0, roasValor: 0,
@@ -339,7 +340,7 @@ const RelatorioCliente = () => {
   const [currentPlatform, setCurrentPlatform] = useState<"google" | "meta">("google");
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  
+
   // Save as template dialog state
   const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
   const [templateName, setTemplateName] = useState("");
@@ -378,7 +379,7 @@ const RelatorioCliente = () => {
     }
 
     setSelectedTemplateId(template.id);
-    
+
     // Apply sections config from template
     if (template.sections) {
       setReportData(prev => ({
@@ -397,11 +398,11 @@ const RelatorioCliente = () => {
         metricsConfig: applyMetricsFromTemplate(template.metrics || []),
       }));
     }
-    
+
     setStep("editor");
-    toast({ 
-      title: "Modelo aplicado!", 
-      description: `Usando "${template.nome}" como base para o relatório.` 
+    toast({
+      title: "Modelo aplicado!",
+      description: `Usando "${template.nome}" como base para o relatório.`
     });
   };
 
@@ -410,17 +411,17 @@ const RelatorioCliente = () => {
     if (urlTemplate && templateIdFromUrl) {
       applyTemplate(urlTemplate);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlTemplate, templateIdFromUrl]);
 
   // Convert template metrics to metricsConfig format
   const applyMetricsFromTemplate = (metrics: any[]): ReportData["metricsConfig"] => {
     const config = { ...defaultReportData.metricsConfig };
-    
+
     metrics.forEach((metric: any) => {
       const key = metric.key;
       const visible = metric.visible;
-      
+
       // Map template metric keys to metricsConfig keys
       if (key === "google_cpl") config.showGoogleCustoPorLead = visible;
       else if (key === "google_cpm") config.showGoogleCpm = visible;
@@ -459,7 +460,7 @@ const RelatorioCliente = () => {
       else if (key === "meta_agendamentos") config.showMetaAgendamentos = visible;
       else if (key === "meta_checkins") config.showMetaCheckins = visible;
     });
-    
+
     return config;
   };
 
@@ -514,19 +515,19 @@ const RelatorioCliente = () => {
 
   // Auto-calculate CPL and CPM
   const calculateMetrics = () => {
-    const googleCPL = reportData.google.contatos > 0 
-      ? reportData.google.investido / reportData.google.contatos 
+    const googleCPL = reportData.google.contatos > 0
+      ? reportData.google.investido / reportData.google.contatos
       : 0;
-    const googleCPM = reportData.google.impressoes > 0 
-      ? (reportData.google.investido / reportData.google.impressoes) * 1000 
+    const googleCPM = reportData.google.impressoes > 0
+      ? (reportData.google.investido / reportData.google.impressoes) * 1000
       : 0;
-    const metaCPL = reportData.meta.conversas > 0 
-      ? reportData.meta.investido / reportData.meta.conversas 
+    const metaCPL = reportData.meta.conversas > 0
+      ? reportData.meta.investido / reportData.meta.conversas
       : 0;
-    const metaCPM = reportData.meta.impressoes > 0 
-      ? (reportData.meta.investido / reportData.meta.impressoes) * 1000 
+    const metaCPM = reportData.meta.impressoes > 0
+      ? (reportData.meta.investido / reportData.meta.impressoes) * 1000
       : 0;
-    
+
     setReportData(prev => ({
       ...prev,
       google: { ...prev.google, custoPorLead: googleCPL, cpm: googleCPM },
@@ -548,7 +549,7 @@ const RelatorioCliente = () => {
         metricsConfig: reportData.metricsConfig,
         sectionsConfig: reportData.sectionsConfig,
       }));
-      
+
       const { error } = await supabase
         .from("client_reports")
         .insert([{
@@ -571,7 +572,7 @@ const RelatorioCliente = () => {
           meta_custo_por_seguidor: reportData.meta.custoPorSeguidor,
           data_values: dataValues,
         }]);
-      
+
       if (error) throw error;
     },
     onSuccess: () => {
@@ -796,7 +797,7 @@ const RelatorioCliente = () => {
 
       queryClient.invalidateQueries({ queryKey: ["report-templates"] });
       queryClient.invalidateQueries({ queryKey: ["report-templates-selector"] });
-      
+
       toast({ title: "Modelo salvo!", description: `"${templateName}" está disponível para uso.` });
       setSaveTemplateDialogOpen(false);
       setTemplateName("");
@@ -924,8 +925,8 @@ const RelatorioCliente = () => {
               <Eye className="w-4 h-4 mr-2" />
               Preview
             </Button>
-            <Button 
-              onClick={handleExport} 
+            <Button
+              onClick={handleExport}
               className="bg-primary hover:bg-primary/90"
               disabled={isExporting}
             >
@@ -1524,7 +1525,7 @@ const RelatorioCliente = () => {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Google Metrics Config */}
                 <div className="pt-4 border-t border-border space-y-3">
                   <p className="text-sm text-muted-foreground font-medium">Métricas a exibir no relatório:</p>
@@ -2162,7 +2163,7 @@ const RelatorioCliente = () => {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Meta Metrics Config */}
                 <div className="pt-4 border-t border-border space-y-3">
                   <p className="text-sm text-muted-foreground font-medium">Métricas a exibir no relatório:</p>
@@ -2665,8 +2666,8 @@ const RelatorioCliente = () => {
                             <span className={cn(
                               "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
                               position === 1 ? "bg-yellow-500 text-black" :
-                              position === 2 ? "bg-gray-400 text-black" :
-                              "bg-amber-700 text-white"
+                                position === 2 ? "bg-gray-400 text-black" :
+                                  "bg-amber-700 text-white"
                             )}>
                               {position}
                             </span>
@@ -2931,9 +2932,9 @@ const RelatorioCliente = () => {
                       if (reportData.metricsConfig.showGoogleCustoPorVisita) additionalMetrics.push({ label: "Custo/Visita", value: formatCurrency(reportData.google.custoPorVisita), color: "text-cyan-400" });
                       if (reportData.metricsConfig.showGoogleCustoPorAdicaoCarrinho) additionalMetrics.push({ label: "Custo/Add Carrinho", value: formatCurrency(reportData.google.custoPorAdicaoCarrinho), color: "text-yellow-400" });
                       if (reportData.metricsConfig.showGoogleCustoPorVenda) additionalMetrics.push({ label: "Custo/Venda", value: formatCurrency(reportData.google.custoPorVenda), color: "text-red-400" });
-                      
+
                       if (additionalMetrics.length === 0) return null;
-                      
+
                       const cols = additionalMetrics.length <= 2 ? 2 : additionalMetrics.length <= 3 ? 3 : 4;
                       return (
                         <div className={`grid grid-cols-${cols} gap-3 mt-3`} style={{ gridTemplateColumns: `repeat(${Math.min(cols, additionalMetrics.length)}, 1fr)` }}>
@@ -3003,9 +3004,9 @@ const RelatorioCliente = () => {
                       if (reportData.metricsConfig.showMetaCustoPorVisita) additionalMetrics.push({ label: "Custo/Visita", value: formatCurrency(reportData.meta.custoPorVisita), color: "text-cyan-400" });
                       if (reportData.metricsConfig.showMetaCustoPorAdicaoCarrinho) additionalMetrics.push({ label: "Custo/Add Carrinho", value: formatCurrency(reportData.meta.custoPorAdicaoCarrinho), color: "text-yellow-400" });
                       if (reportData.metricsConfig.showMetaCustoPorVenda) additionalMetrics.push({ label: "Custo/Venda", value: formatCurrency(reportData.meta.custoPorVenda), color: "text-red-400" });
-                      
+
                       if (additionalMetrics.length === 0) return null;
-                      
+
                       const cols = additionalMetrics.length <= 2 ? 2 : additionalMetrics.length <= 3 ? 3 : 4;
                       return (
                         <div className={`grid gap-3 mt-3`} style={{ gridTemplateColumns: `repeat(${Math.min(cols, additionalMetrics.length)}, 1fr)` }}>
@@ -3081,7 +3082,7 @@ const RelatorioCliente = () => {
                 {reportData.showRanking && reportData.criativosRanking.length > 0 && (
                   <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-yellow-900/30 to-yellow-900/10 border border-yellow-500/30">
                     <h3 className="text-lg font-bold mb-4 text-yellow-400 tracking-widest">
-                      🏆 RANKING DE CRIATIVOS
+                      <Trophy className="w-5 h-5 inline-block mr-1" /> RANKING DE CRIATIVOS
                     </h3>
                     <div className="flex flex-wrap gap-4 justify-center">
                       {reportData.criativosRanking.sort((a, b) => a.position - b.position).map((ranking) => {
@@ -3091,8 +3092,8 @@ const RelatorioCliente = () => {
                             <div className={cn(
                               "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2",
                               ranking.position === 1 ? "bg-yellow-500 text-black" :
-                              ranking.position === 2 ? "bg-gray-400 text-black" :
-                              "bg-amber-700 text-white"
+                                ranking.position === 2 ? "bg-gray-400 text-black" :
+                                  "bg-amber-700 text-white"
                             )}>
                               {ranking.position}
                             </div>
@@ -3184,7 +3185,7 @@ const RelatorioCliente = () => {
                             <div
                               key={image.id}
                               className="rounded-lg overflow-hidden border border-white/20"
-                              style={{ 
+                              style={{
                                 width: image.width ? `${image.width}px` : '200px',
                                 height: image.height ? `${image.height}px` : 'auto'
                               }}
@@ -3214,52 +3215,52 @@ const RelatorioCliente = () => {
                 )}
 
                 {/* Balances - only show if toggle is on AND there are values */}
-                {reportData.sectionsConfig.showSaldoRestante && 
-                  (reportData.google.saldoRestante > 0 || 
-                   reportData.google.diasParaRecarga > 0 || 
-                   reportData.meta.saldoRestante > 0 || 
-                   reportData.meta.diasParaRecarga > 0) && (
-                  <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
-                    <h3 className="text-lg font-bold mb-3 text-primary tracking-widest">SALDO RESTANTE</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      {(reportData.google.saldoRestante > 0 || reportData.google.diasParaRecarga > 0) && (
-                        <div className="p-3 rounded-lg bg-white/5 border border-blue-500/30">
-                          <p className="font-semibold text-blue-400 mb-2">Google Ads</p>
-                          {reportData.google.saldoRestante > 0 && (
-                            <div className="flex items-center justify-between text-gray-300">
-                              <span>Saldo</span>
-                              <span className="font-bold text-white">{formatCurrency(reportData.google.saldoRestante)}</span>
-                            </div>
-                          )}
-                          {reportData.google.diasParaRecarga > 0 && (
-                            <div className="flex items-center justify-between text-gray-300 mt-1">
-                              <span>Próxima recarga</span>
-                              <span className="font-bold text-white">{reportData.google.diasParaRecarga} dias</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                {reportData.sectionsConfig.showSaldoRestante &&
+                  (reportData.google.saldoRestante > 0 ||
+                    reportData.google.diasParaRecarga > 0 ||
+                    reportData.meta.saldoRestante > 0 ||
+                    reportData.meta.diasParaRecarga > 0) && (
+                    <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
+                      <h3 className="text-lg font-bold mb-3 text-primary tracking-widest">SALDO RESTANTE</h3>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        {(reportData.google.saldoRestante > 0 || reportData.google.diasParaRecarga > 0) && (
+                          <div className="p-3 rounded-lg bg-white/5 border border-blue-500/30">
+                            <p className="font-semibold text-blue-400 mb-2">Google Ads</p>
+                            {reportData.google.saldoRestante > 0 && (
+                              <div className="flex items-center justify-between text-gray-300">
+                                <span>Saldo</span>
+                                <span className="font-bold text-white">{formatCurrency(reportData.google.saldoRestante)}</span>
+                              </div>
+                            )}
+                            {reportData.google.diasParaRecarga > 0 && (
+                              <div className="flex items-center justify-between text-gray-300 mt-1">
+                                <span>Próxima recarga</span>
+                                <span className="font-bold text-white">{reportData.google.diasParaRecarga} dias</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
 
-                      {(reportData.meta.saldoRestante > 0 || reportData.meta.diasParaRecarga > 0) && (
-                        <div className="p-3 rounded-lg bg-white/5 border border-purple-500/30">
-                          <p className="font-semibold text-purple-400 mb-2">Meta Ads</p>
-                          {reportData.meta.saldoRestante > 0 && (
-                            <div className="flex items-center justify-between text-gray-300">
-                              <span>Saldo</span>
-                              <span className="font-bold text-white">{formatCurrency(reportData.meta.saldoRestante)}</span>
-                            </div>
-                          )}
-                          {reportData.meta.diasParaRecarga > 0 && (
-                            <div className="flex items-center justify-between text-gray-300 mt-1">
-                              <span>Próxima recarga</span>
-                              <span className="font-bold text-white">{reportData.meta.diasParaRecarga} dias</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                        {(reportData.meta.saldoRestante > 0 || reportData.meta.diasParaRecarga > 0) && (
+                          <div className="p-3 rounded-lg bg-white/5 border border-purple-500/30">
+                            <p className="font-semibold text-purple-400 mb-2">Meta Ads</p>
+                            {reportData.meta.saldoRestante > 0 && (
+                              <div className="flex items-center justify-between text-gray-300">
+                                <span>Saldo</span>
+                                <span className="font-bold text-white">{formatCurrency(reportData.meta.saldoRestante)}</span>
+                              </div>
+                            )}
+                            {reportData.meta.diasParaRecarga > 0 && (
+                              <div className="flex items-center justify-between text-gray-300 mt-1">
+                                <span>Próxima recarga</span>
+                                <span className="font-bold text-white">{reportData.meta.diasParaRecarga} dias</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Footer */}
                 <div className="border-t border-white/10 pt-4 flex items-center justify-between">

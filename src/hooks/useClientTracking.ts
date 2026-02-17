@@ -73,6 +73,7 @@ export const useClientTracking = (clienteId: string | null) => {
         stopTracking();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clienteId]);
 
   return {

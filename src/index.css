@@ -6,66 +6,137 @@
 
 @layer base {
   :root {
-    /* VCD Dark Premium Design System */
-    --background: 0 0% 4%; /* #0B0B0B */
-    --foreground: 0 0% 100%; /* #FFFFFF */
+    /* Vurp Dark Premium Design System */
+    --background: 0 0% 1%;
+    /* #020202 */
+    --foreground: 0 0% 100%;
+    /* #FFFFFF */
 
-    --card: 0 0% 7%; /* #121212 */
+    --card: 148 52% 10%;
+    /* #0D2818 */
     --card-foreground: 0 0% 100%;
 
-    --popover: 0 0% 7%;
+    --popover: 148 52% 10%;
     --popover-foreground: 0 0% 100%;
 
-    /* Yellow VCD #FFB500 */
-    --primary: 43 100% 50%;
-    --primary-foreground: 0 0% 4%;
+    /* Vurp Green #058C42 */
+    --primary: 150 94% 28%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 12%;
+    --secondary: 146 91% 15%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 0 0% 16%;
-    --muted-foreground: 240 4% 66%; /* #A1A1AA */
+    --muted: 148 30% 14%;
+    --muted-foreground: 150 10% 60%;
+    /* softer green-gray */
 
-    --accent: 43 100% 50%;
-    --accent-foreground: 0 0% 4%;
+    --accent: 148 82% 47%;
+    /* #16DB65 Malachite */
+    --accent-foreground: 0 0% 1%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 43 100% 50%;
+    --border: 148 20% 16%;
+    --input: 148 20% 16%;
+    --ring: 150 94% 28%;
 
     --radius: 1rem;
 
-    /* Custom VCD Tokens */
-    --vcd-yellow: 43 100% 50%;
-    --vcd-yellow-glow: 43 100% 50%;
-    --vcd-black-deep: 0 0% 4%;
-    --vcd-black-card: 0 0% 7%;
-    --vcd-gray: 240 4% 66%;
+    /* Custom Vurp Tokens */
+    --vurp-green: 150 94% 28%;
+    --vurp-green-glow: 148 82% 47%;
+    --vurp-black-deep: 0 0% 1%;
+    --vurp-black-card: 148 52% 10%;
+    --vurp-gray: 150 10% 60%;
 
     /* Gradients */
-    --gradient-yellow: linear-gradient(135deg, hsl(43 100% 50%) 0%, hsl(38 100% 45%) 100%);
-    --gradient-dark: linear-gradient(180deg, hsl(0 0% 7%) 0%, hsl(0 0% 4%) 100%);
-    --gradient-glow: radial-gradient(ellipse at center, hsla(43, 100%, 50%, 0.15) 0%, transparent 70%);
+    --gradient-primary: linear-gradient(135deg, hsl(150 94% 28%) 0%, hsl(148 82% 47%) 100%);
+    --gradient-dark: linear-gradient(180deg, hsl(148 52% 10%) 0%, hsl(0 0% 1%) 100%);
+    --gradient-glow: radial-gradient(ellipse at center, hsla(148, 82%, 47%, 0.15) 0%, transparent 70%);
 
     /* Shadows */
-    --shadow-card: 0 4px 24px -4px hsla(0, 0%, 0%, 0.4);
-    --shadow-glow: 0 0 40px hsla(43, 100%, 50%, 0.25);
-    --shadow-button: 0 4px 16px hsla(43, 100%, 50%, 0.3);
+    --shadow-card: 0 4px 24px -4px hsla(0, 0%, 0%, 0.5);
+    --shadow-glow: 0 0 40px hsla(148, 82%, 47%, 0.25);
+    --shadow-button: 0 4px 16px hsla(150, 94%, 28%, 0.35);
 
     /* Sidebar - dark theme */
-    --sidebar-background: 0 0% 5%;
+    --sidebar-background: 0 0% 2%;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 43 100% 50%;
-    --sidebar-primary-foreground: 0 0% 4%;
-    --sidebar-accent: 0 0% 12%;
+    --sidebar-primary: 150 94% 28%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 148 52% 10%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 43 100% 50%;
+    --sidebar-border: 148 20% 14%;
+    --sidebar-ring: 150 94% 28%;
+  }
+
+  /* Light theme */
+  .light {
+    --background: 150 12% 96%;
+    /* #F5F7F6 */
+    --foreground: 150 61% 15%;
+    /* #0F3D26 */
+
+    --card: 0 0% 100%;
+    /* #FFFFFF */
+    --card-foreground: 150 61% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 150 61% 15%;
+
+    /* Vurp Green #0B5A2A */
+    --primary: 144 78% 20%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 142 35% 93%;
+    /* #E8F3EC */
+    --secondary-foreground: 150 61% 15%;
+
+    --muted: 142 35% 93%;
+    --muted-foreground: 150 30% 30%;
+    /* muted green-gray */
+
+    --accent: 148 84% 36%;
+    /* #0FA958 */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 48%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 142 20% 85%;
+    --input: 142 20% 85%;
+    --ring: 144 78% 20%;
+
+    /* Custom Vurp Tokens (light) */
+    --vurp-green: 144 78% 20%;
+    --vurp-green-glow: 148 84% 36%;
+    --vurp-black-deep: 150 12% 96%;
+    --vurp-black-card: 0 0% 100%;
+    --vurp-gray: 150 30% 30%;
+
+    /* Gradients (light) */
+    --gradient-primary: linear-gradient(135deg, hsl(144 78% 20%) 0%, hsl(148 84% 36%) 100%);
+    --gradient-dark: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(150 12% 96%) 100%);
+    --gradient-glow: radial-gradient(ellipse at center, hsla(148, 84%, 36%, 0.1) 0%, transparent 70%);
+
+    /* Shadows (light) */
+    --shadow-card: 0 2px 16px -2px hsla(150, 30%, 15%, 0.08);
+    --shadow-glow: 0 0 30px hsla(148, 84%, 36%, 0.15);
+    --shadow-button: 0 4px 16px hsla(144, 78%, 20%, 0.2);
+
+    /* Sidebar (light) */
+    --sidebar-background: 150 12% 96%;
+    --sidebar-foreground: 150 61% 15%;
+    --sidebar-primary: 144 78% 20%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 142 35% 93%;
+    --sidebar-accent-foreground: 150 61% 15%;
+    --sidebar-border: 142 20% 85%;
+    --sidebar-ring: 144 78% 20%;
   }
 }
+
 
 @layer base {
   * {
@@ -108,14 +179,14 @@
   }
 
   .vcd-gradient-text {
-    background: var(--gradient-yellow);
+    background: var(--gradient-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .vcd-progress-bar {
-    background: var(--gradient-yellow);
+    background: var(--gradient-primary);
     @apply rounded-full transition-all duration-500 ease-out;
   }
 
@@ -138,11 +209,14 @@
   }
 
   @keyframes glow-pulse {
-    0%, 100% {
-      box-shadow: 0 0 20px hsla(43, 100%, 50%, 0.2);
+
+    0%,
+    100% {
+      box-shadow: 0 0 20px hsla(148, 82%, 47%, 0.2);
     }
+
     50% {
-      box-shadow: 0 0 40px hsla(43, 100%, 50%, 0.4);
+      box-shadow: 0 0 40px hsla(148, 82%, 47%, 0.4);
     }
   }
 
@@ -151,10 +225,27 @@
   }
 
   @keyframes shake {
-    10%, 90% { transform: translateX(-1px); }
-    20%, 80% { transform: translateX(2px); }
-    30%, 50%, 70% { transform: translateX(-4px); }
-    40%, 60% { transform: translateX(4px); }
+
+    10%,
+    90% {
+      transform: translateX(-1px);
+    }
+
+    20%,
+    80% {
+      transform: translateX(2px);
+    }
+
+    30%,
+    50%,
+    70% {
+      transform: translateX(-4px);
+    }
+
+    40%,
+    60% {
+      transform: translateX(4px);
+    }
   }
 
   .text-balance {

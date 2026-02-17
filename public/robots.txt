@@ -1,14 +1,61 @@
+# Vurp — robots.txt
+# https://vurp.com.br
+
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /clientes
+Disallow: /cliente/
+Disallow: /gestores
+Disallow: /controle
+Disallow: /gerencial
+Disallow: /configuracoes
+Disallow: /modelos
+Disallow: /conquistas
+Disallow: /produtividade
+Disallow: /previsao-saldo
+Disallow: /calendario
+Disallow: /historico
+Disallow: /account
+Disallow: /novo-cliente
+Disallow: /novo-gestor
+Disallow: /relatorio-cliente
+
+# Google
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 1
 
+# Bing
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 2
 
+# Social Media
 User-agent: Twitterbot
 Allow: /
 
 User-agent: facebookexternalhit
 Allow: /
 
-User-agent: *
+# AI Crawlers
+User-agent: GPTBot
 Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+# Sitemap
+Sitemap: https://vurp.com.br/sitemap.xml

@@ -27,6 +27,7 @@ const SelecionarCliente = () => {
     if (isLoggedIn && loggedGestor?.id && selectedGestorId === "all") {
       setSelectedGestorId(loggedGestor.id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, loggedGestor?.id]);
 
   // Fetch all gestores for filter
@@ -124,7 +125,7 @@ const SelecionarCliente = () => {
               </SelectContent>
             </Select>
           </div>
-          
+
           {/* Search */}
           <div className="relative flex-1 sm:max-w-[250px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

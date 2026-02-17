@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useGestor } from "@/contexts/GestorContext";
-import { 
-  Trophy, Star, Crown, Gem, Award, Zap, Target, Users, 
+import {
+  Trophy, Star, Crown, Gem, Award, Zap, Target, Users,
   FileText, Clock, Camera, Rocket, UserCheck, UserPlus,
   BarChart2, Files, CheckCircle, Layout, Palette, Flame,
   Lock, Download, Linkedin, Share2, Filter, Sparkles
@@ -145,7 +145,7 @@ const Conquistas = () => {
   });
 
   const unlockedIds = new Set(unlockedAchievements.map(ua => ua.achievement_id));
-  
+
   const totalPoints = achievements
     .filter(a => unlockedIds.has(a.id))
     .reduce((sum, a) => sum + a.points, 0);
@@ -169,13 +169,13 @@ const Conquistas = () => {
         scale: 2,
         backgroundColor: "#1a1a2e",
       });
-      
+
       const pdf = new jsPDF({
         orientation: "landscape",
         unit: "px",
         format: [canvas.width, canvas.height],
       });
-      
+
       pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, canvas.width, canvas.height);
       pdf.save(`conquista-${selectedAchievement.name.toLowerCase().replace(/\s/g, "-")}.pdf`);
       toast.success("Conquista exportada com sucesso!");
@@ -189,10 +189,10 @@ const Conquistas = () => {
 
     const rarityLabel = rarityConfig[selectedAchievement.rarity].label;
     const message = encodeURIComponent(
-      `🏆 Acabei de desbloquear a conquista "${selectedAchievement.name}" (${rarityLabel}) no TrafficHub!\n\n` +
+      `Acabei de desbloquear a conquista "${selectedAchievement.name}" (${rarityLabel}) no Vurp!\n\n` +
       `${selectedAchievement.description}\n\n` +
       `+${selectedAchievement.points} pontos de experiência!\n\n` +
-      `#TrafficHub #Conquista #Marketing #Performance #Gamification`
+      `#Vurp #Conquista #Marketing #Performance #Gamification`
     );
 
     const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.origin)}&summary=${message}`;
@@ -233,17 +233,17 @@ const Conquistas = () => {
             <motion.div
               key={i}
               className="absolute w-2 h-2 rounded-full bg-primary/20"
-              initial={{ 
-                x: Math.random() * 100 + "%", 
+              initial={{
+                x: Math.random() * 100 + "%",
                 y: Math.random() * 100 + "%",
-                scale: Math.random() * 0.5 + 0.5 
+                scale: Math.random() * 0.5 + 0.5
               }}
-              animate={{ 
+              animate={{
                 y: [null, "-100%"],
                 opacity: [0.3, 0.8, 0.3],
               }}
-              transition={{ 
-                duration: Math.random() * 5 + 5, 
+              transition={{
+                duration: Math.random() * 5 + 5,
                 repeat: Infinity,
                 ease: "linear",
               }}
@@ -271,7 +271,7 @@ const Conquistas = () => {
 
           {/* Stats */}
           <div className="flex-1 text-center md:text-left">
-            <motion.h1 
+            <motion.h1
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
@@ -279,7 +279,7 @@ const Conquistas = () => {
             >
               Suas Conquistas
             </motion.h1>
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
@@ -288,7 +288,7 @@ const Conquistas = () => {
               {gestor?.nome}, você é um verdadeiro campeão! Continue desbloqueando conquistas.
             </motion.p>
 
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
@@ -299,7 +299,7 @@ const Conquistas = () => {
                 <span className="font-bold text-xl">{totalPoints}</span>
                 <span className="text-muted-foreground">pontos</span>
               </div>
-              
+
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 border border-border">
                 <Trophy className="w-5 h-5 text-primary" />
                 <span className="font-bold">{unlockedAchievements.length}</span>
@@ -307,7 +307,7 @@ const Conquistas = () => {
               </div>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scaleX: 0 }}
               animate={{ opacity: 1, scaleX: 1 }}
               transition={{ delay: 0.6, duration: 0.5 }}
@@ -372,18 +372,18 @@ const Conquistas = () => {
               transition={{ delay: index * 0.02, duration: 0.3 }}
               whileHover={{ scale: 1.05, y: -5 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setSelectedAchievement({ 
-                ...achievement, 
+              onClick={() => setSelectedAchievement({
+                ...achievement,
                 unlocked: isUnlocked,
-                unlockedAt: unlockedDate 
+                unlockedAt: unlockedDate
               })}
               className="cursor-pointer"
             >
-              <Card 
+              <Card
                 className={cn(
                   "relative overflow-hidden transition-all duration-300 h-full",
-                  isUnlocked 
-                    ? `${rarity.bgColor} ${rarity.borderColor} border-2 shadow-lg ${rarity.glowColor}` 
+                  isUnlocked
+                    ? `${rarity.bgColor} ${rarity.borderColor} border-2 shadow-lg ${rarity.glowColor}`
                     : "bg-muted/30 border-border/50 grayscale opacity-60"
                 )}
               >
@@ -400,8 +400,8 @@ const Conquistas = () => {
                   <div
                     className={cn(
                       "w-16 h-16 rounded-full flex items-center justify-center mb-3 relative",
-                      isUnlocked 
-                        ? `bg-gradient-to-br ${rarity.color}` 
+                      isUnlocked
+                        ? `bg-gradient-to-br ${rarity.color}`
                         : "bg-muted"
                     )}
                   >
@@ -435,11 +435,11 @@ const Conquistas = () => {
                   </div>
 
                   {/* Rarity Badge */}
-                  <span 
+                  <span
                     className={cn(
                       "mt-2 text-[10px] px-2 py-0.5 rounded-full border",
-                      isUnlocked 
-                        ? `${rarity.textColor} ${rarity.borderColor}` 
+                      isUnlocked
+                        ? `${rarity.textColor} ${rarity.borderColor}`
                         : "text-muted-foreground border-muted"
                     )}
                   >
@@ -523,7 +523,7 @@ const Conquistas = () => {
                         <>
                           <Trophy className="w-6 h-6 text-amber-400 mx-auto" />
                           <p className="text-xs text-muted-foreground mt-1">
-                            {selectedAchievement.unlockedAt 
+                            {selectedAchievement.unlockedAt
                               ? new Date(selectedAchievement.unlockedAt).toLocaleDateString('pt-BR')
                               : "Desbloqueada"
                             }
@@ -541,7 +541,7 @@ const Conquistas = () => {
                   {/* Gestor info for export */}
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-sm font-medium">{gestor?.nome}</span>
-                    <span className="text-xs text-muted-foreground">TrafficHub</span>
+                    <span className="text-xs text-muted-foreground">Vurp</span>
                   </div>
                 </div>
               </div>
@@ -549,15 +549,15 @@ const Conquistas = () => {
               {/* Actions */}
               {selectedAchievement.unlocked && (
                 <div className="p-4 bg-muted/30 border-t border-border flex gap-3">
-                  <Button 
-                    onClick={handleExportPDF} 
-                    variant="outline" 
+                  <Button
+                    onClick={handleExportPDF}
+                    variant="outline"
                     className="flex-1 gap-2"
                   >
                     <Download className="w-4 h-4" />
                     Exportar PDF
                   </Button>
-                  <Button 
+                  <Button
                     onClick={handleShareLinkedIn}
                     className="flex-1 gap-2 bg-[#0077B5] hover:bg-[#005885]"
                   >
