@@ -70,6 +70,7 @@ import Conquistas from "./pages/Conquistas";
 import Produtividade from "./pages/Produtividade";
 import PrevisaoSaldo from "./pages/PrevisaoSaldo";
 import Calendario from "./pages/Calendario";
+import AgencySettings from "./pages/AgencySettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -146,6 +147,7 @@ const App = () => (
               <Route path="/produtividade" element={<AppLayout><Produtividade /></AppLayout>} />
               <Route path="/previsao-saldo" element={<AppLayout><PrevisaoSaldo /></AppLayout>} />
               <Route path="/calendario" element={<AppLayout><Calendario /></AppLayout>} />
+              <Route path="/agencia/configuracoes" element={<AppLayout><AgencySettings /></AppLayout>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

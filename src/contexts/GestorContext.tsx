@@ -8,6 +8,9 @@ interface Agencia {
   nome: string;
   slug: string;
   logo_url: string | null;
+  logo_black_url: string | null;
+  cor_primaria: string | null;
+  cor_secundaria: string | null;
 }
 
 interface Gestor {
@@ -21,6 +24,7 @@ interface Gestor {
   first_login_at: string | null;
   welcome_modal_dismissed: boolean | null;
   agencia_id: string | null;
+  is_admin: boolean;
 }
 
 interface GestorContextType {
@@ -111,7 +115,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       supabase
         .from("gestores")
         .select(
-          "id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id"
+          "id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id, is_admin"
         )
         .eq("id", storedGestorId)
         .single()
@@ -129,7 +133,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
                 .eq("id", data.agencia_id)
                 .single()
                 .then(({ data: agencyData }) => {
-                  if (agencyData) setAgencia(agencyData as Agencia);
+                  if (agencyData) setAgencia(agencyData as unknown as Agencia);
                 });
             }
           }
@@ -147,7 +151,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         .eq("slug", slug)
         .single()
         .then(({ data }) => {
-          if (data) setAgencia(data as Agencia);
+          if (data) setAgencia(data as unknown as Agencia);
         });
     } else {
       // Check if agency was manually selected and stored
@@ -159,11 +163,27 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
           .eq("slug", storedAgencySlug)
           .single()
           .then(({ data }) => {
-            if (data) setAgencia(data as Agencia);
+            if (data) setAgencia(data as unknown as Agencia);
           });
       }
     }
   }, []);
+
+  // Apply agency colors to CSS variables
+  useEffect(() => {
+    if (agencia) {
+      const root = document.documentElement;
+      if (agencia.cor_primaria) {
+        root.style.setProperty("--agency-primary", agencia.cor_primaria);
+        // Also update standard shadcn primary if possible, but safely
+        // Most shadcn themes use HSL, so hex to hsl conversion would be better,
+        // but for now let's just use the hex directly if supported or set custom vars.
+      }
+      if (agencia.cor_secundaria) {
+        root.style.setProperty("--agency-secondary", agencia.cor_secundaria);
+      }
+    }
+  }, [agencia]);
 
   // Update session duration every second (for display)
   useEffect(() => {
@@ -271,7 +291,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       const { data: gestorData, error } = await supabase
         .from("gestores")
         .select(
-          "id, nome, foto_url, telefone, senha, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id"
+          "id, nome, foto_url, telefone, senha, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id, is_admin"
         )
         .eq("id", gestorId)
         .single();
@@ -312,6 +332,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         first_login_at: gestorData.first_login_at,
         welcome_modal_dismissed: gestorData.welcome_modal_dismissed,
         agencia_id: gestorData.agencia_id,
+        is_admin: gestorData.is_admin || false,
       });
       setIsFirstLogin(isFirstTimeLogin);
       setSessionId(sessionData.id);
@@ -344,9 +365,9 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       return { success: false, error: "Agência não encontrada" };
     }
 
-    setAgencia(data as Agencia);
-    sessionStorage.setItem("vurp_agency_slug", (data as Agencia).slug);
-    return { success: true, agency: data as Agencia };
+    setAgencia(data as unknown as Agencia);
+    sessionStorage.setItem("vurp_agency_slug", (data as unknown as Agencia).slug);
+    return { success: true, agency: data as unknown as Agencia };
   };
 
   const logout = async () => {
@@ -405,7 +426,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
     const { data } = await supabase
       .from("gestores")
       .select(
-        "id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id"
+        "id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id, is_admin"
       )
       .eq("id", gestor.id)
       .single();

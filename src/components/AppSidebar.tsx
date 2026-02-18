@@ -42,7 +42,7 @@ const AppSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { state } = useSidebar();
-  const { agencia } = useGestor();
+  const { agencia, gestor } = useGestor();
   const isCollapsed = state === "collapsed";
 
   const isActive = (path: string) => {
@@ -81,12 +81,19 @@ const AppSidebar = () => {
   return (
     <Sidebar collapsible="icon" className="border-r border-border/50">
       {/* Header */}
-      <SidebarHeader className="border-b border-border/50 p-4">
+      <SidebarHeader
+        className="border-b border-border/50 p-4"
+        style={{ borderBottomColor: agencia?.cor_secundaria ? `${agencia.cor_secundaria}44` : undefined }}
+      >
         <div className="flex items-center gap-3 overflow-hidden">
           {agencia?.logo_url ? (
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden border border-primary/20">
-                <img src={agencia.logo_url} alt={agencia.nome} className="h-full w-full object-contain" />
+              <div className="h-8 w-8 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden border border-primary/20 bg-white/50 backdrop-blur-sm">
+                <img
+                  src={agencia.logo_black_url || agencia.logo_url}
+                  alt={agencia.nome}
+                  className="h-full w-full object-contain"
+                />
               </div>
               {!isCollapsed && (
                 <span className="font-bold text-sm truncate max-w-[150px] text-foreground">
@@ -244,9 +251,32 @@ const AppSidebar = () => {
 
       </SidebarContent>
 
-      {/* Footer - Configurações */}
+      {/* Footer - Configuracoes */}
       <SidebarFooter className="border-t border-border/50 p-2">
         <SidebarMenu>
+          {gestor?.is_admin && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => navigate("/agencia/configuracoes")}
+                isActive={isActive("/agencia/configuracoes")}
+                tooltip="Configurações da Agência"
+                className={cn(
+                  "transition-all duration-200",
+                  isActive("/agencia/configuracoes") &&
+                  "bg-primary/10 text-primary border-l-2 border-primary"
+                )}
+              >
+                <div
+                  className="h-4 w-4 rounded-full flex items-center justify-center border border-primary/30"
+                  style={{ backgroundColor: agencia?.cor_primaria ? `${agencia.cor_primaria}22` : undefined }}
+                >
+                  <Settings className="h-3 w-3 text-primary" style={{ color: agencia?.cor_primaria || undefined }} />
+                </div>
+                <span>Config. Agência</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
+
           {menuItems.config.map((item) => (
             <SidebarMenuItem key={item.path}>
               <SidebarMenuButton

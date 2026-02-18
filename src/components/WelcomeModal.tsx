@@ -39,24 +39,29 @@ const WelcomeModal = ({ isOpen, onClose, gestorName }: WelcomeModalProps) => {
           transition={{ duration: 0.3 }}
         >
           {/* Header with gradient */}
-          <div className="relative bg-gradient-to-br from-primary/20 via-primary/10 to-transparent p-8 text-center">
+          <div
+            className="relative p-8 text-center"
+            style={{
+              background: agencia?.cor_primaria
+                ? `linear-gradient(to bottom right, ${agencia.cor_primaria}33, ${agencia.cor_primaria}11, transparent)`
+                : undefined
+            }}
+          >
             <div className="absolute inset-0 overflow-hidden">
               <motion.div
-                className="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl"
+                className="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl"
+                style={{ backgroundColor: agencia?.cor_primaria ? `${agencia.cor_primaria}33` : undefined }}
                 animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
                 transition={{ duration: 4, repeat: Infinity }}
-              />
-              <motion.div
-                className="absolute -bottom-10 -left-10 w-32 h-32 bg-primary/30 rounded-full blur-2xl"
-                animate={{ scale: [1.2, 1, 1.2], opacity: [0.8, 0.5, 0.8] }}
-                transition={{ duration: 3, repeat: Infinity }}
               />
             </div>
 
             <div className="relative z-10">
               <div className="flex justify-center mb-4">
                 {agencia?.logo_url ? (
-                  <img src={agencia.logo_url} alt={agencia.nome} className="h-16 w-auto object-contain" />
+                  <div className="p-3 bg-white/50 backdrop-blur-sm rounded-xl border border-primary/10 shadow-sm">
+                    <img src={agencia.logo_url} alt={agencia.nome} className="h-16 w-auto object-contain" />
+                  </div>
                 ) : (
                   <VCDLogo size="lg" showText={false} />
                 )}
@@ -94,8 +99,14 @@ const WelcomeModal = ({ isOpen, onClose, gestorName }: WelcomeModalProps) => {
                   transition={{ delay: 0.4 + index * 0.1 }}
                   className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border border-border"
                 >
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <feature.icon className="w-4 h-4 text-primary" />
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: agencia?.cor_primaria ? `${agencia.cor_primaria}22` : undefined }}
+                  >
+                    <feature.icon
+                      className="w-4 h-4 text-primary"
+                      style={{ color: agencia?.cor_primaria || undefined }}
+                    />
                   </div>
                   <span className="text-sm text-foreground">{feature.text}</span>
                 </motion.div>
@@ -129,7 +140,8 @@ const WelcomeModal = ({ isOpen, onClose, gestorName }: WelcomeModalProps) => {
             >
               <Button
                 onClick={() => onClose(dontShowAgain)}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                className="w-full bg-primary hover:brightness-110 text-primary-foreground"
+                style={{ backgroundColor: agencia?.cor_primaria || undefined }}
               >
                 Começar a usar
               </Button>

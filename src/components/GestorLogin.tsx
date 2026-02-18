@@ -124,13 +124,22 @@ const GestorLogin = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="flex flex-col items-center gap-4"
                 >
-                  {agencia.logo_url ? (
-                    <img src={agencia.logo_url} alt={agencia.nome} className="h-20 w-auto object-contain" />
-                  ) : (
-                    <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center border-2 border-primary/20">
-                      <Home className="w-10 h-10 text-primary" />
-                    </div>
-                  )}
+                  <div className="relative group">
+                    <div className="absolute -inset-4 bg-primary/5 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {agencia.logo_url ? (
+                      <div className="h-24 w-48 flex items-center justify-center p-2 rounded-xl bg-white/50 backdrop-blur-sm self-center">
+                        <img
+                          src={agencia.logo_url}
+                          alt={agencia.nome}
+                          className="h-full w-full object-contain filter drop-shadow-sm"
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center border-2 border-primary/20">
+                        <Home className="w-10 h-10 text-primary" />
+                      </div>
+                    )}
+                  </div>
                   <div className="text-center">
                     <h2 className="text-xl font-bold text-foreground">{agencia.nome}</h2>
                     <Button
@@ -181,7 +190,11 @@ const GestorLogin = () => {
                     <Button
                       type="submit"
                       disabled={isLoading || !agencySlug}
-                      className="w-full h-14 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground transition-all"
+                      className="w-full h-14 text-lg font-semibold bg-primary hover:brightness-110 text-primary-foreground transition-all"
+                      style={{
+                        backgroundColor: agencia?.cor_primaria || undefined,
+                        borderColor: agencia?.cor_secundaria || undefined
+                      }}
                     >
                       {isLoading ? (
                         <div className="w-6 h-6 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
@@ -233,11 +246,21 @@ const GestorLogin = () => {
                         </SelectTrigger>
                         <SelectContent className="bg-background border-border/50">
                           {gestores.map((gestor) => (
-                            <SelectItem key={gestor.id} value={gestor.id}>
+                            <SelectItem
+                              key={gestor.id}
+                              value={gestor.id}
+                              className="focus:bg-primary/20 transition-colors"
+                            >
                               <div className="flex items-center gap-3 py-1">
                                 <Avatar className="h-8 w-8 border border-primary/20">
                                   <AvatarImage src={gestor.foto_url || undefined} className="object-cover" />
-                                  <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                                  <AvatarFallback
+                                    className="bg-primary/10 text-primary text-xs font-bold"
+                                    style={{
+                                      backgroundColor: agencia?.cor_primaria ? `${agencia.cor_primaria}22` : undefined,
+                                      color: agencia?.cor_primaria || undefined
+                                    }}
+                                  >
                                     {gestor.nome.substring(0, 2).toUpperCase()}
                                   </AvatarFallback>
                                 </Avatar>
@@ -272,7 +295,10 @@ const GestorLogin = () => {
                     <Button
                       type="submit"
                       disabled={isLoading || !password || !selectedGestorId}
-                      className="w-full h-14 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground vcd-button-glow transition-all duration-200"
+                      className="w-full h-14 text-lg font-semibold bg-primary hover:brightness-110 text-primary-foreground vcd-button-glow transition-all duration-200"
+                      style={{
+                        backgroundColor: agencia?.cor_primaria || undefined
+                      }}
                     >
                       {isLoading ? (
                         <div className="w-6 h-6 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />

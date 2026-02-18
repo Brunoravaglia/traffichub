@@ -8,6 +8,8 @@ import {
     Calendar,
     Share2,
     BookOpen,
+    Eye,
+    Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PublicLayout from "@/components/home/PublicLayout";
@@ -17,11 +19,16 @@ import { blogPosts } from "@/data/blogPosts";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useTheme } from "@/components/ThemeProvider";
+import { useTrackView, useLike } from "@/hooks/useBlogMetrics";
 
 const BlogPostPage = () => {
     const { slug } = useParams<{ slug: string }>();
     const post = blogPosts.find((p) => p.slug === slug);
     const { theme } = useTheme();
+
+    // Track view + like
+    useTrackView(slug);
+    const { liked, likeCount, toggleLike } = useLike(slug);
 
     // Scroll to top when article changes
     useEffect(() => {
@@ -201,6 +208,20 @@ const BlogPostPage = () => {
                                 </p>
 
                                 <div className="flex items-center gap-3">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={toggleLike}
+                                        className={`border-border transition-all ${liked
+                                                ? "text-red-500 border-red-500/30 bg-red-500/5 hover:bg-red-500/10"
+                                                : "text-muted-foreground hover:text-red-500 hover:border-red-500/30"
+                                            }`}
+                                    >
+                                        <Heart
+                                            className={`w-4 h-4 mr-1.5 transition-all ${liked ? "fill-red-500" : ""}`}
+                                        />
+                                        {likeCount > 0 ? likeCount : "Curtir"}
+                                    </Button>
                                     <Button
                                         variant="outline"
                                         size="sm"
