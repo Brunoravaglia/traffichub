@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
@@ -316,7 +316,7 @@ const StatusBadge = ({ value, type }: { value: boolean | string | null; type?: "
 
 const RecargaBadge = ({ tipo }: { tipo: string | null }) => {
   const option = RECARGA_OPTIONS.find(o => o.value === tipo);
-  
+
   if (!tipo || tipo === "mensal") {
     return (
       <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-blue-500/20 text-xs">
@@ -324,7 +324,7 @@ const RecargaBadge = ({ tipo }: { tipo: string | null }) => {
       </Badge>
     );
   }
-  
+
   if (tipo === "semanal") {
     return (
       <Badge variant="secondary" className="bg-purple-500/10 text-purple-600 border-purple-500/20 text-xs">
@@ -332,7 +332,7 @@ const RecargaBadge = ({ tipo }: { tipo: string | null }) => {
       </Badge>
     );
   }
-  
+
   if (tipo === "continuo") {
     return (
       <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20 text-xs">
@@ -399,12 +399,12 @@ const ClientTrackingTable = ({ gestorFilter }: ClientTrackingTableProps) => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      
+
       // Filter by gestor if specified
       const filteredData = gestorFilter && gestorFilter !== "all"
         ? (data as any[])?.filter((t) => t.clientes?.gestor_id === gestorFilter)
         : data;
-      
+
       return filteredData as ClientTracking[];
     },
   });
@@ -567,64 +567,82 @@ const ClientTrackingTable = ({ gestorFilter }: ClientTrackingTableProps) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {trackingData?.map((tracking) => (
-                <TableRow key={tracking.id} className="hover:bg-muted/30">
-                  <TableCell className="sticky left-0 bg-card z-10 font-medium">
-                    {tracking.clientes?.nome || "-"}
-                  </TableCell>
-                  <TableCell className="font-mono text-xs">{tracking.gtm_id || "-"}</TableCell>
-                  <TableCell className="font-mono text-xs">{tracking.ga4_id || "-"}</TableCell>
-                  <TableCell>{tracking.google_ads_status || "-"}</TableCell>
-                  <TableCell><StatusBadge value={tracking.clarity_installed} type="boolean" /></TableCell>
-                  <TableCell><StatusBadge value={tracking.meta_ads_active} type="boolean" /></TableCell>
-                  <TableCell><StatusBadge value={tracking.pixel_installed} type="boolean" /></TableCell>
-                  <TableCell><StatusBadge value={tracking.search_console_status} /></TableCell>
-                  <TableCell><StatusBadge value={tracking.gmn_status} /></TableCell>
-                  <TableCell className={tracking.google_saldo < 100 ? "text-red-500 font-medium" : ""}>
-                    {formatCurrency(tracking.google_saldo)}
-                  </TableCell>
-                  <TableCell className={tracking.google_dias_restantes < 5 ? "text-red-500 font-medium" : ""}>
-                    {tracking.google_dias_restantes}
-                  </TableCell>
-                  <TableCell>
-                    <RecargaBadge tipo={tracking.google_recarga_tipo} />
-                  </TableCell>
-                  <TableCell className={tracking.meta_saldo < 100 ? "text-red-500 font-medium" : ""}>
-                    {formatCurrency(tracking.meta_saldo)}
-                  </TableCell>
-                  <TableCell className={tracking.meta_dias_restantes < 5 ? "text-red-500 font-medium" : ""}>
-                    {tracking.meta_dias_restantes}
-                  </TableCell>
-                  <TableCell>
-                    <RecargaBadge tipo={tracking.meta_recarga_tipo} />
-                  </TableCell>
-                  <TableCell>
-                    {tracking.url ? (
-                      <a
-                        href={tracking.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline flex items-center gap-1 text-xs"
+              {trackingData?.map((tracking) => {
+                let googleSaldoCalc = tracking.google_saldo || 0;
+                let metaSaldoCalc = tracking.meta_saldo || 0;
+
+                if (tracking.google_ultima_validacao && tracking.google_valor_diario > 0 && googleSaldoCalc > 0) {
+                  const daysPassed = differenceInDays(new Date(), new Date(tracking.google_ultima_validacao));
+                  if (daysPassed > 0) googleSaldoCalc = Math.max(0, googleSaldoCalc - (daysPassed * tracking.google_valor_diario));
+                }
+
+                if (tracking.meta_ultima_validacao && tracking.meta_valor_diario > 0 && metaSaldoCalc > 0) {
+                  const daysPassed = differenceInDays(new Date(), new Date(tracking.meta_ultima_validacao));
+                  if (daysPassed > 0) metaSaldoCalc = Math.max(0, metaSaldoCalc - (daysPassed * tracking.meta_valor_diario));
+                }
+
+                const googleDiasCalc = tracking.google_valor_diario > 0 ? Math.floor(googleSaldoCalc / tracking.google_valor_diario) : 0;
+                const metaDiasCalc = tracking.meta_valor_diario > 0 ? Math.floor(metaSaldoCalc / tracking.meta_valor_diario) : 0;
+
+                return (
+                  <TableRow key={tracking.id} className="hover:bg-muted/30">
+                    <TableCell className="sticky left-0 bg-card z-10 font-medium">
+                      {tracking.clientes?.nome || "-"}
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">{tracking.gtm_id || "-"}</TableCell>
+                    <TableCell className="font-mono text-xs">{tracking.ga4_id || "-"}</TableCell>
+                    <TableCell>{tracking.google_ads_status || "-"}</TableCell>
+                    <TableCell><StatusBadge value={tracking.clarity_installed} type="boolean" /></TableCell>
+                    <TableCell><StatusBadge value={tracking.meta_ads_active} type="boolean" /></TableCell>
+                    <TableCell><StatusBadge value={tracking.pixel_installed} type="boolean" /></TableCell>
+                    <TableCell><StatusBadge value={tracking.search_console_status} /></TableCell>
+                    <TableCell><StatusBadge value={tracking.gmn_status} /></TableCell>
+                    <TableCell className={googleSaldoCalc < 100 ? "text-red-500 font-medium" : ""}>
+                      {formatCurrency(googleSaldoCalc)}
+                    </TableCell>
+                    <TableCell className={googleDiasCalc < 5 ? "text-red-500 font-medium" : ""}>
+                      {googleDiasCalc}
+                    </TableCell>
+                    <TableCell>
+                      <RecargaBadge tipo={tracking.google_recarga_tipo} />
+                    </TableCell>
+                    <TableCell className={metaSaldoCalc < 100 ? "text-red-500 font-medium" : ""}>
+                      {formatCurrency(metaSaldoCalc)}
+                    </TableCell>
+                    <TableCell className={metaDiasCalc < 5 ? "text-red-500 font-medium" : ""}>
+                      {metaDiasCalc}
+                    </TableCell>
+                    <TableCell>
+                      <RecargaBadge tipo={tracking.meta_recarga_tipo} />
+                    </TableCell>
+                    <TableCell>
+                      {tracking.url ? (
+                        <a
+                          href={tracking.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline flex items-center gap-1 text-xs"
+                        >
+                          {tracking.url.replace(/https?:\/\//, "").substring(0, 25)}...
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(tracking)}
+                        className="h-8 w-8"
                       >
-                        {tracking.url.replace(/https?:\/\//, "").substring(0, 25)}...
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(tracking)}
-                      className="h-8 w-8"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
           <ScrollBar orientation="horizontal" />
@@ -645,7 +663,7 @@ const ClientTrackingTable = ({ gestorFilter }: ClientTrackingTableProps) => {
           onSave={handleSave}
         />
       </Dialog>
-    </motion.div>
+    </motion.div >
   );
 };
 

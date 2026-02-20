@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Calendar, Briefcase, DollarSign, Target, Share2, Upload, X, Image as ImageIcon, Phone, FileText } from "lucide-react";
+import { ArrowLeft, User, Calendar, Briefcase, DollarSign, Target, Share2, Upload, X, Image as ImageIcon, Phone, FileText, Search } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -41,6 +41,11 @@ const CreateClientForm = () => {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [googleValorDiario, setGoogleValorDiario] = useState("");
+  const [googleSaldo, setGoogleSaldo] = useState("");
+  const [metaValorDiario, setMetaValorDiario] = useState("");
+  const [metaSaldo, setMetaSaldo] = useState("");
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -133,6 +138,40 @@ const CreateClientForm = () => {
             .eq("id", clientData.id);
         }
       }
+
+      // Create client_tracking entry for automatic daily balance deduction
+      const hasGoogleAds = redesSociais.includes("google");
+      const hasMetaAds = redesSociais.includes("meta");
+
+      const gValor = googleValorDiario ? parseFloat(googleValorDiario) : 0;
+      const gSaldo = googleSaldo ? parseFloat(googleSaldo) : 0;
+      const mValor = metaValorDiario ? parseFloat(metaValorDiario) : 0;
+      const mSaldo = metaSaldo ? parseFloat(metaSaldo) : 0;
+
+      const gDias = gValor > 0 ? Math.floor(gSaldo / gValor) : 0;
+      const mDias = mValor > 0 ? Math.floor(mSaldo / mValor) : 0;
+      
+      const now = new Date();
+      const gProxima = new Date(now);
+      gProxima.setDate(gProxima.getDate() + gDias);
+      const mProxima = new Date(now);
+      mProxima.setDate(mProxima.getDate() + mDias);
+
+      await supabase.from("client_tracking").insert([{
+        cliente_id: clientData.id,
+        google_valor_diario: hasGoogleAds ? gValor : 0,
+        google_saldo: hasGoogleAds ? gSaldo : 0,
+        google_dias_restantes: hasGoogleAds ? gDias : 0,
+        google_ultima_validacao: format(now, "yyyy-MM-dd"),
+        google_proxima_recarga: format(gProxima, "yyyy-MM-dd"),
+        meta_valor_diario: hasMetaAds ? mValor : 0,
+        meta_saldo: hasMetaAds ? mSaldo : 0,
+        meta_dias_restantes: hasMetaAds ? mDias : 0,
+        meta_ultima_validacao: format(now, "yyyy-MM-dd"),
+        meta_proxima_recarga: format(mProxima, "yyyy-MM-dd"),
+        gtm_ids: [],
+        ga4_ids: []
+      }]);
 
       return clientData;
     },
@@ -369,6 +408,72 @@ const CreateClientForm = () => {
                 className="h-12 bg-secondary border-border focus:border-primary"
               />
             </div>
+
+            {/* Investimento Diário e Saldo - Google */}
+            {redesSociais.includes("google") && (
+              <div className="vcd-card space-y-4 p-4 bg-secondary/20">
+                <h3 className="text-sm font-semibold text-[#4285f4] flex items-center gap-2">
+                  <Search className="w-4 h-4" /> Google Ads
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-foreground">Investimento Diário (R$)</label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="Ex: 50"
+                      value={googleValorDiario}
+                      onChange={(e) => setGoogleValorDiario(e.target.value)}
+                      className="h-10 bg-secondary border-border focus:border-primary"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-foreground">Saldo Atual (R$)</label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="Ex: 500"
+                      value={googleSaldo}
+                      onChange={(e) => setGoogleSaldo(e.target.value)}
+                      className="h-10 bg-secondary border-border focus:border-primary"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Investimento Diário e Saldo - Meta */}
+            {redesSociais.includes("meta") && (
+              <div className="vcd-card space-y-4 p-4 bg-secondary/20">
+                <h3 className="text-sm font-semibold text-[#1877f2] flex items-center gap-2">
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg> Meta Ads
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-foreground">Investimento Diário (R$)</label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="Ex: 50"
+                      value={metaValorDiario}
+                      onChange={(e) => setMetaValorDiario(e.target.value)}
+                      className="h-10 bg-secondary border-border focus:border-primary"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-foreground">Saldo Atual (R$)</label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="Ex: 500"
+                      value={metaSaldo}
+                      onChange={(e) => setMetaSaldo(e.target.value)}
+                      className="h-10 bg-secondary border-border focus:border-primary"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Expectativa de Resultados */}
             <div className="space-y-2">

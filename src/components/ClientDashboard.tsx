@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -125,7 +126,7 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
         .maybeSingle();
 
       if (error) throw error;
-      
+
       // Handle legacy gtm_ids and ga4_ids
       const result = data as ClientTracking | null;
       if (result) {
@@ -138,14 +139,37 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
 
   const saveMutation = useMutation({
     mutationFn: async (data: Partial<ClientTracking>) => {
-      const googleDias = data.google_valor_diario && data.google_valor_diario > 0
+      // Calculate remaining days based on current input values
+      const now = new Date();
+      let googleDias = data.google_valor_diario && data.google_valor_diario > 0
         ? Math.floor((data.google_saldo || 0) / data.google_valor_diario)
         : 0;
-      const metaDias = data.meta_valor_diario && data.meta_valor_diario > 0
+      let metaDias = data.meta_valor_diario && data.meta_valor_diario > 0
         ? Math.floor((data.meta_saldo || 0) / data.meta_valor_diario)
         : 0;
 
-      const now = new Date();
+      // Handle dynamic deduction if the values weren't manually edited 
+      // but just saved from auto-calculations (we check the last validation date)
+      if (tracking?.google_ultima_validacao && data.google_saldo === tracking.google_saldo) {
+        const lastValG = new Date(tracking.google_ultima_validacao);
+        const daysPassedG = differenceInDays(now, lastValG);
+        if (daysPassedG > 0 && data.google_valor_diario && data.google_saldo && data.google_valor_diario > 0 && data.google_saldo > 0) {
+          const deductionG = daysPassedG * data.google_valor_diario;
+          data.google_saldo = Math.max(0, data.google_saldo - deductionG);
+          googleDias = Math.floor(data.google_saldo / data.google_valor_diario);
+        }
+      }
+
+      if (tracking?.meta_ultima_validacao && data.meta_saldo === tracking.meta_saldo) {
+        const lastValM = new Date(tracking.meta_ultima_validacao);
+        const daysPassedM = differenceInDays(now, lastValM);
+        if (daysPassedM > 0 && data.meta_valor_diario && data.meta_saldo && data.meta_valor_diario > 0 && data.meta_saldo > 0) {
+          const deductionM = daysPassedM * data.meta_valor_diario;
+          data.meta_saldo = Math.max(0, data.meta_saldo - deductionM);
+          metaDias = Math.floor(data.meta_saldo / data.meta_valor_diario);
+        }
+      }
+
       const googleProxima = new Date(now);
       googleProxima.setDate(googleProxima.getDate() + googleDias);
       const metaProxima = new Date(now);
@@ -250,17 +274,55 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
     );
   }
 
-  const googleDiasClass = tracking?.google_dias_restantes && tracking.google_dias_restantes <= 3
-    ? "text-red-500"
-    : tracking?.google_dias_restantes && tracking.google_dias_restantes <= 7
-    ? "text-yellow-500"
-    : "text-green-500";
+  // Dynamic calculation for display
+  const displayGoogleSaldo = () => {
+    if (!tracking) return 0;
+    let s = tracking.google_saldo || 0;
+    if (tracking.google_ultima_validacao && tracking.google_valor_diario > 0 && s > 0) {
+      const daysPassed = differenceInDays(new Date(), new Date(tracking.google_ultima_validacao));
+      if (daysPassed > 0) {
+        s = Math.max(0, s - (daysPassed * tracking.google_valor_diario));
+      }
+    }
+    return s;
+  };
 
-  const metaDiasClass = tracking?.meta_dias_restantes && tracking.meta_dias_restantes <= 3
+  const displayGoogleDias = () => {
+    if (!tracking || !tracking.google_valor_diario) return 0;
+    return Math.floor(displayGoogleSaldo() / tracking.google_valor_diario);
+  };
+
+  const displayMetaSaldo = () => {
+    if (!tracking) return 0;
+    let s = tracking.meta_saldo || 0;
+    if (tracking.meta_ultima_validacao && tracking.meta_valor_diario > 0 && s > 0) {
+      const daysPassed = differenceInDays(new Date(), new Date(tracking.meta_ultima_validacao));
+      if (daysPassed > 0) {
+        s = Math.max(0, s - (daysPassed * tracking.meta_valor_diario));
+      }
+    }
+    return s;
+  };
+
+  const displayMetaDias = () => {
+    if (!tracking || !tracking.meta_valor_diario) return 0;
+    return Math.floor(displayMetaSaldo() / tracking.meta_valor_diario);
+  };
+
+  const currentGoogleDias = displayGoogleDias();
+  const currentMetaDias = displayMetaDias();
+
+  const googleDiasClass = tracking?.google_valor_diario && currentGoogleDias <= 3
     ? "text-red-500"
-    : tracking?.meta_dias_restantes && tracking.meta_dias_restantes <= 7
-    ? "text-yellow-500"
-    : "text-green-500";
+    : tracking?.google_valor_diario && currentGoogleDias <= 7
+      ? "text-yellow-500"
+      : "text-green-500";
+
+  const metaDiasClass = tracking?.meta_valor_diario && currentMetaDias <= 3
+    ? "text-red-500"
+    : tracking?.meta_valor_diario && currentMetaDias <= 7
+      ? "text-yellow-500"
+      : "text-green-500";
 
   return (
     <div className="space-y-6">
@@ -349,7 +411,7 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
             <CardContent>
               <p className="text-2xl font-bold text-foreground">
                 {formatCurrency(
-                  (hasGoogleAds ? tracking?.google_valor_diario || 0 : 0) + 
+                  (hasGoogleAds ? tracking?.google_valor_diario || 0 : 0) +
                   (hasMetaAds ? tracking?.meta_valor_diario || 0 : 0)
                 )}
               </p>
@@ -595,7 +657,7 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
                       <p className="text-sm font-medium">{tracking.ga4_id || "-"}</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-wrap gap-2">
                     <StatusBadge value={tracking.clarity_installed || false} label="Clarity" />
                     <StatusBadge value={tracking.pixel_installed || false} label="Pixel" />
@@ -657,14 +719,12 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
                             )}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          Próxima recarga: {tracking.google_proxima_recarga
-                            ? format(new Date(tracking.google_proxima_recarga), "dd/MM/yyyy")
-                            : "-"}
-                        </p>
-                        <p className={`text-lg font-bold ${googleDiasClass}`}>
-                          {tracking.google_dias_restantes} dias restantes
-                        </p>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Em {displayGoogleDias()} dias</span>
+                          <span className="font-medium">
+                            {tracking.google_proxima_recarga ? format(new Date(tracking.google_proxima_recarga), "dd/MM/yyyy", { locale: ptBR }) : "-"}
+                          </span>
+                        </div>
                       </div>
                     )}
 
@@ -682,14 +742,12 @@ const ClientDashboard = ({ clienteId, cliente }: ClientDashboardProps) => {
                             )}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          Próxima recarga: {tracking.meta_proxima_recarga
-                            ? format(new Date(tracking.meta_proxima_recarga), "dd/MM/yyyy")
-                            : "-"}
-                        </p>
-                        <p className={`text-lg font-bold ${metaDiasClass}`}>
-                          {tracking.meta_dias_restantes} dias restantes
-                        </p>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Em {displayMetaDias()} dias</span>
+                          <span className="font-medium">
+                            {tracking.meta_proxima_recarga ? format(new Date(tracking.meta_proxima_recarga), "dd/MM/yyyy", { locale: ptBR }) : "-"}
+                          </span>
+                        </div>
                       </div>
                     )}
                   </>

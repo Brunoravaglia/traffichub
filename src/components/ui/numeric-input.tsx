@@ -15,48 +15,78 @@ const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps>(
     // Sync display value with external value when not focused
     React.useEffect(() => {
       if (!isFocused) {
-        setDisplayValue(value === 0 ? "" : String(value));
+        setDisplayValue(value === 0 ? "" : formatDisplay(value));
       }
-    }, [value, isFocused]);
+    }, [value, isFocused, isDecimal]);
+
+    const formatDisplay = (val: number) => {
+      if (isDecimal) {
+        return new Intl.NumberFormat('pt-BR', {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2
+        }).format(val);
+      } else {
+        return new Intl.NumberFormat('pt-BR').format(val);
+      }
+    };
 
     const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
       setIsFocused(true);
-      // If value is 0, show empty to allow clean typing
       if (value === 0) {
         setDisplayValue("");
+      } else {
+        // Just show the current display value, let them edit
       }
       props.onFocus?.(e);
     };
 
     const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
       setIsFocused(false);
-      // Parse final value
-      const parsed = isDecimal ? parseFloat(displayValue) : parseInt(displayValue);
-      const finalValue = isNaN(parsed) ? 0 : parsed;
-      onChange(finalValue);
-      setDisplayValue(finalValue === 0 ? "" : String(finalValue));
+      // Ensure it snaps to clean formatting on blur
+      setDisplayValue(value === 0 ? "" : formatDisplay(value));
       props.onBlur?.(e);
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const inputValue = e.target.value;
-      
-      // Allow empty string
+      let inputValue = e.target.value;
+
+      setDisplayValue(inputValue);
+
       if (inputValue === "") {
-        setDisplayValue("");
         onChange(0);
         return;
       }
 
-      // Validate numeric input - allow digits, decimal point, and minus
-      const regex = isDecimal ? /^-?\d*\.?\d*$/ : /^-?\d*$/;
-      if (regex.test(inputValue)) {
-        setDisplayValue(inputValue);
-        const parsed = isDecimal ? parseFloat(inputValue) : parseInt(inputValue);
-        if (!isNaN(parsed)) {
-          onChange(parsed);
-        }
+      // Remove R$, spaces, any letters
+      let clean = inputValue.replace(/[^\d.,-]/g, "");
+
+      if (!clean || clean === "-" || clean === "." || clean === ",") {
+        onChange(0);
+        return;
       }
+
+      let parsed = 0;
+
+      // Detect if user is typing with comma (pt-BR format)
+      if (clean.includes(',')) {
+        // Remove dots (thousands separators)
+        clean = clean.replace(/\./g, "");
+        // Replace comma with dot for parseFloat
+        clean = clean.replace(",", ".");
+
+        parsed = isDecimal ? parseFloat(clean) : parseInt(clean);
+      } else {
+        // Only dots. If it's a decimal, allow one dot. 
+        // If they use multiple dots, assume thousands.
+        const dotCount = (clean.match(/\./g) || []).length;
+        if (dotCount > 1 || !isDecimal) {
+          clean = clean.replace(/\./g, "");
+        }
+        parsed = isDecimal ? parseFloat(clean) : parseInt(clean);
+      }
+
+      const finalValue = isNaN(parsed) ? 0 : parsed;
+      onChange(finalValue);
     };
 
     return (

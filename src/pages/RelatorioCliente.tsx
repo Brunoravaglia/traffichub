@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -220,6 +220,8 @@ interface ReportData {
   };
   paineisAnuncio: AdPanelImage[];
   customSections: CustomSection[];
+  validationId?: string;
+  validationTime?: string;
 }
 
 const defaultReportData: ReportData = {
@@ -497,17 +499,45 @@ const RelatorioCliente = () => {
   // Auto-fill saldos from client tracking when toggle is on
   useEffect(() => {
     if (reportData.autoFillSaldos && clientTracking) {
+      const today = new Date();
+
+      // Calc Google Deduction
+      let googleDeductedSaldo = clientTracking.google_saldo || 0;
+      let googleRemainingDays = clientTracking.google_dias_restantes || 0;
+      if (clientTracking.google_ultima_validacao && clientTracking.google_valor_diario > 0) {
+        const lastVal = new Date(clientTracking.google_ultima_validacao);
+        const daysPassed = differenceInDays(today, lastVal);
+        if (daysPassed > 0) {
+          const deduction = daysPassed * clientTracking.google_valor_diario;
+          googleDeductedSaldo = Math.max(0, googleDeductedSaldo - deduction);
+          googleRemainingDays = Math.max(0, Math.floor(googleDeductedSaldo / clientTracking.google_valor_diario));
+        }
+      }
+
+      // Calc Meta Deduction
+      let metaDeductedSaldo = clientTracking.meta_saldo || 0;
+      let metaRemainingDays = clientTracking.meta_dias_restantes || 0;
+      if (clientTracking.meta_ultima_validacao && clientTracking.meta_valor_diario > 0) {
+        const lastValM = new Date(clientTracking.meta_ultima_validacao);
+        const daysPassedM = differenceInDays(today, lastValM);
+        if (daysPassedM > 0) {
+          const deductionM = daysPassedM * clientTracking.meta_valor_diario;
+          metaDeductedSaldo = Math.max(0, metaDeductedSaldo - deductionM);
+          metaRemainingDays = Math.max(0, Math.floor(metaDeductedSaldo / clientTracking.meta_valor_diario));
+        }
+      }
+
       setReportData(prev => ({
         ...prev,
         google: {
           ...prev.google,
-          saldoRestante: clientTracking.google_saldo || 0,
-          diasParaRecarga: clientTracking.google_dias_restantes || 0,
+          saldoRestante: googleDeductedSaldo,
+          diasParaRecarga: googleRemainingDays,
         },
         meta: {
           ...prev.meta,
-          saldoRestante: clientTracking.meta_saldo || 0,
-          diasParaRecarga: clientTracking.meta_dias_restantes || 0,
+          saldoRestante: metaDeductedSaldo,
+          diasParaRecarga: metaRemainingDays,
         },
       }));
     }
@@ -538,6 +568,8 @@ const RelatorioCliente = () => {
   // Save report mutation
   const saveReportMutation = useMutation({
     mutationFn: async () => {
+      const validationId = reportData.validationId || crypto.randomUUID();
+
       const dataValues = JSON.parse(JSON.stringify({
         google: reportData.google,
         meta: reportData.meta,
@@ -548,6 +580,8 @@ const RelatorioCliente = () => {
         showRanking: reportData.showRanking,
         metricsConfig: reportData.metricsConfig,
         sectionsConfig: reportData.sectionsConfig,
+        validationId,
+        validationTime: format(new Date(), "yyyy-MM-dd HH:mm:ss")
       }));
 
       const { error } = await supabase
@@ -574,8 +608,11 @@ const RelatorioCliente = () => {
         }]);
 
       if (error) throw error;
+
+      return validationId;
     },
-    onSuccess: () => {
+    onSuccess: (validationId) => {
+      setReportData(prev => ({ ...prev, validationId }));
       toast({ title: "Relatório salvo com sucesso!" });
       queryClient.invalidateQueries({ queryKey: ["client-reports", clienteId] });
     },
@@ -3273,7 +3310,15 @@ const RelatorioCliente = () => {
                   </div>
                   <div className="text-right text-xs text-gray-500">
                     <p>Relatório gerado em</p>
-                    <p>{format(new Date(), "dd/MM/yyyy 'às' HH:mm")}</p>
+                    <p>{reportData.validationTime ? format(new Date(reportData.validationTime), "dd/MM/yyyy 'às' HH:mm") : format(new Date(), "dd/MM/yyyy 'às' HH:mm")}</p>
+                    {reportData.validationId && (
+                      <div className="mt-1 flex flex-col items-end">
+                        <span className="text-[10px] text-gray-600">ID de Validação: {reportData.validationId.split('-')[0]}</span>
+                        <a href={`https://vocedigitalpropaganda.com.br/validar-relatorio/${reportData.validationId}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline">
+                          Verificar Autenticidade
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
