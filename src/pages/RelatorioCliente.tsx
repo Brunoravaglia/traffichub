@@ -794,11 +794,11 @@ const RelatorioCliente = () => {
     toast({ title: "Gerando PDF...", description: "Por favor aguarde" });
 
     try {
-      const captureElement = pdfRef.current;
-      const captureWidth = captureElement.scrollWidth;
-      const captureHeight = captureElement.scrollHeight;
+      const element = pdfRef.current;
+      const captureWidth = 800;
+      const captureHeight = element.offsetHeight;
 
-      const canvas = await html2canvas(captureElement, {
+      const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         logging: false,
@@ -2960,8 +2960,8 @@ const RelatorioCliente = () => {
             <div
               ref={pdfRef}
               className={cn(
-                "w-full text-white overflow-hidden",
-                reportData.isGeneratingPDF ? "rounded-none shadow-none" : "max-w-[800px] rounded-lg shadow-2xl"
+                "w-full max-w-[800px] text-white overflow-hidden",
+                reportData.isGeneratingPDF ? "rounded-none shadow-none" : "rounded-lg shadow-2xl"
               )}
               style={{ fontFamily: "Inter, sans-serif", backgroundColor: "#1a1a2e" }}
             >
@@ -3066,9 +3066,9 @@ const RelatorioCliente = () => {
                       if (additionalMetrics.length === 0) return null;
 
                       return (
-                        <div className="flex flex-wrap gap-3 mt-3">
+                        <div className="grid grid-cols-4 gap-3 mt-3">
                           {additionalMetrics.map((metric, idx) => (
-                            <div key={idx} className="flex-grow basis-[calc(25%-12px)] min-w-[150px] text-center p-3 rounded-lg bg-white/5">
+                            <div key={idx} className="text-center p-3 rounded-lg bg-white/5">
                               <p className={`text-xl font-bold ${metric.color}`}>{metric.value}</p>
                               <p className="text-xs text-gray-400">{metric.label}</p>
                             </div>
@@ -3137,9 +3137,9 @@ const RelatorioCliente = () => {
                       if (additionalMetrics.length === 0) return null;
 
                       return (
-                        <div className="flex flex-wrap gap-3 mt-3">
+                        <div className="grid grid-cols-4 gap-3 mt-3">
                           {additionalMetrics.map((metric, idx) => (
-                            <div key={idx} className="flex-grow basis-[calc(25%-12px)] min-w-[150px] text-center p-3 rounded-lg bg-white/5">
+                            <div key={idx} className="text-center p-3 rounded-lg bg-white/5">
                               <p className={`text-xl font-bold ${metric.color}`}>{metric.value}</p>
                               <p className="text-xs text-gray-400">{metric.label}</p>
                             </div>
