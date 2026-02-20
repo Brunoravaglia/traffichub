@@ -530,7 +530,7 @@ const RelatorioCliente = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clientes")
-        .select("*")
+        .select("*, agencias(*), gestores(*)")
         .eq("id", clienteId)
         .single();
       if (error) throw error;
@@ -3422,10 +3422,23 @@ const RelatorioCliente = () => {
                 {/* Footer */}
                 <div className="border-t border-[#ffb500]/20 pt-6 mt-8 flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <VCDLogo size="lg" showText={false} className="text-[#ffb500]" />
+                    {/* @ts-ignore */}
+                    {cliente?.agencias?.logo_url || cliente?.gestores?.foto_url ? (
+                      <img
+                        // @ts-ignore
+                        src={cliente?.agencias?.logo_url || cliente?.gestores?.foto_url}
+                        alt="Logo da Agência"
+                        className="h-10 w-auto object-contain max-w-[120px] filter drop-shadow-md"
+                        crossOrigin="anonymous"
+                      />
+                    ) : (
+                      <VCDLogo size="lg" showText={false} className="text-[#ffb500]" />
+                    )}
                     <div>
-                      <p className="text-xs text-white/60 font-medium">Relatório gerado por <span className="text-[#ffb500] font-bold">Você Digital Propaganda</span></p>
-                      <p className="text-xs text-white/40 mt-0.5">www.vocedigitalpropaganda.com.br</p>
+                      <p className="text-xs text-white/60 font-medium">Relatório gerado por <span className="text-[#ffb500] font-bold">
+                        {/* @ts-ignore */}
+                        {cliente?.agencias?.nome || cliente?.gestores?.nome || "Você Digital Propaganda"}
+                      </span></p>
                     </div>
                   </div>
                   <div className="text-right text-xs text-gray-500">
