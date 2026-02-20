@@ -59,7 +59,7 @@ const releases: ReleaseItem[] = [
         id: "v1.0.0",
         version: "v1.0.0",
         date: "Fevereiro 01, 2026",
-        title: "Lançamento Oficial TrafficHub",
+        title: "Lançamento Oficial Vurp",
         description: "Versão inicial da plataforma completa para gestores de tráfego, agências e consultores.",
         type: "feature",
         items: [
