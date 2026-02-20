@@ -20,6 +20,7 @@ import {
 import { FaGoogle, FaMeta, FaTiktok, FaLinkedin } from "react-icons/fa6";
 import PublicLayout from "@/components/home/PublicLayout";
 import SEOHead from "@/components/SEOHead";
+import { GoogleLogo, MetaLogo, TikTokLogo, LinkedInLogo } from "@/components/BrandLogos";
 
 const features = [
     {
@@ -129,10 +130,10 @@ const features = [
 ];
 
 const platforms = [
-    { name: "Google Ads", icon: FaGoogle },
-    { name: "Meta Ads", icon: FaMeta },
-    { name: "TikTok Ads", icon: FaTiktok },
-    { name: "LinkedIn Ads", icon: FaLinkedin },
+    { name: "Google Ads", icon: GoogleLogo },
+    { name: "Meta Ads", icon: MetaLogo },
+    { name: "TikTok Ads", icon: TikTokLogo },
+    { name: "LinkedIn Ads", icon: LinkedInLogo },
 ];
 
 const stats = [

@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import { GoogleLogo, MetaLogo, LinkedInLogo, FacebookLogo, InstagramLogo, WhatsAppLogo, TikTokLogo } from '@/components/BrandLogos';
+import { jsPDF } from 'jspdf';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -796,19 +797,20 @@ const RelatorioCliente = () => {
     try {
       const element = pdfRef.current;
       const captureWidth = 800;
-      const captureHeight = element.offsetHeight;
+      // Get exact height including padding/content
+      const captureHeight = element.getBoundingClientRect().height;
 
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: "#1a1a2e",
+        backgroundColor: "#000000",
         width: captureWidth,
         height: captureHeight,
-        windowWidth: captureWidth,
+        windowWidth: 1024, // Bypass mobile breakpoints
       });
 
-      const imgData = canvas.toDataURL("image/png");
+      const imgData = canvas.toDataURL("image/jpeg", 0.85);
       const pdfWidth = 210; // A4 width in mm
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
@@ -823,7 +825,7 @@ const RelatorioCliente = () => {
       });
 
       // Add image at full size - allows report to be as long as needed
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, scaledHeight);
+      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, scaledHeight);
 
       const clienteName = cliente?.nome || "Relatorio";
       const period = format(periodoInicio, "MMMM", { locale: ptBR });
@@ -1308,7 +1310,7 @@ const RelatorioCliente = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {reportData.objetivos.map((obj, index) => (
-                  <div key={index} className="flex gap-2">
+                  <div key={`objetivo-${index}`} className="flex gap-2">
                     <Input
                       value={obj}
                       onChange={(e) => {
@@ -2960,56 +2962,65 @@ const RelatorioCliente = () => {
             <div
               ref={pdfRef}
               className={cn(
-                "w-full max-w-[800px] text-white overflow-hidden",
-                reportData.isGeneratingPDF ? "rounded-none shadow-none" : "rounded-lg shadow-2xl"
+                "w-full text-white overflow-hidden",
+                reportData.isGeneratingPDF ? "rounded-none shadow-none" : "max-w-[800px] rounded-lg shadow-2xl"
               )}
-              style={{ fontFamily: "Inter, sans-serif", backgroundColor: "#1a1a2e" }}
+              style={{
+                fontFamily: "Inter, sans-serif",
+                backgroundColor: "#000000",
+                width: reportData.isGeneratingPDF ? '800px' : '100%',
+                minHeight: reportData.isGeneratingPDF ? 'auto' : '1000px'
+              }}
             >
               {/* Header with Client Logo + Name */}
               <div className="p-8 pb-4">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-4">
+                <div className="flex items-start justify-between mb-8">
+                  <div className="flex items-center gap-6">
                     {cliente?.logo_url ? (
-                      <div className="w-20 h-20 rounded-xl overflow-hidden border border-white/20" style={{ backgroundColor: "transparent" }}>
+                      <div className="h-24 max-w-[280px] rounded-2xl overflow-hidden border border-[#ffb500]/20 shadow-lg px-4 flex items-center" style={{ backgroundColor: "rgba(255,181,0,0.03)", height: '96px', maxWidth: '280px' }}>
                         <img
                           src={cliente.logo_url}
                           alt={cliente.nome}
-                          className="w-full h-full object-cover rounded-xl"
+                          className="h-full w-auto object-contain py-2"
+                          style={{ height: '96px', width: 'auto', maxWidth: '100%', objectFit: 'contain' }}
                           crossOrigin="anonymous"
                         />
                       </div>
                     ) : (
-                      <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center">
-                        <span className="text-3xl font-bold">{cliente?.nome?.charAt(0)}</span>
+                      <div className="w-24 h-24 rounded-2xl bg-[#ffb500]/10 border border-[#ffb500]/20 text-[#ffb500] flex items-center justify-center shadow-lg">
+                        <span className="text-4xl font-light tracking-widest">{cliente?.nome?.charAt(0)}</span>
                       </div>
                     )}
-                    <div>
-                      <p className="text-2xl font-bold text-primary uppercase">{cliente?.nome}</p>
-                      <p className="text-sm text-gray-400">Relatório de Performance</p>
+                    <div className="space-y-1">
+                      <p className="text-3xl font-medium text-[#ffb500] tracking-wide uppercase leading-tight">{cliente?.nome}</p>
+                      <p className="text-sm text-gray-400 font-light tracking-wider">Relatório de Performance</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <h1 className="text-2xl font-bold text-white mb-1">RESULTADOS DE CAMPANHA</h1>
-                    <p className="text-lg text-gray-400 uppercase font-semibold">
+                  <div className="text-right flex flex-col justify-center">
+                    <h1 className="text-3xl font-light text-white mb-1 tracking-wider leading-none">RESULTADOS DE</h1>
+                    <h1 className="text-3xl font-medium text-[#ffb500] mb-2 tracking-wider leading-none">CAMPANHA</h1>
+                    <p className="text-xl text-gray-500 uppercase font-light tracking-widest">
                       Mês de {format(periodoInicio, "MMMM", { locale: ptBR })}
                     </p>
                   </div>
                 </div>
 
                 {/* Period */}
-                <div className="text-center mb-6 text-base text-gray-300 tracking-widest uppercase font-medium">
-                  Campanhas de {format(periodoInicio, "dd/MM")} à {format(periodoFim, "dd/MM")}
+                <div className="text-center mb-8">
+                  <span className="px-6 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300 tracking-[0.2em] font-bold uppercase">
+                    Campanhas de {format(periodoInicio, "dd/MM")} à {format(periodoFim, "dd/MM")}
+                  </span>
                 </div>
 
                 {/* Objectives */}
                 {reportData.sectionsConfig.showObjetivos && reportData.objetivos.filter(Boolean).length > 0 && (
-                  <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
-                    <h2 className="text-lg font-bold mb-3 text-primary tracking-widest">OBJETIVOS</h2>
-                    <ul className="space-y-2">
+                  <div className="mb-8 p-6 rounded-2xl bg-white/[0.03] border border-white/10 shadow-inner">
+                    <h2 className="text-sm font-medium mb-4 text-[#ffb500] tracking-widest uppercase">OBJETIVOS</h2>
+                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
                       {reportData.objetivos.filter(Boolean).map((obj, i) => (
-                        <li key={i} className="flex items-center gap-2 text-gray-300">
-                          <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
-                          {obj}
+                        <li key={obj} className="flex items-start gap-3 text-gray-300 text-sm font-medium">
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#ffb500] mt-1.5 flex-shrink-0" />
+                          <span className="leading-tight">{obj}</span>
                         </li>
                       ))}
                     </ul>
@@ -3018,26 +3029,28 @@ const RelatorioCliente = () => {
 
                 {/* Google Ads Section */}
                 {reportData.sectionsConfig.showGoogleAds && (
-                  <div className="mb-6 p-5 rounded-xl bg-gradient-to-r from-blue-900/40 to-blue-900/10 border border-blue-500/30">
-                    <h3 className="text-lg font-bold mb-4 text-blue-400">TRÁFEGO GOOGLE</h3>
-                    <div className="grid grid-cols-4 gap-3">
-                      <div className="text-center p-3 rounded-lg bg-white/5">
-                        <p className="text-2xl font-bold text-white">{formatNumber(reportData.google.cliques)}</p>
-                        <p className="text-xs text-gray-400">Cliques</p>
+                  <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-blue-600/10 via-blue-900/5 to-transparent border border-blue-500/20 shadow-lg">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                        <GoogleLogo className="w-5 h-5" />
                       </div>
-                      <div className="text-center p-3 rounded-lg bg-white/5">
-                        <p className="text-2xl font-bold text-white">{formatNumber(reportData.google.impressoes)}</p>
-                        <p className="text-xs text-gray-400">Impressões</p>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-white/5">
-                        <p className="text-2xl font-bold text-white">{formatNumber(reportData.google.contatos)}</p>
-                        <p className="text-xs text-gray-400">Conversões</p>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-white/5">
-                        <p className="text-2xl font-bold text-white">{formatCurrency(reportData.google.investido)}</p>
-                        <p className="text-xs text-gray-400">Investidos</p>
-                      </div>
+                      <h3 className="text-md font-black text-blue-400 tracking-[0.2em] uppercase" style={{ color: '#60a5fa' }}>TRÁFEGO GOOGLE</h3>
                     </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                      {[
+                        { label: "Cliques", value: formatNumber(reportData.google.cliques) },
+                        { label: "Impressões", value: formatNumber(reportData.google.impressoes) },
+                        { label: "Conversões", value: formatNumber(reportData.google.contatos) },
+                        { label: "Investidos", value: formatCurrency(reportData.google.investido) }
+                      ].map((m, i) => (
+                        <div key={m.label} className="text-center p-4 rounded-xl bg-white/[0.04] border border-white/[0.04] hover:bg-white/[0.06] transition-colors">
+                          <p className="text-2xl font-black text-white mb-1">{m.value}</p>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{m.label}</p>
+                        </div>
+                      ))}
+                    </div>
+
                     {(() => {
                       const additionalMetrics = [];
                       if (reportData.metricsConfig.showGoogleCustoPorLead) additionalMetrics.push({ label: "Custo por Lead", value: formatCurrency(reportData.google.custoPorLead), color: "text-green-400" });
@@ -3066,11 +3079,11 @@ const RelatorioCliente = () => {
                       if (additionalMetrics.length === 0) return null;
 
                       return (
-                        <div className="grid grid-cols-4 gap-3 mt-3">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           {additionalMetrics.map((metric, idx) => (
-                            <div key={idx} className="text-center p-3 rounded-lg bg-white/5">
-                              <p className={`text-xl font-bold ${metric.color}`}>{metric.value}</p>
-                              <p className="text-xs text-gray-400">{metric.label}</p>
+                            <div key={metric.label} className="text-center p-4 rounded-xl bg-white/[0.04] border border-white/[0.04] hover:bg-white/[0.06] transition-colors">
+                              <p className={`text-xl font-black ${metric.color} mb-1`}>{metric.value}</p>
+                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{metric.label}</p>
                             </div>
                           ))}
                         </div>
@@ -3081,26 +3094,28 @@ const RelatorioCliente = () => {
 
                 {/* Meta Ads Section */}
                 {reportData.sectionsConfig.showMetaAds && (
-                  <div className="mb-6 p-5 rounded-xl bg-gradient-to-r from-purple-900/40 to-purple-900/10 border border-purple-500/30">
-                    <h3 className="text-lg font-bold mb-4 text-purple-400">TRÁFEGO META ADS</h3>
-                    <div className="grid grid-cols-4 gap-3">
-                      <div className="text-center p-3 rounded-lg bg-white/5">
-                        <p className="text-2xl font-bold text-white">{formatNumber(reportData.meta.impressoes)}</p>
-                        <p className="text-xs text-gray-400">Impressões</p>
+                  <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-purple-600/10 via-purple-900/5 to-transparent border border-purple-500/20 shadow-lg">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                        <MetaLogo className="w-5 h-5 text-purple-400" />
                       </div>
-                      <div className="text-center p-3 rounded-lg bg-white/5">
-                        <p className="text-2xl font-bold text-white">{formatNumber(reportData.meta.engajamento)}</p>
-                        <p className="text-xs text-gray-400">Engajamento</p>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-white/5">
-                        <p className="text-2xl font-bold text-white">{formatNumber(reportData.meta.conversas)}</p>
-                        <p className="text-xs text-gray-400">Conversas</p>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-white/5">
-                        <p className="text-2xl font-bold text-white">{formatCurrency(reportData.meta.investido)}</p>
-                        <p className="text-xs text-gray-400">Investidos</p>
-                      </div>
+                      <h3 className="text-md font-black text-purple-400 tracking-[0.2em] uppercase" style={{ color: '#c084fc' }}>TRÁFEGO META ADS</h3>
                     </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                      {[
+                        { label: "Impressões", value: formatNumber(reportData.meta.impressoes) },
+                        { label: "Engajamento", value: formatNumber(reportData.meta.engajamento) },
+                        { label: "Conversas", value: formatNumber(reportData.meta.conversas) },
+                        { label: "Investidos", value: formatCurrency(reportData.meta.investido) }
+                      ].map((m, i) => (
+                        <div key={m.label} className="text-center p-4 rounded-xl bg-white/[0.04] border border-white/[0.04] hover:bg-white/[0.06] transition-colors">
+                          <p className="text-2xl font-black text-white mb-1">{m.value}</p>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{m.label}</p>
+                        </div>
+                      ))}
+                    </div>
+
                     {/* Additional Meta Metrics */}
                     {(() => {
                       const additionalMetrics = [];
@@ -3137,11 +3152,11 @@ const RelatorioCliente = () => {
                       if (additionalMetrics.length === 0) return null;
 
                       return (
-                        <div className="grid grid-cols-4 gap-3 mt-3">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           {additionalMetrics.map((metric, idx) => (
-                            <div key={idx} className="text-center p-3 rounded-lg bg-white/5">
-                              <p className={`text-xl font-bold ${metric.color}`}>{metric.value}</p>
-                              <p className="text-xs text-gray-400">{metric.label}</p>
+                            <div key={metric.label} className="text-center p-4 rounded-xl bg-white/[0.04] border border-white/[0.04] hover:bg-white/[0.06] transition-colors">
+                              <p className={`text-xl font-black ${metric.color} mb-1`}>{metric.value}</p>
+                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{metric.label}</p>
                             </div>
                           ))}
                         </div>
@@ -3181,7 +3196,7 @@ const RelatorioCliente = () => {
                 {/* Meta Creatives */}
                 {reportData.sectionsConfig.showCriativosMeta && reportData.criativos.filter(c => c.platform === "meta").length > 0 && (
                   <div className="mb-6">
-                    <h3 className="text-lg font-bold mb-4 text-purple-400 tracking-widest">
+                    <h3 className="text-lg font-bold mb-4 text-purple-400 tracking-widest" style={{ color: '#c084fc' }}>
                       CRIATIVOS META
                     </h3>
                     <div className="flex flex-wrap gap-3 justify-center">
@@ -3305,7 +3320,7 @@ const RelatorioCliente = () => {
                   <>
                     {reportData.customSections.filter(s => s.images.length > 0).map((section) => (
                       <div key={section.id} className="mb-6">
-                        <h3 className="text-lg font-bold mb-4 text-primary tracking-widest uppercase">
+                        <h3 className="text-lg font-medium mb-4 text-[#ffb500] tracking-widest uppercase">
                           {section.title}
                         </h3>
                         <div className="flex flex-wrap gap-3 justify-center">
@@ -3334,11 +3349,11 @@ const RelatorioCliente = () => {
 
                 {/* Summary */}
                 {reportData.sectionsConfig.showResumo && reportData.resumo && (
-                  <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
-                    <h3 className="text-lg font-bold mb-3 text-primary tracking-widest">
+                  <div className="mb-8 p-6 rounded-2xl bg-white/[0.03] border border-white/10 shadow-lg">
+                    <h3 className="text-sm font-medium mb-4 text-[#ffb500] tracking-widest uppercase">
                       Resumo geral dos resultados
                     </h3>
-                    <p className="text-gray-300 leading-relaxed text-sm">{reportData.resumo}</p>
+                    <p className="text-gray-300 leading-relaxed text-[13px] font-medium italic">{reportData.resumo}</p>
                   </div>
                 )}
 
@@ -3348,42 +3363,56 @@ const RelatorioCliente = () => {
                     reportData.google.diasParaRecarga > 0 ||
                     reportData.meta.saldoRestante > 0 ||
                     reportData.meta.diasParaRecarga > 0) && (
-                    <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
-                      <h3 className="text-lg font-bold mb-3 text-primary tracking-widest">SALDO RESTANTE</h3>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="mb-8 p-6 rounded-2xl bg-white/[0.03] border border-white/10 shadow-inner">
+                      <h3 className="text-sm font-medium mb-6 text-[#ffb500] tracking-widest uppercase">SALDO RESTANTE</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {(reportData.google.saldoRestante > 0 || reportData.google.diasParaRecarga > 0) && (
-                          <div className="p-3 rounded-lg bg-white/5 border border-blue-500/30">
-                            <p className="font-semibold text-blue-400 mb-2">Google Ads</p>
-                            {reportData.google.saldoRestante > 0 && (
-                              <div className="flex items-center justify-between text-gray-300">
-                                <span>Saldo</span>
-                                <span className="font-bold text-white">{formatCurrency(reportData.google.saldoRestante)}</span>
+                          <div className="p-4 rounded-xl bg-blue-500/[0.05] border border-blue-500/20 shadow-sm">
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="p-1.5 bg-blue-500/10 rounded-md border border-blue-500/20">
+                                <GoogleLogo className="w-4 h-4" />
                               </div>
-                            )}
-                            {reportData.google.diasParaRecarga > 0 && (
-                              <div className="flex items-center justify-between text-gray-300 mt-1">
-                                <span>Próxima recarga</span>
-                                <span className="font-bold text-white">{reportData.google.diasParaRecarga} dias</span>
-                              </div>
-                            )}
+                              <p className="font-black text-xs text-blue-400 uppercase tracking-widest">Google Ads</p>
+                            </div>
+                            <div className="space-y-3">
+                              {reportData.google.saldoRestante > 0 && (
+                                <div className="flex items-center justify-between text-xs font-bold font-mono">
+                                  <span className="text-gray-400 uppercase tracking-tighter">Saldo</span>
+                                  <span className="text-white text-lg">{formatCurrency(reportData.google.saldoRestante)}</span>
+                                </div>
+                              )}
+                              {reportData.google.diasParaRecarga > 0 && (
+                                <div className="flex items-center justify-between text-xs font-bold font-mono border-t border-white/5 pt-3">
+                                  <span className="text-gray-400 uppercase tracking-tighter">Recarga em</span>
+                                  <span className="text-white text-lg">{reportData.google.diasParaRecarga} dias</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         )}
 
                         {(reportData.meta.saldoRestante > 0 || reportData.meta.diasParaRecarga > 0) && (
-                          <div className="p-3 rounded-lg bg-white/5 border border-purple-500/30">
-                            <p className="font-semibold text-purple-400 mb-2">Meta Ads</p>
-                            {reportData.meta.saldoRestante > 0 && (
-                              <div className="flex items-center justify-between text-gray-300">
-                                <span>Saldo</span>
-                                <span className="font-bold text-white">{formatCurrency(reportData.meta.saldoRestante)}</span>
+                          <div className="p-4 rounded-xl bg-purple-500/[0.05] border border-purple-500/20 shadow-sm">
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="p-1.5 bg-purple-500/10 rounded-md border border-purple-500/20">
+                                <MetaLogo className="w-4 h-4 text-purple-400" />
                               </div>
-                            )}
-                            {reportData.meta.diasParaRecarga > 0 && (
-                              <div className="flex items-center justify-between text-gray-300 mt-1">
-                                <span>Próxima recarga</span>
-                                <span className="font-bold text-white">{reportData.meta.diasParaRecarga} dias</span>
-                              </div>
-                            )}
+                              <p className="font-black text-xs text-purple-400 uppercase tracking-widest">Meta Ads</p>
+                            </div>
+                            <div className="space-y-3">
+                              {reportData.meta.saldoRestante > 0 && (
+                                <div className="flex items-center justify-between text-xs font-bold font-mono">
+                                  <span className="text-gray-400 uppercase tracking-tighter">Saldo</span>
+                                  <span className="text-white text-lg">{formatCurrency(reportData.meta.saldoRestante)}</span>
+                                </div>
+                              )}
+                              {reportData.meta.diasParaRecarga > 0 && (
+                                <div className="flex items-center justify-between text-xs font-bold font-mono border-t border-white/5 pt-3">
+                                  <span className="text-gray-400 uppercase tracking-tighter">Recarga em</span>
+                                  <span className="text-white text-lg">{reportData.meta.diasParaRecarga} dias</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -3391,12 +3420,12 @@ const RelatorioCliente = () => {
                   )}
 
                 {/* Footer */}
-                <div className="border-t border-white/10 pt-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <VCDLogo size="md" showText={false} />
+                <div className="border-t border-[#ffb500]/20 pt-6 mt-8 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <VCDLogo size="lg" showText={false} className="text-[#ffb500]" />
                     <div>
-                      <p className="text-xs text-gray-500">Você Digital Propaganda</p>
-                      <p className="text-xs text-gray-500">www.vocedigitalpropaganda.com.br</p>
+                      <p className="text-xs text-white/60 font-medium">Relatório gerado por <span className="text-[#ffb500] font-bold">Você Digital Propaganda</span></p>
+                      <p className="text-xs text-white/40 mt-0.5">www.vocedigitalpropaganda.com.br</p>
                     </div>
                   </div>
                   <div className="text-right text-xs text-gray-500">
@@ -3410,7 +3439,7 @@ const RelatorioCliente = () => {
                           href={`${window.location.origin}/validar-relatorio?id=${reportData.validationId}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[8px] text-primary hover:underline mt-1 font-bold"
+                          className="text-[8px] text-[#ffb500] mt-1 font-medium"
                         >
                           {window.location.host}/validar-relatorio
                         </a>
@@ -3420,10 +3449,10 @@ const RelatorioCliente = () => {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </motion.div >
         )}
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 

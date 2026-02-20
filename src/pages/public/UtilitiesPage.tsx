@@ -23,6 +23,7 @@ import {
 import PublicLayout from "@/components/home/PublicLayout";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
+import { GoogleLogo, MetaLogo, LinkedInLogo } from "@/components/BrandLogos";
 
 interface ToolItem {
     slug: string;
@@ -58,7 +59,7 @@ const sections: { title: string; emoji: string; tools: ToolItem[] }[] = [
         title: "Simuladores Estratégicos",
         emoji: "📊",
         tools: [
-            { slug: "simulador-meta", title: "Simulador Meta Ads", subtitle: "Orçamento > Leads > Vendas", description: "Simule resultados de campanhas com benchmarks por nicho", icon: Megaphone, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20", popular: true, cta: "Simular agora" },
+            { slug: "simulador-meta", title: "Simulador Meta Ads", subtitle: "Orçamento > Leads > Vendas", description: "Simule resultados de campanhas com benchmarks por nicho", icon: MetaLogo, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20", popular: true, cta: "Simular agora" },
             { slug: "simulador-funil", title: "Simulador de Funil", subtitle: "Visualize seu pipeline", description: "Projete vendas e faturamento com suas taxas de conversão", icon: GitBranch, color: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/20", popular: true, cta: "Simular agora" },
         ],
     },
