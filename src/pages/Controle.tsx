@@ -31,8 +31,8 @@ const Controle = () => {
   });
 
   return (
-    <div className="min-h-full bg-background p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="h-[calc(100vh-3.5rem)] bg-background pt-6 px-6 overflow-hidden flex flex-col">
+      <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col min-h-0">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -74,8 +74,8 @@ const Controle = () => {
         <ControleDashboard gestorFilter={selectedGestor} />
 
         {/* Tabs with Table */}
-        <Tabs defaultValue="tracking" className="w-full">
-          <TabsList className="mb-6">
+        <Tabs defaultValue="tracking" className="w-full flex-1 flex flex-col min-h-0 overflow-hidden mt-6">
+          <TabsList className="mb-0 flex-shrink-0">
             <TabsTrigger value="tracking" className="gap-2">
               <Database className="w-4 h-4" />
               Tracking & Integrações
@@ -86,11 +86,11 @@ const Controle = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="tracking">
+          <TabsContent value="tracking" className="mt-4 flex-1 flex flex-col min-h-0 overflow-hidden">
             <ClientTrackingTable gestorFilter={selectedGestor} />
           </TabsContent>
 
-          <TabsContent value="saldo">
+          <TabsContent value="saldo" className="mt-4 flex-1 flex flex-col min-h-0 overflow-hidden">
             <ClientTrackingTable gestorFilter={selectedGestor} />
           </TabsContent>
         </Tabs>

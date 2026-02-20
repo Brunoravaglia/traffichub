@@ -518,7 +518,7 @@ const ClientTrackingTable = ({ gestorFilter }: ClientTrackingTableProps) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
+      className="flex flex-col h-full overflow-hidden gap-4 pb-4"
     >
       {/* Add new client tracking */}
       {clientesSemTracking && clientesSemTracking.length > 0 && (
@@ -542,8 +542,8 @@ const ClientTrackingTable = ({ gestorFilter }: ClientTrackingTableProps) => {
       )}
 
       {/* Tracking Table */}
-      <div className="rounded-lg border border-border bg-card overflow-hidden">
-        <ScrollArea className="w-full">
+      <div className="rounded-lg border border-border bg-card overflow-hidden flex-1 flex flex-col min-h-0">
+        <ScrollArea className="flex-1 h-full w-full">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
