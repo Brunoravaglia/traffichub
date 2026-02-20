@@ -804,7 +804,7 @@ const RelatorioCliente = () => {
         scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: "#000000",
+        backgroundColor: "#0b1120",
         width: captureWidth,
         height: captureHeight,
         windowWidth: 1024, // Bypass mobile breakpoints
@@ -2966,8 +2966,8 @@ const RelatorioCliente = () => {
                 reportData.isGeneratingPDF ? "rounded-none shadow-none" : "max-w-[800px] rounded-lg shadow-2xl"
               )}
               style={{
-                fontFamily: "'Inter', sans-serif",
-                backgroundColor: "#18181b",
+                fontFamily: "Inter, sans-serif",
+                backgroundColor: "#0b1120",
                 width: reportData.isGeneratingPDF ? '800px' : '100%',
                 minHeight: reportData.isGeneratingPDF ? 'auto' : '1000px'
               }}
@@ -2977,12 +2977,12 @@ const RelatorioCliente = () => {
                 <div className="flex items-start justify-between mb-8">
                   <div className="flex items-center gap-6">
                     {cliente?.logo_url ? (
-                      <div className="h-24 max-w-[280px] rounded-2xl overflow-hidden border border-[#ffb500]/20 shadow-lg px-4 flex items-center" style={{ backgroundColor: "rgba(255,181,0,0.03)", height: '96px', maxWidth: '280px' }}>
+                      <div className="h-24 max-w-[280px] rounded-2xl overflow-hidden shadow-lg flex items-center justify-center bg-black/20" style={{ height: '96px', maxWidth: '280px' }}>
                         <img
                           src={cliente.logo_url}
                           alt={cliente.nome}
-                          className="h-full w-auto object-contain py-2"
-                          style={{ height: '96px', width: 'auto', maxWidth: '100%', objectFit: 'contain' }}
+                          className="w-full h-full object-cover"
+                          style={{ height: '96px', width: '100%', objectFit: 'cover' }}
                           crossOrigin="anonymous"
                         />
                       </div>
