@@ -115,14 +115,15 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       supabase
         .from("gestores")
         .select(
-          "id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id, is_admin"
+          "id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id"
         )
         .eq("id", storedGestorId)
         .single()
         .then((result) => {
           const { data } = result as { data: Gestor | null };
           if (data) {
-            setGestor(data);
+            // @ts-ignore - Handle missing is_admin
+            setGestor({ ...data, is_admin: false });
             setIsFirstLogin(!data.first_login_at);
 
             // If gestor has agency, fetch agency data
@@ -167,6 +168,98 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
           });
       }
     }
+
+    // Auth listener for Supabase Auth (e.g. Google OAuth return)
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        // If we don't have a local session, it means they just logged in via OAuth
+        const currentLocalGestor = sessionStorage.getItem("vcd_gestor_id");
+        if (!currentLocalGestor) {
+          try {
+            const user = session.user;
+
+            // 1. Check if gestor already exists mapped to this auth user ID
+            const { data: existingGestor } = await supabase
+              .from("gestores")
+              .select("*")
+              .eq("id", user.id)
+              .single();
+
+            // 2. If it doesn't exist, create it (New Account via Google)
+            if (!existingGestor) {
+              const fullName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || "Novo Gestor";
+              const avatarUrl = user.user_metadata?.avatar_url || null;
+
+              // We must insert the gestor. Note: `auth.users` trigger might already do this if it exists,
+              // but doing it with `upsert` or checking first is safer if the trigger is missing.
+              await supabase.from("gestores").upsert({
+                id: user.id, // Link to auth.users ID
+                nome: fullName,
+                foto_url: avatarUrl,
+                senha: "google-oauth", // Placeholder since they use Google
+                dados_completos: false,
+                foto_preenchida: !!avatarUrl,
+                onboarding_completo: false,
+              }, { onConflict: 'id' });
+            }
+
+            // 3. Log them in locally (fetch fresh data to ensure we have it)
+            const { data: finalGestor } = await supabase
+              .from("gestores")
+              .select("*")
+              .eq("id", user.id)
+              .single();
+
+            if (finalGestor) {
+              // Create session locally
+              const { data: sessionData } = await supabase
+                .from("gestor_sessions")
+                .insert({ gestor_id: user.id, duration_seconds: 0 })
+                .select()
+                .single();
+
+              if (sessionData) {
+                const now = new Date();
+                // @ts-ignore - Handle missing is_admin
+                setGestor({ ...finalGestor, is_admin: false });
+                setIsFirstLogin(!finalGestor.first_login_at);
+                setSessionId(sessionData.id);
+                setSessionStartTime(now);
+                setSessionDuration(0);
+                lastSavedDurationRef.current = 0;
+
+                sessionStorage.setItem("vcd_gestor_id", finalGestor.id);
+                sessionStorage.setItem("vcd_session_id", sessionData.id);
+                sessionStorage.setItem("vcd_session_start", now.toISOString());
+                sessionStorage.setItem("vcd_unlocked", "true");
+
+                if (finalGestor.agencia_id) {
+                  const { data: agencyData } = await supabase
+                    .from("agencias")
+                    .select("*")
+                    .eq("id", finalGestor.agencia_id)
+                    .single();
+                  if (agencyData) setAgencia(agencyData as unknown as Agencia);
+                }
+              }
+            }
+          } catch (err) {
+            console.error("[Session] Error syncing Supabase Auth:", err);
+          }
+        }
+      } else if (event === "SIGNED_OUT") {
+        // If Supabase signs out, clear our local session as well
+        if (sessionStorage.getItem("vcd_gestor_id")) {
+          // Don't call logout() directly here to avoid loop if logout() called SIGNED_OUT
+          setGestor(null);
+          sessionStorage.removeItem("vcd_gestor_id");
+        }
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   // Apply agency colors to CSS variables
@@ -291,7 +384,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       const { data: gestorData, error } = await supabase
         .from("gestores")
         .select(
-          "id, nome, foto_url, telefone, senha, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id, is_admin"
+          "id, nome, foto_url, telefone, senha, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id"
         )
         .eq("id", gestorId)
         .single();
@@ -332,7 +425,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         first_login_at: gestorData.first_login_at,
         welcome_modal_dismissed: gestorData.welcome_modal_dismissed,
         agencia_id: gestorData.agencia_id,
-        is_admin: gestorData.is_admin || false,
+        is_admin: false,
       });
       setIsFirstLogin(isFirstTimeLogin);
       setSessionId(sessionData.id);
@@ -426,13 +519,14 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
     const { data } = await supabase
       .from("gestores")
       .select(
-        "id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id, is_admin"
+        "id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id"
       )
       .eq("id", gestor.id)
       .single();
 
     if (data) {
-      setGestor(data as Gestor);
+      // @ts-ignore - Handle missing is_admin
+      setGestor({ ...data, is_admin: false });
     }
   }, [gestor]);
 
