@@ -223,6 +223,7 @@ interface ReportData {
   validationId?: string;
   validationPassword?: string;
   validationTime?: string;
+  isGeneratingPDF?: boolean;
 }
 
 const defaultReportData: ReportData = {
@@ -625,6 +626,7 @@ const RelatorioCliente = () => {
     mutationFn: async () => {
       const validationId = reportData.validationId || crypto.randomUUID();
       const validationPassword = reportData.validationPassword || Math.random().toString(36).substring(2, 8).toUpperCase();
+      const validationTime = reportData.validationTime || format(new Date(), "yyyy-MM-dd HH:mm:ss");
 
       const dataValues = JSON.parse(JSON.stringify({
         google: reportData.google,
@@ -638,7 +640,7 @@ const RelatorioCliente = () => {
         sectionsConfig: reportData.sectionsConfig,
         validationId,
         validationPassword,
-        validationTime: format(new Date(), "yyyy-MM-dd HH:mm:ss")
+        validationTime
       }));
 
       const { error } = await supabase
@@ -831,27 +833,39 @@ const RelatorioCliente = () => {
   // Export PDF only (saves report automatically first)
   const handleExport = async () => {
     setIsExporting(true);
+    // Force preview mode immediately
+    setIsPreview(true);
     calculateMetrics();
+
+    // Pre-generate credentials if they don't exist
+    const vId = reportData.validationId || crypto.randomUUID();
+    const vPass = reportData.validationPassword || Math.random().toString(36).substring(2, 8).toUpperCase();
+    const vTime = reportData.validationTime || format(new Date(), "yyyy-MM-dd HH:mm:ss");
+
+    // Update state first so UI can start rendering
+    setReportData(prev => ({
+      ...prev,
+      validationId: vId,
+      validationPassword: vPass,
+      validationTime: vTime,
+      isGeneratingPDF: true
+    }));
+
     try {
-      const { validationId, validationPassword } = await saveReportMutation.mutateAsync();
+      await saveReportMutation.mutateAsync();
 
-      // Force explicit local state update to ensure it's registered ASAP
-      setReportData(prev => ({ ...prev, validationId, validationPassword }));
-
-      // Force preview mode so the PDF container (pdfRef) is rendered in the DOM
-      setIsPreview(true);
-
-      // We must wait a moment for React to finish rendering the new bottom footer 
-      // containing the new Validation ID and Password before taking the screenshot.
-      // Increased timeout to 2000ms to guarantee DOM paint cycle and image loading completes.
+      // Wait for a significant amount of time to ensure DOM and images are ready
       setTimeout(async () => {
         await handleExportPDF();
         setIsExporting(false);
-      }, 2000);
+        setReportData(prev => ({ ...prev, isGeneratingPDF: false }));
+      }, 2500);
 
     } catch (e) {
       console.error(e);
       setIsExporting(false);
+      setReportData(prev => ({ ...prev, isGeneratingPDF: false }));
+      toast({ title: "Erro ao salvar relatório", variant: "destructive" });
     }
   };
 
@@ -3387,12 +3401,12 @@ const RelatorioCliente = () => {
                     <p>Relatório gerado em</p>
                     <p>{reportData.validationTime ? format(new Date(reportData.validationTime), "dd/MM/yyyy 'às' HH:mm") : format(new Date(), "dd/MM/yyyy 'às' HH:mm")}</p>
                     {reportData.validationId && (
-                      <div className="mt-1 flex flex-col items-end border-t border-white/5 pt-1">
-                        <span className="text-[10px] text-gray-400 font-mono">ID: {reportData.validationId.split('-')[0]}</span>
-                        <span className="text-[10px] text-gray-400 font-mono">Senha: {reportData.validationPassword}</span>
-                        <a href={`https://vocedigitalpropaganda.com.br/validar-relatorio?id=${reportData.validationId}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline mt-0.5">
-                          Verificar Autenticidade
-                        </a>
+                      <div className="mt-2 flex flex-col items-end border-t border-white/10 pt-2 min-w-[200px]">
+                        <span className="text-[11px] text-gray-300 font-mono font-bold">ID: {reportData.validationId}</span>
+                        <span className="text-[11px] text-gray-300 font-mono font-bold">SENHA: {reportData.validationPassword}</span>
+                        <p className="text-[10px] text-primary font-semibold mt-1">
+                          vcd.vurp.com.br/validar-relatorio
+                        </p>
                       </div>
                     )}
                   </div>
