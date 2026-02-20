@@ -15,6 +15,20 @@ interface ReleaseItem {
 
 const releases: ReleaseItem[] = [
     {
+        id: "v1.2.1",
+        version: "v1.2.1",
+        date: "Fevereiro 20, 2026",
+        title: "Overhaul de UI/UX e Animações",
+        description: "Grandes atualizações visuais para tornar a plataforma mais premium, atrativa e polida.",
+        type: "improvement",
+        items: [
+            "Redesign completo da tela de Login de Gestor com visual glassmorphism e tema dark neutro.",
+            "Correção de layout na página de Controle para isolar a rolagem (scroll) apenas na tabela.",
+            "Novo botão ultra animado na seleção de templates para 'Começar Agora - É Grátis'.",
+            "Dashboard Controle: Gráficos aprimorados e simulação de dados visuais atraentes."
+        ]
+    },
+    {
         id: "v1.2.0",
         version: "v1.2.0",
         date: "Fevereiro 20, 2026",

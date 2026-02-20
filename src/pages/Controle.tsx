@@ -74,8 +74,8 @@ const Controle = () => {
         <ControleDashboard gestorFilter={selectedGestor} />
 
         {/* Tabs with Table */}
-        <Tabs defaultValue="tracking" className="w-full flex-1 flex flex-col min-h-0 overflow-hidden mt-6">
-          <TabsList className="mb-0 flex-shrink-0">
+        <Tabs defaultValue="tracking" className="w-full mt-6">
+          <TabsList className="mb-0">
             <TabsTrigger value="tracking" className="gap-2">
               <Database className="w-4 h-4" />
               Tracking & Integrações
@@ -86,11 +86,11 @@ const Controle = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="tracking" className="mt-4 flex-1 flex flex-col min-h-0 overflow-hidden">
+          <TabsContent value="tracking" className="mt-4">
             <ClientTrackingTable gestorFilter={selectedGestor} />
           </TabsContent>
 
-          <TabsContent value="saldo" className="mt-4 flex-1 flex flex-col min-h-0 overflow-hidden">
+          <TabsContent value="saldo" className="mt-4">
             <ClientTrackingTable gestorFilter={selectedGestor} />
           </TabsContent>
         </Tabs>

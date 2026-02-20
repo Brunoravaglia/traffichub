@@ -15,6 +15,8 @@ import {
   Timer,
   Flame,
   Calendar,
+  Sparkles,
+  Link2,
 } from "lucide-react";
 import { useGestor } from "@/contexts/GestorContext";
 import {
@@ -54,27 +56,27 @@ const AppSidebar = () => {
     main: [
       { title: "Dashboard", icon: Home, path: "/dashboard" },
       { title: "Gerencial", icon: BarChart3, path: "/gerencial" },
-      { title: "Controle", icon: FileText, path: "/controle" },
       { title: "Calendário", icon: Calendar, path: "/calendario" },
       { title: "Produtividade", icon: Timer, path: "/produtividade" },
       { title: "Previsão Saldo", icon: Flame, path: "/previsao-saldo" },
+    ],
+    gestao: [
+      { title: "Clientes", icon: Users, path: "/clientes" },
+      { title: "Controle & Checklist", icon: FileText, path: "/controle" },
+      { title: "Relatórios & Modelos", icon: LayoutTemplate, path: "/modelos" },
+      { title: "Histórico", icon: History, path: "/historico" },
+      { title: "Gestores", icon: Briefcase, path: "/gestores" },
       { title: "Conquistas", icon: Trophy, path: "/conquistas" },
     ],
-    clientes: [
-      { title: "Ver Clientes", icon: Users, path: "/clientes" },
-      { title: "Novo Cliente", icon: Plus, path: "/novo-cliente" },
-    ],
-    relatorios: [
-      { title: "Novo Relatório", icon: Plus, path: "/relatorio-cliente" },
-      { title: "Modelos", icon: LayoutTemplate, path: "/modelos" },
-      { title: "Histórico", icon: History, path: "/historico" },
-    ],
-    gestores: [
-      { title: "Ver Gestores", icon: Briefcase, path: "/gestores" },
-      { title: "Novo Gestor", icon: UserPlus, path: "/novo-gestor" },
+    ferramentas: [
+      { title: "Todas Ferramentas", icon: Sparkles, path: "/utilidades" },
+      { title: "Simulador Meta", icon: BarChart3, path: "/utilidades/simulador-meta" },
+      { title: "Simulador Funil", icon: LayoutTemplate, path: "/utilidades/simulador-funil" },
+      { title: "Gerador de UTMs", icon: Link2, path: "/utilidades/gerador-utm" },
+      { title: "Headlines", icon: FileText, path: "/utilidades/gerador-headlines" },
     ],
     config: [
-      { title: "Configurações", icon: Settings, path: "/configuracoes" },
+      { title: "Configuração Pessoal", icon: Settings, path: "/configuracoes" },
     ],
   };
 
@@ -102,15 +104,15 @@ const AppSidebar = () => {
               )}
             </div>
           ) : (
-            <VCDLogo size="sm" showText={!isCollapsed} />
+            <VCDLogo size="lg" showText={false} />
           )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="py-2">
+      <SidebarContent className="py-2 gap-2 overflow-y-auto">
         {/* Main Navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel className={cn(isCollapsed && "sr-only")}>
+          <SidebarGroupLabel className={cn("text-xs font-semibold text-muted-foreground uppercase tracking-wider", isCollapsed && "sr-only")}>
             Principal
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -136,117 +138,56 @@ const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Clientes */}
+        {/* Gestão */}
         <SidebarGroup>
-          <Collapsible defaultOpen className="group/collapsible">
-            <SidebarGroupLabel
-              asChild
-              className={cn("cursor-pointer", isCollapsed && "sr-only")}
-            >
-              <CollapsibleTrigger className="flex w-full items-center justify-between">
-                <span>Clientes</span>
-                <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-              </CollapsibleTrigger>
-            </SidebarGroupLabel>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {menuItems.clientes.map((item) => (
-                    <SidebarMenuItem key={item.path}>
-                      <SidebarMenuButton
-                        onClick={() => navigate(item.path)}
-                        isActive={isActive(item.path)}
-                        tooltip={item.title}
-                        className={cn(
-                          "transition-all duration-200",
-                          isActive(item.path) &&
-                          "bg-primary/10 text-primary border-l-2 border-primary"
-                        )}
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </Collapsible>
+          <SidebarGroupLabel className={cn("text-xs font-semibold text-muted-foreground uppercase tracking-wider", isCollapsed && "sr-only")}>
+            Gestão & Operação
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {menuItems.gestao.map((item) => (
+                <SidebarMenuItem key={item.path}>
+                  <SidebarMenuButton
+                    onClick={() => navigate(item.path)}
+                    isActive={isActive(item.path)}
+                    tooltip={item.title}
+                    className={cn(
+                      "transition-all duration-200",
+                      isActive(item.path) &&
+                      "bg-primary/10 text-primary border-l-2 border-primary"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Relatórios */}
+        {/* Ferramentas */}
         <SidebarGroup>
-          <Collapsible defaultOpen className="group/collapsible">
-            <SidebarGroupLabel
-              asChild
-              className={cn("cursor-pointer", isCollapsed && "sr-only")}
-            >
-              <CollapsibleTrigger className="flex w-full items-center justify-between">
-                <span>Relatórios</span>
-                <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-              </CollapsibleTrigger>
-            </SidebarGroupLabel>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {menuItems.relatorios.map((item) => (
-                    <SidebarMenuItem key={item.path}>
-                      <SidebarMenuButton
-                        onClick={() => navigate(item.path)}
-                        isActive={isActive(item.path)}
-                        tooltip={item.title}
-                        className={cn(
-                          "transition-all duration-200",
-                          isActive(item.path) &&
-                          "bg-primary/10 text-primary border-l-2 border-primary"
-                        )}
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </Collapsible>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <Collapsible defaultOpen className="group/collapsible">
-            <SidebarGroupLabel
-              asChild
-              className={cn("cursor-pointer", isCollapsed && "sr-only")}
-            >
-              <CollapsibleTrigger className="flex w-full items-center justify-between">
-                <span>Gestores</span>
-                <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-              </CollapsibleTrigger>
-            </SidebarGroupLabel>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {menuItems.gestores.map((item) => (
-                    <SidebarMenuItem key={item.path}>
-                      <SidebarMenuButton
-                        onClick={() => navigate(item.path)}
-                        isActive={isActive(item.path)}
-                        tooltip={item.title}
-                        className={cn(
-                          "transition-all duration-200",
-                          isActive(item.path) &&
-                          "bg-primary/10 text-primary border-l-2 border-primary"
-                        )}
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </Collapsible>
+          <SidebarGroupLabel className={cn("text-xs font-semibold text-muted-foreground uppercase tracking-wider", isCollapsed && "sr-only")}>
+            Ferramentas & Úteis
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {menuItems.ferramentas.map((item) => (
+                <SidebarMenuItem key={item.path}>
+                  <SidebarMenuButton
+                    onClick={() => navigate(item.path)}
+                    isActive={false} // Will navigate out of dashboard
+                    tooltip={item.title}
+                    className="transition-all duration-200 hover:bg-primary/10 hover:text-primary"
+                  >
+                    <item.icon className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
         </SidebarGroup>
 
       </SidebarContent>

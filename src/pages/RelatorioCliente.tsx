@@ -801,16 +801,16 @@ const RelatorioCliente = () => {
       const captureHeight = element.getBoundingClientRect().height;
 
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: 3, // Aumentado para 3 para melhor legibilidade e evitar texto "borrado"
         useCORS: true,
         logging: false,
         backgroundColor: "#0b1120",
         width: captureWidth,
-        height: captureHeight,
         windowWidth: 1024, // Bypass mobile breakpoints
       });
 
-      const imgData = canvas.toDataURL("image/jpeg", 0.85);
+      // Use JPEG com qualidade 0.95 para manter um arquivo leve (leveza), mas sem os artefatos visuais pesados (péssimo) do 0.85
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
       const pdfWidth = 210; // A4 width in mm
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;

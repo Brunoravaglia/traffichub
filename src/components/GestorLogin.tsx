@@ -147,8 +147,11 @@ const GestorLogin = () => {
                     <Button
                       variant="link"
                       size="sm"
-                      className="text-xs text-muted-foreground h-auto p-0"
-                      onClick={() => window.location.reload()}
+                      className="text-xs text-zinc-400 hover:text-white h-auto p-0 transition-colors"
+                      onClick={() => {
+                        sessionStorage.removeItem("vurp_agency_slug");
+                        window.location.reload();
+                      }}
                     >
                       Trocar agência
                     </Button>

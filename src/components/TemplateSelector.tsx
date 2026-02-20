@@ -170,7 +170,28 @@ export function TemplateSelector({ onSelect, selectedTemplateId }: TemplateSelec
   };
 
   return (
-    <div className="space-y-6">
+    <>
+      {/* Prominent Start from Scratch Button */}
+      <motion.div
+        className="w-full mb-10 relative group"
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, type: "spring" }}
+      >
+        <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 via-green-400 to-emerald-500 rounded-2xl blur-md opacity-75 group-hover:opacity-100 transition-all duration-500 animate-pulse" />
+        <button
+          onClick={() => onSelect(null)}
+          className="relative w-full h-20 sm:h-24 text-xl sm:text-3xl font-extrabold rounded-2xl bg-[#008A46] hover:bg-[#00994f] text-white shadow-[0_0_40px_rgba(0,138,70,0.4)] overflow-hidden flex items-center justify-center gap-4 border border-white/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+        >
+          {/* Shine effect */}
+          <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12" />
+
+          <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-300 animate-bounce" />
+          <span className="tracking-wide drop-shadow-md">Começar Agora - É Grátis</span>
+          <ChevronRight className="w-8 h-8 sm:w-10 sm:h-10 ml-2 group-hover:translate-x-3 transition-transform duration-300" />
+        </button>
+      </motion.div >
+
       {/* Header */}
       <div className="flex flex-col gap-4">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -187,23 +208,14 @@ export function TemplateSelector({ onSelect, selectedTemplateId }: TemplateSelec
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-            <Button
-              onClick={() => onSelect(null)}
-              variant="default"
-              className="bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border border-primary/20 transition-all font-semibold h-10 shadow-sm"
-            >
-              Começar do Zero
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
-
             {/* Search */}
-            <div className="relative w-full sm:w-64">
+            <div className="relative w-full sm:w-80">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar modelos..."
+                placeholder="Buscar modelos de relatórios..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 bg-secondary/50 border-border focus:border-primary h-10"
+                className="pl-10 bg-secondary/50 border-border focus:border-primary h-12 text-base rounded-xl"
               />
             </div>
           </div>
@@ -439,7 +451,7 @@ export function TemplateSelector({ onSelect, selectedTemplateId }: TemplateSelec
           <ChevronRight className="w-3 h-3 ml-1" />
         </Button>
       </div>
-    </div>
+    </>
   );
 }
 

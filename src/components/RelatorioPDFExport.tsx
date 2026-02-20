@@ -65,13 +65,13 @@ const RelatorioPDFExport = ({ cliente, relatorio }: RelatorioPDFExportProps) => 
       });
 
       const canvas = await html2canvas(pdfRef.current, {
-        scale: 2,
+        scale: 3,
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#0a0a0a",
       });
 
-      const imgData = canvas.toDataURL("image/png");
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
@@ -86,7 +86,7 @@ const RelatorioPDFExport = ({ cliente, relatorio }: RelatorioPDFExportProps) => 
       const imgX = (pdfWidth - imgWidth * ratio) / 2;
       const imgY = 0;
 
-      pdf.addImage(imgData, "PNG", imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      pdf.addImage(imgData, "JPEG", imgX, imgY, imgWidth * ratio, imgHeight * ratio);
       pdf.save(`relatorio-${cliente.nome.toLowerCase().replace(/\s+/g, "-")}-${relatorio.data}.pdf`);
 
       toast({
@@ -128,8 +128,8 @@ const RelatorioPDFExport = ({ cliente, relatorio }: RelatorioPDFExportProps) => 
                 Documento Editado - Registro de Auditoria
               </p>
               <p className="text-orange-400/80 text-xs mt-1">
-                Este relatório foi editado {relatorio.edit_count} vez(es). 
-                Última edição em: {relatorio.edited_at 
+                Este relatório foi editado {relatorio.edit_count} vez(es).
+                Última edição em: {relatorio.edited_at
                   ? format(new Date(relatorio.edited_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
                   : "N/A"
                 }
@@ -292,71 +292,71 @@ const RelatorioPDFExport = ({ cliente, relatorio }: RelatorioPDFExportProps) => 
         </div>
 
         {/* Balance Section - Only shows if any balance is filled */}
-        {((relatorio.saldo_google !== null && relatorio.saldo_google !== undefined) || 
+        {((relatorio.saldo_google !== null && relatorio.saldo_google !== undefined) ||
           (relatorio.saldo_meta !== null && relatorio.saldo_meta !== undefined)) && (
-          <div className="mt-8 pt-6 border-t border-white/10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                <Wallet className="w-5 h-5 text-emerald-500" />
+            <div className="mt-8 pt-6 border-t border-white/10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                  <Wallet className="w-5 h-5 text-emerald-500" />
+                </div>
+                <h2 className="text-xl font-bold text-white">Saldo das Contas</h2>
               </div>
-              <h2 className="text-xl font-bold text-white">Saldo das Contas</h2>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              {relatorio.saldo_google !== null && relatorio.saldo_google !== undefined && (
-                <div className="p-4 rounded-xl bg-[#4285f4]/10 border border-[#4285f4]/20">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Search className="w-4 h-4 text-[#4285f4]" />
-                    <span className="text-[#4285f4] font-medium text-sm">Google Ads</span>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-white/60 text-sm flex items-center gap-1">
-                        <Wallet className="w-3 h-3" /> Saldo
-                      </span>
-                      <span className="text-[#4285f4] font-bold">{formatCurrency(relatorio.saldo_google)}</span>
+              <div className="grid grid-cols-2 gap-4">
+                {relatorio.saldo_google !== null && relatorio.saldo_google !== undefined && (
+                  <div className="p-4 rounded-xl bg-[#4285f4]/10 border border-[#4285f4]/20">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Search className="w-4 h-4 text-[#4285f4]" />
+                      <span className="text-[#4285f4] font-medium text-sm">Google Ads</span>
                     </div>
-                    {relatorio.dias_google !== null && relatorio.dias_google !== undefined && (
+                    <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-white/60 text-sm flex items-center gap-1">
-                          <Clock className="w-3 h-3" /> Próxima Recarga
+                          <Wallet className="w-3 h-3" /> Saldo
                         </span>
-                        <span className="text-white font-medium">{relatorio.dias_google} dias</span>
+                        <span className="text-[#4285f4] font-bold">{formatCurrency(relatorio.saldo_google)}</span>
                       </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {relatorio.saldo_meta !== null && relatorio.saldo_meta !== undefined && (
-                <div className="p-4 rounded-xl bg-[#1877f2]/10 border border-[#1877f2]/20">
-                  <div className="flex items-center gap-2 mb-3">
-                    <svg className="w-4 h-4 text-[#1877f2]" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                    </svg>
-                    <span className="text-[#1877f2] font-medium text-sm">Meta Ads</span>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-white/60 text-sm flex items-center gap-1">
-                        <Wallet className="w-3 h-3" /> Saldo
-                      </span>
-                      <span className="text-[#1877f2] font-bold">{formatCurrency(relatorio.saldo_meta)}</span>
+                      {relatorio.dias_google !== null && relatorio.dias_google !== undefined && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/60 text-sm flex items-center gap-1">
+                            <Clock className="w-3 h-3" /> Próxima Recarga
+                          </span>
+                          <span className="text-white font-medium">{relatorio.dias_google} dias</span>
+                        </div>
+                      )}
                     </div>
-                    {relatorio.dias_meta !== null && relatorio.dias_meta !== undefined && (
+                  </div>
+                )}
+
+                {relatorio.saldo_meta !== null && relatorio.saldo_meta !== undefined && (
+                  <div className="p-4 rounded-xl bg-[#1877f2]/10 border border-[#1877f2]/20">
+                    <div className="flex items-center gap-2 mb-3">
+                      <svg className="w-4 h-4 text-[#1877f2]" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                      </svg>
+                      <span className="text-[#1877f2] font-medium text-sm">Meta Ads</span>
+                    </div>
+                    <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-white/60 text-sm flex items-center gap-1">
-                          <Clock className="w-3 h-3" /> Próxima Recarga
+                          <Wallet className="w-3 h-3" /> Saldo
                         </span>
-                        <span className="text-white font-medium">{relatorio.dias_meta} dias</span>
+                        <span className="text-[#1877f2] font-bold">{formatCurrency(relatorio.saldo_meta)}</span>
                       </div>
-                    )}
+                      {relatorio.dias_meta !== null && relatorio.dias_meta !== undefined && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/60 text-sm flex items-center gap-1">
+                            <Clock className="w-3 h-3" /> Próxima Recarga
+                          </span>
+                          <span className="text-white font-medium">{relatorio.dias_meta} dias</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* Footer */}
         <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-between">
