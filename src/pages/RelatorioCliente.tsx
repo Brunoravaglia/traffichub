@@ -794,17 +794,17 @@ const RelatorioCliente = () => {
     toast({ title: "Gerando PDF...", description: "Por favor aguarde" });
 
     try {
-      // Use a fixed width for capture to ensure internal layout is consistent
-      // despite the browser window size. 800px matches our max-w.
-      const captureWidth = 800;
+      const captureElement = pdfRef.current;
+      const captureWidth = captureElement.scrollWidth;
+      const captureHeight = captureElement.scrollHeight;
 
-      const canvas = await html2canvas(pdfRef.current, {
+      const canvas = await html2canvas(captureElement, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: "#1a1a2e",
         width: captureWidth,
-        // Let height be automatic based on content
+        height: captureHeight,
         windowWidth: captureWidth,
       });
 
@@ -2959,7 +2959,10 @@ const RelatorioCliente = () => {
           >
             <div
               ref={pdfRef}
-              className="w-full max-w-[800px] text-white rounded-lg shadow-2xl overflow-hidden"
+              className={cn(
+                "w-full text-white overflow-hidden",
+                reportData.isGeneratingPDF ? "rounded-none shadow-none" : "max-w-[800px] rounded-lg shadow-2xl"
+              )}
               style={{ fontFamily: "Inter, sans-serif", backgroundColor: "#1a1a2e" }}
             >
               {/* Header with Client Logo + Name */}
@@ -2994,7 +2997,7 @@ const RelatorioCliente = () => {
                 </div>
 
                 {/* Period */}
-                <div className="text-center mb-6 text-sm text-gray-400 tracking-widest uppercase">
+                <div className="text-center mb-6 text-base text-gray-300 tracking-widest uppercase font-medium">
                   Campanhas de {format(periodoInicio, "dd/MM")} à {format(periodoFim, "dd/MM")}
                 </div>
 
@@ -3063,9 +3066,9 @@ const RelatorioCliente = () => {
                       if (additionalMetrics.length === 0) return null;
 
                       return (
-                        <div className="grid grid-cols-4 gap-3 mt-3">
+                        <div className="flex flex-wrap gap-3 mt-3">
                           {additionalMetrics.map((metric, idx) => (
-                            <div key={idx} className="text-center p-3 rounded-lg bg-white/5">
+                            <div key={idx} className="flex-grow basis-[calc(25%-12px)] min-w-[150px] text-center p-3 rounded-lg bg-white/5">
                               <p className={`text-xl font-bold ${metric.color}`}>{metric.value}</p>
                               <p className="text-xs text-gray-400">{metric.label}</p>
                             </div>
@@ -3134,9 +3137,9 @@ const RelatorioCliente = () => {
                       if (additionalMetrics.length === 0) return null;
 
                       return (
-                        <div className="grid grid-cols-4 gap-3 mt-3">
+                        <div className="flex flex-wrap gap-3 mt-3">
                           {additionalMetrics.map((metric, idx) => (
-                            <div key={idx} className="text-center p-3 rounded-lg bg-white/5">
+                            <div key={idx} className="flex-grow basis-[calc(25%-12px)] min-w-[150px] text-center p-3 rounded-lg bg-white/5">
                               <p className={`text-xl font-bold ${metric.color}`}>{metric.value}</p>
                               <p className="text-xs text-gray-400">{metric.label}</p>
                             </div>
@@ -3390,7 +3393,7 @@ const RelatorioCliente = () => {
                 {/* Footer */}
                 <div className="border-t border-white/10 pt-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <VCDLogo size="sm" showText={false} />
+                    <VCDLogo size="md" showText={false} />
                     <div>
                       <p className="text-xs text-gray-500">Você Digital Propaganda</p>
                       <p className="text-xs text-gray-500">www.vocedigitalpropaganda.com.br</p>
