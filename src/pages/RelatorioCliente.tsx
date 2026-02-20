@@ -3407,12 +3407,12 @@ const RelatorioCliente = () => {
                         <span className="text-[8px] text-gray-500 font-mono text-right break-all leading-tight">ID: {reportData.validationId}</span>
                         <span className="text-[8px] text-gray-500 font-mono text-right mt-0.5">SENHA: {reportData.validationPassword}</span>
                         <a
-                          href={`https://vcd.vurp.com.br/validar-relatorio?id=${reportData.validationId}`}
+                          href={`${window.location.origin}/validar-relatorio?id=${reportData.validationId}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-[8px] text-primary hover:underline mt-1 font-bold"
                         >
-                          vcd.vurp.com.br/validar-relatorio
+                          {window.location.host}/validar-relatorio
                         </a>
                       </div>
                     )}
