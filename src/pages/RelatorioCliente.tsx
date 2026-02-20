@@ -3061,9 +3061,8 @@ const RelatorioCliente = () => {
 
                       if (additionalMetrics.length === 0) return null;
 
-                      const cols = additionalMetrics.length <= 2 ? 2 : additionalMetrics.length <= 3 ? 3 : 4;
                       return (
-                        <div className={`grid grid-cols-${cols} gap-3 mt-3`} style={{ gridTemplateColumns: `repeat(${Math.min(cols, additionalMetrics.length)}, 1fr)` }}>
+                        <div className="grid grid-cols-4 gap-3 mt-3">
                           {additionalMetrics.map((metric, idx) => (
                             <div key={idx} className="text-center p-3 rounded-lg bg-white/5">
                               <p className={`text-xl font-bold ${metric.color}`}>{metric.value}</p>
@@ -3133,9 +3132,8 @@ const RelatorioCliente = () => {
 
                       if (additionalMetrics.length === 0) return null;
 
-                      const cols = additionalMetrics.length <= 2 ? 2 : additionalMetrics.length <= 3 ? 3 : 4;
                       return (
-                        <div className={`grid gap-3 mt-3`} style={{ gridTemplateColumns: `repeat(${Math.min(cols, additionalMetrics.length)}, 1fr)` }}>
+                        <div className="grid grid-cols-4 gap-3 mt-3">
                           {additionalMetrics.map((metric, idx) => (
                             <div key={idx} className="text-center p-3 rounded-lg bg-white/5">
                               <p className={`text-xl font-bold ${metric.color}`}>{metric.value}</p>
@@ -3401,12 +3399,17 @@ const RelatorioCliente = () => {
                     <p>Relatório gerado em</p>
                     <p>{reportData.validationTime ? format(new Date(reportData.validationTime), "dd/MM/yyyy 'às' HH:mm") : format(new Date(), "dd/MM/yyyy 'às' HH:mm")}</p>
                     {reportData.validationId && (
-                      <div className="mt-2 flex flex-col items-end border-t border-white/10 pt-2 min-w-[200px]">
-                        <span className="text-[11px] text-gray-300 font-mono font-bold">ID: {reportData.validationId}</span>
-                        <span className="text-[11px] text-gray-300 font-mono font-bold">SENHA: {reportData.validationPassword}</span>
-                        <p className="text-[10px] text-primary font-semibold mt-1">
+                      <div className="mt-2 flex flex-col items-end border-t border-white/5 pt-2">
+                        <span className="text-[9px] text-gray-500 font-mono">ID: {reportData.validationId}</span>
+                        <span className="text-[9px] text-gray-500 font-mono">SENHA: {reportData.validationPassword}</span>
+                        <a
+                          href={`https://vcd.vurp.com.br/validar-relatorio?id=${reportData.validationId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[9px] text-primary hover:underline mt-0.5"
+                        >
                           vcd.vurp.com.br/validar-relatorio
-                        </p>
+                        </a>
                       </div>
                     )}
                   </div>
