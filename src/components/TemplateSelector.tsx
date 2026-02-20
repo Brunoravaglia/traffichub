@@ -77,13 +77,13 @@ export function TemplateSelector({ onSelect, selectedTemplateId }: TemplateSelec
         .from("report_templates")
         .select("*")
         .order("created_at", { ascending: false });
-      
+
       if (gestor?.id) {
         query = query.or(`is_global.eq.true,gestor_id.eq.${gestor.id}`);
       } else {
         query = query.eq("is_global", true);
       }
-      
+
       const { data, error } = await query;
 
       if (error) throw error;
@@ -105,22 +105,22 @@ export function TemplateSelector({ onSelect, selectedTemplateId }: TemplateSelec
   const filteredTemplates = templates?.filter((t) => {
     const matchesSearch = t.nome.toLowerCase().includes(search.toLowerCase()) ||
       t.descricao.toLowerCase().includes(search.toLowerCase());
-    
+
     if (!matchesSearch) return false;
-    
+
     if (platformFilter === "all") return true;
-    
+
     // Check if template has metrics for the selected platform
     const hasGoogle = t.sections?.showGoogleAds || t.metrics?.some(m => m.platform === "google" && m.visible);
     const hasMeta = t.sections?.showMetaAds || t.metrics?.some(m => m.platform === "meta" && m.visible);
-    
+
     if (platformFilter === "google") {
       return hasGoogle && !hasMeta;
     }
     if (platformFilter === "meta") {
       return hasMeta && !hasGoogle;
     }
-    
+
     return true;
   });
 
@@ -173,7 +173,7 @@ export function TemplateSelector({ onSelect, selectedTemplateId }: TemplateSelec
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
               <Sparkles className="w-5 h-5 text-primary" />
@@ -186,15 +186,26 @@ export function TemplateSelector({ onSelect, selectedTemplateId }: TemplateSelec
             </div>
           </div>
 
-          {/* Search */}
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar modelos..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 bg-secondary/50 border-border focus:border-primary"
-            />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+            <Button
+              onClick={() => onSelect(null)}
+              variant="default"
+              className="bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border border-primary/20 transition-all font-semibold h-10 shadow-sm"
+            >
+              Começar do Zero
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+
+            {/* Search */}
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar modelos..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10 bg-secondary/50 border-border focus:border-primary h-10"
+              />
+            </div>
           </div>
         </div>
 
@@ -416,16 +427,16 @@ export function TemplateSelector({ onSelect, selectedTemplateId }: TemplateSelec
         </motion.div>
       )}
 
-      {/* Skip Option */}
-      <div className="flex items-center justify-center pt-2">
+      {/* Skip Option (kept as secondary fallback at the bottom) */}
+      <div className="flex items-center justify-center pt-2 pb-6">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => onSelect(null)}
-          className="text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground text-xs uppercase tracking-widest font-medium"
         >
-          Continuar sem modelo
-          <ChevronRight className="w-4 h-4 ml-1" />
+          Ou pular e começar relatório do zero
+          <ChevronRight className="w-3 h-3 ml-1" />
         </Button>
       </div>
     </div>

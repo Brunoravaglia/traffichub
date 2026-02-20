@@ -999,7 +999,7 @@ const RelatorioCliente = () => {
                 Criar Relatório
               </h1>
               <p className="text-muted-foreground max-w-lg mx-auto">
-                Escolha um modelo para começar rapidamente ou continue sem modelo para personalizar do zero
+                Escolha um modelo para agilizar seu trabalho ou clique em Começar do Zero para um relatório personalizado
               </p>
             </div>
 
