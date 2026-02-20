@@ -56,6 +56,8 @@ const ValidarRelatorio = () => {
           )
         `)
                 .eq("data_values->>validationId", validationId)
+                .order("created_at", { ascending: false })
+                .limit(1)
                 .maybeSingle();
 
             if (error) throw error;
