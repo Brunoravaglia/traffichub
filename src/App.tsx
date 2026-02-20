@@ -37,6 +37,8 @@ import GeradorUTMPage from "./pages/calculators/GeradorUTMPage";
 import GeradorHeadlinesPage from "./pages/calculators/GeradorHeadlinesPage";
 import DiagnosticoMarketingPage from "./pages/calculators/DiagnosticoMarketingPage";
 import ScoreDigitalPage from "./pages/calculators/ScoreDigitalPage";
+import ChangelogPage from "./pages/public/ChangelogPage";
+import ValidarRelatorio from "./pages/public/ValidarRelatorio";
 import { ThemeProvider } from "./components/ThemeProvider";
 
 // Auth pages
@@ -115,6 +117,8 @@ const App = () => (
               <Route path="/utilidades/gerador-headlines" element={<GeradorHeadlinesPage />} />
               <Route path="/utilidades/diagnostico-marketing" element={<DiagnosticoMarketingPage />} />
               <Route path="/utilidades/score-digital" element={<ScoreDigitalPage />} />
+              <Route path="/changelog" element={<ChangelogPage />} />
+              <Route path="/validar-relatorio" element={<ValidarRelatorio />} />
 
               {/* Auth pages */}
               <Route path="/login" element={<Login />} />

@@ -197,7 +197,7 @@ const TodosRelatorios = () => {
                   variant="outline"
                   size="sm"
                   onClick={() =>
-                    navigate(`/cliente/${report.cliente_id}/enviar-relatorio`)
+                    navigate(`/cliente/${report.cliente_id}/enviar-relatorio?reportId=${report.id}`)
                   }
                   className="flex-shrink-0"
                 >

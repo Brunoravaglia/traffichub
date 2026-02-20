@@ -9,11 +9,13 @@ const footerLinks = {
         { label: "Funcionalidades", to: "/features" },
         { label: "Preços", to: "/pricing" },
         { label: "Blog", to: "/blog" },
+        { label: "Changelog", to: "/changelog" },
         { label: "Sobre", to: "/about" },
         { label: "FAQ", to: "/faq" },
     ],
     support: [
         { label: "Central de Suporte", to: "/support" },
+        { label: "Validar Relatório", to: "/validar-relatorio" },
         { label: "Contato", to: "/support" },
     ],
     legal: [

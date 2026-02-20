@@ -126,7 +126,7 @@ const Modelos = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  
+
   // Client selection modal
   const [clientSelectOpen, setClientSelectOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateConfig | null>(null);
@@ -566,15 +566,13 @@ const Modelos = () => {
                             <Copy className="w-4 h-4 mr-2" />
                             Duplicar
                           </DropdownMenuItem>
-                          {!template.is_global && (
-                            <DropdownMenuItem
-                              onClick={() => template.id && handleDeleteClick(template.id)}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Excluir
-                            </DropdownMenuItem>
-                          )}
+                          <DropdownMenuItem
+                            onClick={() => template.id && handleDeleteClick(template.id)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Excluir
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>

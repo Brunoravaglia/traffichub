@@ -221,6 +221,7 @@ interface ReportData {
   paineisAnuncio: AdPanelImage[];
   customSections: CustomSection[];
   validationId?: string;
+  validationPassword?: string;
   validationTime?: string;
 }
 
@@ -324,6 +325,7 @@ const RelatorioCliente = () => {
   const { id: clienteId } = useParams();
   const [searchParams] = useSearchParams();
   const templateIdFromUrl = searchParams.get("templateId");
+  const reportIdFromUrl = searchParams.get("reportId");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { gestor } = useGestor();
@@ -373,6 +375,22 @@ const RelatorioCliente = () => {
     enabled: !!templateIdFromUrl,
   });
 
+  // Fetch and auto-apply existing report from URL
+  const { data: existingReport } = useQuery({
+    queryKey: ["report-from-url", reportIdFromUrl],
+    queryFn: async () => {
+      if (!reportIdFromUrl) return null;
+      const { data, error } = await supabase
+        .from("client_reports")
+        .select("*")
+        .eq("id", reportIdFromUrl)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!reportIdFromUrl,
+  });
+
   // Apply template to report data
   const applyTemplate = (template: any) => {
     if (!template) {
@@ -415,6 +433,44 @@ const RelatorioCliente = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlTemplate, templateIdFromUrl]);
+
+  // Auto-apply existing report data when loaded
+  useEffect(() => {
+    if (existingReport && existingReport.data_values) {
+      const data = existingReport.data_values as any;
+
+      setReportData({
+        objetivos: data.objetivos || [],
+        google: data.google || defaultReportData.google,
+        meta: data.meta || defaultReportData.meta,
+        resumo: data.resumo || "",
+        criativos: data.criativos || [],
+        criativosRanking: data.criativosRanking || [],
+        showRanking: data.showRanking ?? true,
+        metricsConfig: data.metricsConfig || defaultReportData.metricsConfig,
+        sectionsConfig: data.sectionsConfig || defaultReportData.sectionsConfig,
+        paineisAnuncio: data.paineisAnuncio || [],
+        customSections: data.customSections || [],
+        validationId: data.validationId,
+        validationPassword: data.validationPassword,
+        validationTime: data.validationTime,
+        autoFillSaldos: false // Don't overwrite saved data with auto-fill
+      });
+
+      if (existingReport.periodo_inicio) {
+        setPeriodoInicio(new Date(existingReport.periodo_inicio));
+      }
+      if (existingReport.periodo_fim) {
+        setPeriodoFim(new Date(existingReport.periodo_fim));
+      }
+
+      setStep("editor");
+      toast({
+        title: "Relatório carregado!",
+        description: "Os dados salvos anteriormente foram restaurados."
+      });
+    }
+  }, [existingReport]);
 
   // Convert template metrics to metricsConfig format
   const applyMetricsFromTemplate = (metrics: any[]): ReportData["metricsConfig"] => {
@@ -565,10 +621,10 @@ const RelatorioCliente = () => {
     }));
   };
 
-  // Save report mutation
   const saveReportMutation = useMutation({
     mutationFn: async () => {
       const validationId = reportData.validationId || crypto.randomUUID();
+      const validationPassword = reportData.validationPassword || Math.random().toString(36).substring(2, 8).toUpperCase();
 
       const dataValues = JSON.parse(JSON.stringify({
         google: reportData.google,
@@ -581,6 +637,7 @@ const RelatorioCliente = () => {
         metricsConfig: reportData.metricsConfig,
         sectionsConfig: reportData.sectionsConfig,
         validationId,
+        validationPassword,
         validationTime: format(new Date(), "yyyy-MM-dd HH:mm:ss")
       }));
 
@@ -609,10 +666,10 @@ const RelatorioCliente = () => {
 
       if (error) throw error;
 
-      return validationId;
+      return { validationId, validationPassword };
     },
-    onSuccess: (validationId) => {
-      setReportData(prev => ({ ...prev, validationId }));
+    onSuccess: ({ validationId, validationPassword }) => {
+      setReportData(prev => ({ ...prev, validationId, validationPassword }));
       toast({ title: "Relatório salvo com sucesso!" });
       queryClient.invalidateQueries({ queryKey: ["client-reports", clienteId] });
     },
@@ -775,9 +832,27 @@ const RelatorioCliente = () => {
   const handleExport = async () => {
     setIsExporting(true);
     calculateMetrics();
-    await saveReportMutation.mutateAsync();
-    await handleExportPDF();
-    setIsExporting(false);
+    try {
+      const { validationId, validationPassword } = await saveReportMutation.mutateAsync();
+
+      // Force explicit local state update to ensure it's registered ASAP
+      setReportData(prev => ({ ...prev, validationId, validationPassword }));
+
+      // Force preview mode so the PDF container (pdfRef) is rendered in the DOM
+      setIsPreview(true);
+
+      // We must wait a moment for React to finish rendering the new bottom footer 
+      // containing the new Validation ID and Password before taking the screenshot.
+      // Increased timeout to 2000ms to guarantee DOM paint cycle and image loading completes.
+      setTimeout(async () => {
+        await handleExportPDF();
+        setIsExporting(false);
+      }, 2000);
+
+    } catch (e) {
+      console.error(e);
+      setIsExporting(false);
+    }
   };
 
   // Save current config as template
@@ -3312,9 +3387,10 @@ const RelatorioCliente = () => {
                     <p>Relatório gerado em</p>
                     <p>{reportData.validationTime ? format(new Date(reportData.validationTime), "dd/MM/yyyy 'às' HH:mm") : format(new Date(), "dd/MM/yyyy 'às' HH:mm")}</p>
                     {reportData.validationId && (
-                      <div className="mt-1 flex flex-col items-end">
-                        <span className="text-[10px] text-gray-600">ID de Validação: {reportData.validationId.split('-')[0]}</span>
-                        <a href={`https://vocedigitalpropaganda.com.br/validar-relatorio/${reportData.validationId}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline">
+                      <div className="mt-1 flex flex-col items-end border-t border-white/5 pt-1">
+                        <span className="text-[10px] text-gray-400 font-mono">ID: {reportData.validationId.split('-')[0]}</span>
+                        <span className="text-[10px] text-gray-400 font-mono">Senha: {reportData.validationPassword}</span>
+                        <a href={`https://vocedigitalpropaganda.com.br/validar-relatorio?id=${reportData.validationId}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline mt-0.5">
                           Verificar Autenticidade
                         </a>
                       </div>
