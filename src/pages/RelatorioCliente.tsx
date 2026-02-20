@@ -668,7 +668,7 @@ const RelatorioCliente = () => {
 
       if (error) throw error;
 
-      return { validationId, validationPassword };
+      return { validationId, validationPassword, validationTime };
     },
     onSuccess: ({ validationId, validationPassword }) => {
       setReportData(prev => ({ ...prev, validationId, validationPassword }));
@@ -794,13 +794,18 @@ const RelatorioCliente = () => {
     toast({ title: "Gerando PDF...", description: "Por favor aguarde" });
 
     try {
+      // Use a fixed width for capture to ensure internal layout is consistent
+      // despite the browser window size. 800px matches our max-w.
+      const captureWidth = 800;
+
       const canvas = await html2canvas(pdfRef.current, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: "#1a1a2e",
-        width: pdfRef.current.scrollWidth,
-        height: pdfRef.current.scrollHeight,
+        width: captureWidth,
+        // Let height be automatic based on content
+        windowWidth: captureWidth,
       });
 
       const imgData = canvas.toDataURL("image/png");
@@ -837,24 +842,20 @@ const RelatorioCliente = () => {
     setIsPreview(true);
     calculateMetrics();
 
-    // Pre-generate credentials if they don't exist
-    const vId = reportData.validationId || crypto.randomUUID();
-    const vPass = reportData.validationPassword || Math.random().toString(36).substring(2, 8).toUpperCase();
-    const vTime = reportData.validationTime || format(new Date(), "yyyy-MM-dd HH:mm:ss");
-
-    // Update state first so UI can start rendering
-    setReportData(prev => ({
-      ...prev,
-      validationId: vId,
-      validationPassword: vPass,
-      validationTime: vTime,
-      isGeneratingPDF: true
-    }));
-
     try {
-      await saveReportMutation.mutateAsync();
+      // 1. Mutate and get the EXACT credentials saved to DB
+      const credentials = await saveReportMutation.mutateAsync();
 
-      // Wait for a significant amount of time to ensure DOM and images are ready
+      // 2. Update local state with these credentials FIRST
+      setReportData(prev => ({
+        ...prev,
+        ...credentials,
+        isGeneratingPDF: true
+      }));
+
+      // 3. Wait for React to finish rendering the new bottom footer 
+      // containing the new Validation ID and Password before taking the screenshot.
+      // Increased timeout to 2500ms to guarantee DOM paint cycle and image loading completes.
       setTimeout(async () => {
         await handleExportPDF();
         setIsExporting(false);
@@ -3399,14 +3400,14 @@ const RelatorioCliente = () => {
                     <p>Relatório gerado em</p>
                     <p>{reportData.validationTime ? format(new Date(reportData.validationTime), "dd/MM/yyyy 'às' HH:mm") : format(new Date(), "dd/MM/yyyy 'às' HH:mm")}</p>
                     {reportData.validationId && (
-                      <div className="mt-2 flex flex-col items-end border-t border-white/5 pt-2">
-                        <span className="text-[9px] text-gray-500 font-mono">ID: {reportData.validationId}</span>
-                        <span className="text-[9px] text-gray-500 font-mono">SENHA: {reportData.validationPassword}</span>
+                      <div className="mt-2 flex flex-col items-end border-t border-white/5 pt-2 max-w-[250px]">
+                        <span className="text-[8px] text-gray-500 font-mono text-right break-all leading-tight">ID: {reportData.validationId}</span>
+                        <span className="text-[8px] text-gray-500 font-mono text-right mt-0.5">SENHA: {reportData.validationPassword}</span>
                         <a
                           href={`https://vcd.vurp.com.br/validar-relatorio?id=${reportData.validationId}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[9px] text-primary hover:underline mt-0.5"
+                          className="text-[8px] text-primary hover:underline mt-1 font-bold"
                         >
                           vcd.vurp.com.br/validar-relatorio
                         </a>
