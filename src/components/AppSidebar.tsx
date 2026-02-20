@@ -87,25 +87,8 @@ const AppSidebar = () => {
         className="border-b border-border/50 p-4"
         style={{ borderBottomColor: agencia?.cor_secundaria ? `${agencia.cor_secundaria}44` : undefined }}
       >
-        <div className="flex items-center gap-3 overflow-hidden">
-          {agencia?.logo_url ? (
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden border border-primary/20 bg-white/50 backdrop-blur-sm">
-                <img
-                  src={agencia.logo_black_url || agencia.logo_url}
-                  alt={agencia.nome}
-                  className="h-full w-full object-contain"
-                />
-              </div>
-              {!isCollapsed && (
-                <span className="font-bold text-sm truncate max-w-[150px] text-foreground">
-                  {agencia.nome}
-                </span>
-              )}
-            </div>
-          ) : (
-            <VCDLogo size="lg" showText={false} />
-          )}
+        <div className="flex items-center justify-center w-full py-2">
+          <VCDLogo size="lg" showText={false} />
         </div>
       </SidebarHeader>
 
