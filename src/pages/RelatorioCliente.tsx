@@ -2966,8 +2966,8 @@ const RelatorioCliente = () => {
                 reportData.isGeneratingPDF ? "rounded-none shadow-none" : "max-w-[800px] rounded-lg shadow-2xl"
               )}
               style={{
-                fontFamily: "Poppins, sans-serif",
-                backgroundColor: "#0a0a0a",
+                fontFamily: "'Inter', sans-serif",
+                backgroundColor: "#18181b",
                 width: reportData.isGeneratingPDF ? '800px' : '100%',
                 minHeight: reportData.isGeneratingPDF ? 'auto' : '1000px'
               }}
