@@ -801,31 +801,42 @@ const RelatorioCliente = () => {
       const captureHeight = element.getBoundingClientRect().height;
 
       const canvas = await html2canvas(element, {
-        scale: 3, // Aumentado para 3 para melhor legibilidade e evitar texto "borrado"
+        scale: 2, // 2 is usually enough and faster
         useCORS: true,
         logging: false,
         backgroundColor: "#0b1120",
         width: captureWidth,
-        windowWidth: 1024, // Bypass mobile breakpoints
+        windowWidth: 1024,
       });
 
-      // Use JPEG com qualidade 0.95 para manter um arquivo leve (leveza), mas sem os artefatos visuais pesados (péssimo) do 0.85
       const imgData = canvas.toDataURL("image/jpeg", 0.95);
-      const pdfWidth = 210; // A4 width in mm
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = pdfWidth / imgWidth;
-      const scaledHeight = imgHeight * ratio;
-
-      // Create PDF with custom height to fit all content (no page limit)
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
-        format: [pdfWidth, scaledHeight],
+        format: "a4",
       });
 
-      // Add image at full size - allows report to be as long as needed
-      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, scaledHeight);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = pdfWidth / imgWidth;
+      const totalImgHeightInMm = imgHeight * ratio;
+
+      let heightLeft = totalImgHeightInMm;
+      let position = 0;
+
+      // Add the first page
+      pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, totalImgHeightInMm);
+      heightLeft -= pdfHeight;
+
+      // Add subsequent pages if needed
+      while (heightLeft > 0) {
+        position = heightLeft - totalImgHeightInMm;
+        pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, totalImgHeightInMm);
+        heightLeft -= pdfHeight;
+      }
 
       const clienteName = cliente?.nome || "Relatorio";
       const period = format(periodoInicio, "MMMM", { locale: ptBR });
@@ -1125,7 +1136,7 @@ const RelatorioCliente = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="grid md:grid-cols-2 gap-6"
+            className="grid md:grid-cols-2 gap-6 items-start"
           >
             {/* Period Selection */}
             <Card>
@@ -1141,17 +1152,22 @@ const RelatorioCliente = () => {
                     <Label>Data Início</Label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start">
-                          <CalendarIcon className="mr-2 h-4 w-4" />
+                        <Button
+                          variant="outline"
+                          className="w-full h-12 justify-start text-left font-normal bg-secondary border-border hover:bg-secondary/80"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                           {format(periodoInicio, "dd/MM/yyyy")}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className="w-auto p-0 bg-card border-border shadow-xl" align="start">
                         <Calendar
                           mode="single"
                           selected={periodoInicio}
                           onSelect={(date) => date && setPeriodoInicio(date)}
+                          initialFocus
                           locale={ptBR}
+                          className="p-3 pointer-events-auto"
                         />
                       </PopoverContent>
                     </Popover>
@@ -1160,17 +1176,22 @@ const RelatorioCliente = () => {
                     <Label>Data Fim</Label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start">
-                          <CalendarIcon className="mr-2 h-4 w-4" />
+                        <Button
+                          variant="outline"
+                          className="w-full h-12 justify-start text-left font-normal bg-secondary border-border hover:bg-secondary/80"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                           {format(periodoFim, "dd/MM/yyyy")}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className="w-auto p-0 bg-card border-border shadow-xl" align="start">
                         <Calendar
                           mode="single"
                           selected={periodoFim}
                           onSelect={(date) => date && setPeriodoFim(date)}
+                          initialFocus
                           locale={ptBR}
+                          className="p-3 pointer-events-auto"
                         />
                       </PopoverContent>
                     </Popover>
@@ -2973,45 +2994,13 @@ const RelatorioCliente = () => {
               }}
             >
               {/* Header with Client Logo + Name */}
-              <div className="p-8 pb-4">
-                <div className="flex items-start justify-between mb-8">
-                  <div className="flex items-center gap-6">
-                    {cliente?.logo_url ? (
-                      <div className="h-24 max-w-[280px] rounded-2xl overflow-hidden shadow-lg flex items-center justify-center bg-black/20" style={{ height: '96px', maxWidth: '280px' }}>
-                        <img
-                          src={cliente.logo_url}
-                          alt={cliente.nome}
-                          className="w-full h-full object-cover"
-                          style={{ height: '96px', width: '100%', objectFit: 'cover' }}
-                          crossOrigin="anonymous"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-24 h-24 rounded-2xl bg-[#ffb500]/10 border border-[#ffb500]/20 text-[#ffb500] flex items-center justify-center shadow-lg">
-                        <span className="text-4xl font-medium tracking-widest">{cliente?.nome?.charAt(0)}</span>
-                      </div>
-                    )}
-                    <div className="space-y-1">
-                      <p className="text-3xl font-bold text-[#ffb500] tracking-wide uppercase leading-tight">{cliente?.nome}</p>
-                      <p className="text-sm text-gray-400 font-normal tracking-wider">Relatório de Performance</p>
-                    </div>
-                  </div>
-                  <div className="text-right flex flex-col justify-center">
-                    <h1 className="text-3xl font-medium text-white mb-1 tracking-wider leading-none">RESULTADOS DE</h1>
-                    <h1 className="text-3xl font-extrabold text-[#ffb500] mb-2 tracking-wider leading-none">CAMPANHA</h1>
-                    <p className="text-xl text-gray-500 uppercase font-medium tracking-widest">
-                      Mês de {format(periodoInicio, "MMMM", { locale: ptBR })}
-                    </p>
-                  </div>
-                </div>
+              <ReportHeader
+                cliente={cliente}
+                periodoInicio={periodoInicio}
+                periodoFim={periodoFim}
+              />
 
-                {/* Period */}
-                <div className="text-center mb-8">
-                  <span className="px-6 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300 tracking-[0.2em] font-bold uppercase">
-                    Campanhas de {format(periodoInicio, "dd/MM")} à {format(periodoFim, "dd/MM")}
-                  </span>
-                </div>
-
+              <div className="p-8 pt-0">
                 {/* Objectives */}
                 {reportData.sectionsConfig.showObjetivos && reportData.objetivos.filter(Boolean).length > 0 && (
                   <div className="mb-8 p-6 rounded-2xl bg-white/[0.03] border border-white/10 shadow-inner">
@@ -3029,146 +3018,24 @@ const RelatorioCliente = () => {
 
                 {/* Google Ads Section */}
                 {reportData.sectionsConfig.showGoogleAds && (
-                  <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-blue-600/10 via-blue-900/5 to-transparent border border-blue-500/20 shadow-lg">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                        <GoogleLogo className="w-5 h-5" />
-                      </div>
-                      <h3 className="text-md font-bold text-blue-400 tracking-[0.2em] uppercase" style={{ color: '#60a5fa' }}>TRÁFEGO GOOGLE</h3>
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-                      {[
-                        { label: "Cliques", value: formatNumber(reportData.google.cliques) },
-                        { label: "Impressões", value: formatNumber(reportData.google.impressoes) },
-                        { label: "Conversões", value: formatNumber(reportData.google.contatos) },
-                        { label: "Investidos", value: formatCurrency(reportData.google.investido) }
-                      ].map((m, i) => (
-                        <div key={m.label} className="text-center p-4 rounded-xl bg-white/[0.04] border border-white/[0.04] hover:bg-white/[0.06] transition-colors">
-                          <p className="text-2xl font-bold text-white mb-1">{m.value}</p>
-                          <p className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">{m.label}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {(() => {
-                      const additionalMetrics = [];
-                      if (reportData.metricsConfig.showGoogleCustoPorLead) additionalMetrics.push({ label: "Custo por Lead", value: formatCurrency(reportData.google.custoPorLead), color: "text-green-400" });
-                      if (reportData.metricsConfig.showGoogleCpm) additionalMetrics.push({ label: "CPM", value: formatCurrency(reportData.google.cpm), color: "text-yellow-400" });
-                      if (reportData.metricsConfig.showGoogleCtr) additionalMetrics.push({ label: "CTR (%)", value: `${reportData.google.ctr.toFixed(2)}%`, color: "text-blue-400" });
-                      if (reportData.metricsConfig.showGoogleCpc) additionalMetrics.push({ label: "CPC", value: formatCurrency(reportData.google.cpc), color: "text-orange-400" });
-                      if (reportData.metricsConfig.showGoogleConversoes) additionalMetrics.push({ label: "Conversões Ads", value: formatNumber(reportData.google.conversoes), color: "text-emerald-400" });
-                      if (reportData.metricsConfig.showGoogleTaxaConversao) additionalMetrics.push({ label: "Taxa Conv.", value: `${reportData.google.taxaConversao.toFixed(2)}%`, color: "text-cyan-400" });
-                      if (reportData.metricsConfig.showGoogleRoas) additionalMetrics.push({ label: "ROAS", value: `${reportData.google.roas.toFixed(2)}x`, color: "text-pink-400" });
-                      if (reportData.metricsConfig.showGoogleRoasValor) additionalMetrics.push({ label: "ROAS (R$)", value: formatCurrency(reportData.google.roasValor), color: "text-fuchsia-400" });
-                      if (reportData.metricsConfig.showGoogleCustoConversao) additionalMetrics.push({ label: "Custo/Conv.", value: formatCurrency(reportData.google.custoConversao), color: "text-red-400" });
-                      if (reportData.metricsConfig.showGoogleAlcance) additionalMetrics.push({ label: "Alcance", value: formatNumber(reportData.google.alcance), color: "text-indigo-400" });
-                      if (reportData.metricsConfig.showGoogleFrequencia) additionalMetrics.push({ label: "Frequência", value: reportData.google.frequencia.toFixed(2), color: "text-violet-400" });
-                      if (reportData.metricsConfig.showGoogleVisualizacoesVideo) additionalMetrics.push({ label: "Views Vídeo", value: formatNumber(reportData.google.visualizacoesVideo), color: "text-teal-400" });
-                      if (reportData.metricsConfig.showGoogleTaxaVisualizacao) additionalMetrics.push({ label: "Taxa View", value: `${reportData.google.taxaVisualizacao.toFixed(2)}%`, color: "text-sky-400" });
-                      if (reportData.metricsConfig.showGoogleInteracoes) additionalMetrics.push({ label: "Interações", value: formatNumber(reportData.google.interacoes), color: "text-lime-400" });
-                      if (reportData.metricsConfig.showGoogleTaxaInteracao) additionalMetrics.push({ label: "Taxa Inter.", value: `${reportData.google.taxaInteracao.toFixed(2)}%`, color: "text-amber-400" });
-                      if (reportData.metricsConfig.showGoogleCompras) additionalMetrics.push({ label: "Compras", value: formatNumber(reportData.google.compras), color: "text-emerald-400" });
-                      if (reportData.metricsConfig.showGoogleVisitasProduto) additionalMetrics.push({ label: "Visitas Produto", value: formatNumber(reportData.google.visitasProduto), color: "text-sky-400" });
-                      if (reportData.metricsConfig.showGoogleAdicoesCarrinho) additionalMetrics.push({ label: "Add Carrinho", value: formatNumber(reportData.google.adicoesCarrinho), color: "text-orange-400" });
-                      if (reportData.metricsConfig.showGoogleVendas) additionalMetrics.push({ label: "Vendas", value: formatNumber(reportData.google.vendas), color: "text-green-400" });
-                      if (reportData.metricsConfig.showGoogleCustoPorVisita) additionalMetrics.push({ label: "Custo/Visita", value: formatCurrency(reportData.google.custoPorVisita), color: "text-cyan-400" });
-                      if (reportData.metricsConfig.showGoogleCustoPorAdicaoCarrinho) additionalMetrics.push({ label: "Custo/Add Carrinho", value: formatCurrency(reportData.google.custoPorAdicaoCarrinho), color: "text-yellow-400" });
-                      if (reportData.metricsConfig.showGoogleCustoPorVenda) additionalMetrics.push({ label: "Custo/Venda", value: formatCurrency(reportData.google.custoPorVenda), color: "text-red-400" });
-
-                      if (additionalMetrics.length === 0) return null;
-
-                      return (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                          {additionalMetrics.map((metric, idx) => (
-                            <div key={metric.label} className="text-center p-4 rounded-xl bg-white/[0.04] border border-white/[0.04] hover:bg-white/[0.06] transition-colors">
-                              <p className={`text-xl font-bold ${metric.color} mb-1`}>{metric.value}</p>
-                              <p className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">{metric.label}</p>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })()}
-                  </div>
+                  <GoogleAdsMetricsView
+                    google={reportData.google}
+                    metricsConfig={reportData.metricsConfig}
+                  />
                 )}
 
                 {/* Meta Ads Section */}
                 {reportData.sectionsConfig.showMetaAds && (
-                  <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-purple-600/10 via-purple-900/5 to-transparent border border-purple-500/20 shadow-lg">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
-                        <MetaLogo className="w-5 h-5 text-purple-400" />
-                      </div>
-                      <h3 className="text-md font-bold text-purple-400 tracking-[0.2em] uppercase" style={{ color: '#c084fc' }}>TRÁFEGO META ADS</h3>
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-                      {[
-                        { label: "Impressões", value: formatNumber(reportData.meta.impressoes) },
-                        { label: "Engajamento", value: formatNumber(reportData.meta.engajamento) },
-                        { label: "Conversas", value: formatNumber(reportData.meta.conversas) },
-                        { label: "Investidos", value: formatCurrency(reportData.meta.investido) }
-                      ].map((m, i) => (
-                        <div key={m.label} className="text-center p-4 rounded-xl bg-white/[0.04] border border-white/[0.04] hover:bg-white/[0.06] transition-colors">
-                          <p className="text-2xl font-bold text-white mb-1">{m.value}</p>
-                          <p className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">{m.label}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Additional Meta Metrics */}
-                    {(() => {
-                      const additionalMetrics = [];
-                      if (reportData.metricsConfig.showMetaCustoPorLead) additionalMetrics.push({ label: "Custo por Lead", value: formatCurrency(reportData.meta.custoPorLead), color: "text-green-400" });
-                      if (reportData.metricsConfig.showMetaCpm) additionalMetrics.push({ label: "CPM", value: formatCurrency(reportData.meta.cpm), color: "text-yellow-400" });
-                      if (reportData.metricsConfig.showMetaCustoPorSeguidor) additionalMetrics.push({ label: "Custo/Seguidor", value: formatCurrency(reportData.meta.custoPorSeguidor), color: "text-pink-400" });
-                      if (reportData.metricsConfig.showMetaCliques) additionalMetrics.push({ label: "Cliques Link", value: formatNumber(reportData.meta.cliques), color: "text-blue-400" });
-                      if (reportData.metricsConfig.showMetaCtr) additionalMetrics.push({ label: "CTR (%)", value: `${reportData.meta.ctr.toFixed(2)}%`, color: "text-cyan-400" });
-                      if (reportData.metricsConfig.showMetaCpc) additionalMetrics.push({ label: "CPC", value: formatCurrency(reportData.meta.cpc), color: "text-orange-400" });
-                      if (reportData.metricsConfig.showMetaAlcance) additionalMetrics.push({ label: "Alcance", value: formatNumber(reportData.meta.alcance), color: "text-indigo-400" });
-                      if (reportData.metricsConfig.showMetaFrequencia) additionalMetrics.push({ label: "Frequência", value: reportData.meta.frequencia.toFixed(2), color: "text-violet-400" });
-                      if (reportData.metricsConfig.showMetaLeads) additionalMetrics.push({ label: "Leads", value: formatNumber(reportData.meta.leads), color: "text-emerald-400" });
-                      if (reportData.metricsConfig.showMetaConversoes) additionalMetrics.push({ label: "Conversões", value: formatNumber(reportData.meta.conversoes), color: "text-teal-400" });
-                      if (reportData.metricsConfig.showMetaRoas) additionalMetrics.push({ label: "ROAS", value: `${reportData.meta.roas.toFixed(2)}x`, color: "text-rose-400" });
-                      if (reportData.metricsConfig.showMetaRoasValor) additionalMetrics.push({ label: "ROAS (R$)", value: formatCurrency(reportData.meta.roasValor), color: "text-fuchsia-400" });
-                      if (reportData.metricsConfig.showMetaCurtidasPagina) additionalMetrics.push({ label: "Curtidas Página", value: formatNumber(reportData.meta.curtidasPagina), color: "text-red-400" });
-                      if (reportData.metricsConfig.showMetaSeguidores) additionalMetrics.push({ label: "Seguidores", value: formatNumber(reportData.meta.seguidores), color: "text-fuchsia-400" });
-                      if (reportData.metricsConfig.showMetaCompartilhamentos) additionalMetrics.push({ label: "Compartilhamentos", value: formatNumber(reportData.meta.compartilhamentos), color: "text-sky-400" });
-                      if (reportData.metricsConfig.showMetaSalvos) additionalMetrics.push({ label: "Salvos", value: formatNumber(reportData.meta.salvos), color: "text-amber-400" });
-                      if (reportData.metricsConfig.showMetaComentarios) additionalMetrics.push({ label: "Comentários", value: formatNumber(reportData.meta.comentarios), color: "text-lime-400" });
-                      if (reportData.metricsConfig.showMetaVisualizacoesVideo) additionalMetrics.push({ label: "Views Vídeo", value: formatNumber(reportData.meta.visualizacoesVideo), color: "text-cyan-400" });
-                      if (reportData.metricsConfig.showMetaRetencaoVideo) additionalMetrics.push({ label: "Retenção Vídeo", value: `${reportData.meta.retencaoVideo.toFixed(2)}%`, color: "text-teal-400" });
-                      if (reportData.metricsConfig.showMetaMensagensIniciadas) additionalMetrics.push({ label: "Mensagens", value: formatNumber(reportData.meta.mensagensIniciadas), color: "text-blue-400" });
-                      if (reportData.metricsConfig.showMetaAgendamentos) additionalMetrics.push({ label: "Agendamentos", value: formatNumber(reportData.meta.agendamentos), color: "text-green-400" });
-                      if (reportData.metricsConfig.showMetaCheckins) additionalMetrics.push({ label: "Check-ins", value: formatNumber(reportData.meta.checkins), color: "text-orange-400" });
-                      if (reportData.metricsConfig.showMetaCompras) additionalMetrics.push({ label: "Compras", value: formatNumber(reportData.meta.compras), color: "text-emerald-400" });
-                      if (reportData.metricsConfig.showMetaVisitasProduto) additionalMetrics.push({ label: "Visitas Produto", value: formatNumber(reportData.meta.visitasProduto), color: "text-sky-400" });
-                      if (reportData.metricsConfig.showMetaAdicoesCarrinho) additionalMetrics.push({ label: "Add Carrinho", value: formatNumber(reportData.meta.adicoesCarrinho), color: "text-orange-400" });
-                      if (reportData.metricsConfig.showMetaVendas) additionalMetrics.push({ label: "Vendas", value: formatNumber(reportData.meta.vendas), color: "text-green-400" });
-                      if (reportData.metricsConfig.showMetaCustoPorVisita) additionalMetrics.push({ label: "Custo/Visita", value: formatCurrency(reportData.meta.custoPorVisita), color: "text-cyan-400" });
-                      if (reportData.metricsConfig.showMetaCustoPorAdicaoCarrinho) additionalMetrics.push({ label: "Custo/Add Carrinho", value: formatCurrency(reportData.meta.custoPorAdicaoCarrinho), color: "text-yellow-400" });
-                      if (reportData.metricsConfig.showMetaCustoPorVenda) additionalMetrics.push({ label: "Custo/Venda", value: formatCurrency(reportData.meta.custoPorVenda), color: "text-red-400" });
-
-                      if (additionalMetrics.length === 0) return null;
-
-                      return (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                          {additionalMetrics.map((metric, idx) => (
-                            <div key={metric.label} className="text-center p-4 rounded-xl bg-white/[0.04] border border-white/[0.04] hover:bg-white/[0.06] transition-colors">
-                              <p className={`text-xl font-black ${metric.color} mb-1`}>{metric.value}</p>
-                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{metric.label}</p>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })()}
-                  </div>
+                  <MetaAdsMetricsView
+                    meta={reportData.meta}
+                    metricsConfig={reportData.metricsConfig}
+                  />
                 )}
 
                 {/* Google Creatives */}
                 {reportData.sectionsConfig.showCriativosGoogle && reportData.criativos.filter(c => c.platform === "google").length > 0 && (
                   <div className="mb-6">
-                    <h3 className="text-lg font-bold mb-4 text-blue-400 tracking-widest">
+                    <h3 className="text-lg font-bold mb-4 text-blue-400 tracking-widest uppercase">
                       CRIATIVOS GOOGLE
                     </h3>
                     <div className="flex flex-wrap gap-3 justify-center">
@@ -3196,7 +3063,7 @@ const RelatorioCliente = () => {
                 {/* Meta Creatives */}
                 {reportData.sectionsConfig.showCriativosMeta && reportData.criativos.filter(c => c.platform === "meta").length > 0 && (
                   <div className="mb-6">
-                    <h3 className="text-lg font-bold mb-4 text-purple-400 tracking-widest" style={{ color: '#c084fc' }}>
+                    <h3 className="text-lg font-bold mb-4 text-purple-400 tracking-widest uppercase" style={{ color: '#c084fc' }}>
                       CRIATIVOS META
                     </h3>
                     <div className="flex flex-wrap gap-3 justify-center">
@@ -3224,7 +3091,7 @@ const RelatorioCliente = () => {
                 {/* Ranking Section */}
                 {reportData.showRanking && reportData.criativosRanking.length > 0 && (
                   <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-yellow-900/30 to-yellow-900/10 border border-yellow-500/30">
-                    <h3 className="text-lg font-bold mb-4 text-yellow-400 tracking-widest">
+                    <h3 className="text-lg font-bold mb-4 text-yellow-400 tracking-widest uppercase">
                       <Trophy className="w-5 h-5 inline-block mr-1" /> RANKING DE CRIATIVOS
                     </h3>
                     <div className="flex flex-wrap gap-4 justify-center">
@@ -3262,7 +3129,7 @@ const RelatorioCliente = () => {
                 {/* Ad Panels Google */}
                 {reportData.sectionsConfig.showPaineisAnuncio && reportData.paineisAnuncio.filter(p => p.platform === "google").length > 0 && (
                   <div className="mb-6">
-                    <h3 className="text-lg font-bold mb-4 text-blue-400 tracking-widest">
+                    <h3 className="text-lg font-bold mb-4 text-blue-400 tracking-widest uppercase">
                       PAINÉIS GOOGLE ADS
                     </h3>
                     <div className="flex flex-wrap gap-3 justify-center">
@@ -3290,7 +3157,7 @@ const RelatorioCliente = () => {
                 {/* Ad Panels Meta */}
                 {reportData.sectionsConfig.showPaineisAnuncio && reportData.paineisAnuncio.filter(p => p.platform === "meta").length > 0 && (
                   <div className="mb-6">
-                    <h3 className="text-lg font-bold mb-4 text-purple-400 tracking-widest">
+                    <h3 className="text-lg font-bold mb-4 text-purple-400 tracking-widest uppercase">
                       PAINÉIS META ADS
                     </h3>
                     <div className="flex flex-wrap gap-3 justify-center">
@@ -3357,7 +3224,7 @@ const RelatorioCliente = () => {
                   </div>
                 )}
 
-                {/* Balances - only show if toggle is on AND there are values */}
+                {/* Balances */}
                 {reportData.sectionsConfig.showSaldoRestante &&
                   (reportData.google.saldoRestante > 0 ||
                     reportData.google.diasParaRecarga > 0 ||
@@ -3420,46 +3287,7 @@ const RelatorioCliente = () => {
                   )}
 
                 {/* Footer */}
-                <div className="border-t border-[#ffb500]/20 pt-6 mt-8 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    {/* @ts-ignore */}
-                    {cliente?.agencias?.logo_url || cliente?.gestores?.foto_url ? (
-                      <img
-                        // @ts-ignore
-                        src={cliente?.agencias?.logo_url || cliente?.gestores?.foto_url}
-                        alt="Logo da Agência"
-                        className="h-10 w-auto object-contain max-w-[120px] filter drop-shadow-md"
-                        crossOrigin="anonymous"
-                      />
-                    ) : (
-                      <VCDLogo size="lg" showText={false} className="text-[#ffb500]" />
-                    )}
-                    <div>
-                      <p className="text-xs text-white/60 font-medium">Relatório gerado por <span className="text-[#ffb500] font-bold">
-                        {/* @ts-ignore */}
-                        {cliente?.agencias?.nome || cliente?.gestores?.nome || "Você Digital Propaganda"}
-                      </span></p>
-                    </div>
-                  </div>
-                  <div className="text-right text-xs text-gray-500">
-                    <p>Relatório gerado em</p>
-                    <p>{reportData.validationTime ? format(new Date(reportData.validationTime), "dd/MM/yyyy 'às' HH:mm") : format(new Date(), "dd/MM/yyyy 'às' HH:mm")}</p>
-                    {reportData.validationId && (
-                      <div className="mt-2 flex flex-col items-end border-t border-white/5 pt-2 max-w-[250px]">
-                        <span className="text-[8px] text-gray-500 font-mono text-right break-all leading-tight">ID: {reportData.validationId}</span>
-                        <span className="text-[8px] text-gray-500 font-mono text-right mt-0.5">SENHA: {reportData.validationPassword}</span>
-                        <a
-                          href={`${window.location.origin}/validar-relatorio?id=${reportData.validationId}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[8px] text-[#ffb500] mt-1 font-medium"
-                        >
-                          {window.location.host}/validar-relatorio
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <ReportFooter reportData={reportData} />
               </div>
             </div>
           </motion.div >

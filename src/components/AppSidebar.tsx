@@ -53,27 +53,29 @@ const AppSidebar = () => {
   };
 
   const menuItems = {
-    main: [
-      { title: "Dashboard", icon: Home, path: "/dashboard" },
-      { title: "Gerencial", icon: BarChart3, path: "/gerencial" },
+    analise: [
+      { title: "Home Dashboard", icon: Home, path: "/dashboard" },
+      { title: "Visão Gerencial", icon: BarChart3, path: "/gerencial" },
+      { title: "Checklist de Setup", icon: FileText, path: "/controle" },
+    ],
+    relatorios: [
+      { title: "Gerar Relatórios", icon: Sparkles, path: "/modelos" },
+      { title: "Meus Clientes", icon: Users, path: "/clientes" },
+      { title: "Histórico de Envios", icon: History, path: "/historico" },
+    ],
+    operacao: [
       { title: "Calendário", icon: Calendar, path: "/calendario" },
       { title: "Produtividade", icon: Timer, path: "/produtividade" },
       { title: "Previsão Saldo", icon: Flame, path: "/previsao-saldo" },
     ],
-    gestao: [
-      { title: "Clientes", icon: Users, path: "/clientes" },
-      { title: "Controle & Checklist", icon: FileText, path: "/controle" },
-      { title: "Relatórios & Modelos", icon: LayoutTemplate, path: "/modelos" },
-      { title: "Histórico", icon: History, path: "/historico" },
+    equipe: [
       { title: "Gestores", icon: Briefcase, path: "/gestores" },
       { title: "Conquistas", icon: Trophy, path: "/conquistas" },
     ],
     ferramentas: [
-      { title: "Todas Ferramentas", icon: Sparkles, path: "/utilidades" },
-      { title: "Simulador Meta", icon: BarChart3, path: "/utilidades/simulador-meta" },
-      { title: "Simulador Funil", icon: LayoutTemplate, path: "/utilidades/simulador-funil" },
-      { title: "Gerador de UTMs", icon: Link2, path: "/utilidades/gerador-utm" },
-      { title: "Headlines", icon: FileText, path: "/utilidades/gerador-headlines" },
+      { title: "Todas Ferramentas", icon: Plus, path: "/ferramentas" },
+      { title: "Simulador Meta", icon: BarChart3, path: "/ferramentas/simulador-meta" },
+      { title: "Gerador de UTMs", icon: Link2, path: "/ferramentas/gerador-utm" },
     ],
     config: [
       { title: "Configuração Pessoal", icon: Settings, path: "/configuracoes" },
@@ -84,36 +86,45 @@ const AppSidebar = () => {
     <Sidebar collapsible="icon" className="border-r border-border/50">
       {/* Header */}
       <SidebarHeader
-        className="border-b border-border/50 p-4"
+        className="px-6 py-8 border-b border-border/10"
         style={{ borderBottomColor: agencia?.cor_secundaria ? `${agencia.cor_secundaria}44` : undefined }}
       >
         <div className="flex items-center justify-center w-full py-2">
-          <VCDLogo size="lg" showText={false} />
+          {agencia?.logo_url ? (
+            <img
+              src={agencia.logo_url}
+              alt={agencia.nome}
+              className="max-h-12 w-auto object-contain opacity-90 hover:opacity-100 transition-opacity"
+            />
+          ) : (
+            <VCDLogo size="lg" showText={true} />
+          )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="py-2 gap-2 overflow-y-auto">
-        {/* Main Navigation */}
+      <SidebarContent className="py-2 gap-0 overflow-y-auto">
+        {/* Análise */}
         <SidebarGroup>
-          <SidebarGroupLabel className={cn("text-xs font-semibold text-muted-foreground uppercase tracking-wider", isCollapsed && "sr-only")}>
-            Principal
+          <SidebarGroupLabel className={cn("text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] px-4 mb-2", isCollapsed && "sr-only")}>
+            Performance
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.main.map((item) => (
+            <SidebarMenu className="px-2">
+              {menuItems.analise.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton
                     onClick={() => navigate(item.path)}
                     isActive={isActive(item.path)}
                     tooltip={item.title}
                     className={cn(
-                      "transition-all duration-200",
-                      isActive(item.path) &&
-                      "bg-primary/10 text-primary border-l-2 border-primary"
+                      "transition-all duration-200 h-10 rounded-lg mb-1",
+                      isActive(item.path)
+                        ? "bg-primary/15 text-primary shadow-sm ring-1 ring-primary/20"
+                        : "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground"
                     )}
                   >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
+                    <item.icon className={cn("h-4 w-4", isActive(item.path) ? "text-primary" : "text-muted-foreground")} />
+                    <span className="font-medium">{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -121,27 +132,28 @@ const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Gestão */}
+        {/* Relatórios Section */}
         <SidebarGroup>
-          <SidebarGroupLabel className={cn("text-xs font-semibold text-muted-foreground uppercase tracking-wider", isCollapsed && "sr-only")}>
-            Gestão & Operação
+          <SidebarGroupLabel className={cn("text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] px-4 mb-2", isCollapsed && "sr-only")}>
+            Relatórios
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.gestao.map((item) => (
+            <SidebarMenu className="px-2">
+              {menuItems.relatorios.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton
                     onClick={() => navigate(item.path)}
                     isActive={isActive(item.path)}
                     tooltip={item.title}
                     className={cn(
-                      "transition-all duration-200",
-                      isActive(item.path) &&
-                      "bg-primary/10 text-primary border-l-2 border-primary"
+                      "transition-all duration-200 h-10 rounded-lg mb-1",
+                      isActive(item.path)
+                        ? "bg-primary/15 text-primary shadow-sm ring-1 ring-primary/20"
+                        : "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground"
                     )}
                   >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
+                    <item.icon className={cn("h-4 w-4", isActive(item.path) ? "text-primary" : "text-muted-foreground")} />
+                    <span className="font-medium">{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -149,30 +161,89 @@ const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Ferramentas */}
+        {/* Operação */}
         <SidebarGroup>
-          <SidebarGroupLabel className={cn("text-xs font-semibold text-muted-foreground uppercase tracking-wider", isCollapsed && "sr-only")}>
-            Ferramentas & Úteis
+          <SidebarGroupLabel className={cn("text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] px-4 mb-2", isCollapsed && "sr-only")}>
+            Operação
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="px-2">
+              {menuItems.operacao.map((item) => (
+                <SidebarMenuItem key={item.path}>
+                  <SidebarMenuButton
+                    onClick={() => navigate(item.path)}
+                    isActive={isActive(item.path)}
+                    tooltip={item.title}
+                    className={cn(
+                      "transition-all duration-200 h-10 rounded-lg mb-1",
+                      isActive(item.path)
+                        ? "bg-primary/15 text-primary shadow-sm ring-1 ring-primary/20"
+                        : "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground"
+                    )}
+                  >
+                    <item.icon className={cn("h-4 w-4", isActive(item.path) ? "text-primary" : "text-muted-foreground")} />
+                    <span className="font-medium">{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Equipe */}
+        <SidebarGroup>
+          <SidebarGroupLabel className={cn("text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] px-4 mb-2", isCollapsed && "sr-only")}>
+            Equipe
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu className="px-2">
+              {menuItems.equipe.map((item) => (
+                <SidebarMenuItem key={item.path}>
+                  <SidebarMenuButton
+                    onClick={() => navigate(item.path)}
+                    isActive={isActive(item.path)}
+                    tooltip={item.title}
+                    className={cn(
+                      "transition-all duration-200 h-10 rounded-lg mb-1",
+                      isActive(item.path)
+                        ? "bg-primary/15 text-primary shadow-sm ring-1 ring-primary/20"
+                        : "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground"
+                    )}
+                  >
+                    <item.icon className={cn("h-4 w-4", isActive(item.path) ? "text-primary" : "text-muted-foreground")} />
+                    <span className="font-medium">{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Utilitários */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu className="px-2">
+              <SidebarMenuItem>
+                <div className="px-2 py-4">
+                  <div className="h-px bg-white/[0.05] w-full" />
+                </div>
+              </SidebarMenuItem>
               {menuItems.ferramentas.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton
                     onClick={() => navigate(item.path)}
-                    isActive={false} // Will navigate out of dashboard
+                    isActive={false}
                     tooltip={item.title}
-                    className="transition-all duration-200 hover:bg-primary/10 hover:text-primary"
+                    className="transition-all duration-200 h-9 rounded-lg mb-1 text-muted-foreground/70 hover:bg-white/[0.03] hover:text-foreground"
                   >
-                    <item.icon className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                    <span>{item.title}</span>
+                    <item.icon className="h-4 w-4 opacity-50" />
+                    <span className="text-xs">{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
       </SidebarContent>
 
       {/* Footer - Configuracoes */}

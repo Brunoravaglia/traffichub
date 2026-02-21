@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Plus, Users, BarChart3, Briefcase, TrendingUp, CheckCircle2, AlertCircle } from "lucide-react";
+import { Plus, Users, BarChart3, Briefcase, TrendingUp, CheckCircle2, AlertCircle, FileText, DollarSign, Gauge } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { format, startOfMonth, endOfMonth } from "date-fns";
@@ -87,14 +87,25 @@ const Dashboard = () => {
         { name: "Pendentes", value: 100 - avgProgress, color: "hsl(var(--muted))" },
       ];
 
+      const relatorios = relatoriosRes.data || [];
+      const totalRelatoriosSet = relatorios.length;
+
+      const totalInvestido = relatorios.reduce((acc, r: any) => {
+        const dataValues = r.data_values || {};
+        const gInvest = Number(dataValues.google?.investido || 0);
+        const mInvest = Number(dataValues.meta?.investido || 0);
+        return acc + gInvest + mInvest;
+      }, 0);
+
       return {
         clientes: clientesRes.data || [],
         gestores: gestoresRes.data || [],
-        totalChecklists: checklists.length > 0 ? checklists.length : 12, // simulated if 0
+        totalChecklists: checklists.length > 0 ? checklists.length : 12,
         pendentes,
         avgProgress,
         hasRecentActivity,
-        totalRelatorios: relatoriosRes.data?.length > 0 ? relatoriosRes.data.length : 8, // simulated if 0
+        totalRelatorios: totalRelatoriosSet,
+        totalInvestido,
         chartData,
         pieData,
         progressColor,
@@ -155,62 +166,77 @@ const Dashboard = () => {
         </motion.div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
           <motion.div
             variants={itemVariants}
             onClick={() => navigate("/clientes")}
-            className="vcd-card group hover:border-primary/30 transition-all duration-300 cursor-pointer"
+            className="vcd-card group hover:border-primary/30 transition-all duration-300 cursor-pointer p-4 bg-gradient-to-br from-white/[0.03] to-transparent"
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Users className="w-6 h-6 text-primary" />
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Users className="w-5 h-5 text-primary" />
               </div>
-              <TrendingUp className="w-4 h-4 text-green-500" />
+              <TrendingUp className="w-4 h-4 text-green-500 opacity-50" />
             </div>
-            <p className="text-3xl font-bold text-foreground">{stats?.clientes.length || 0}</p>
-            <p className="text-sm text-muted-foreground">Clientes Ativos</p>
+            <p className="text-2xl font-bold text-foreground">{stats?.clientes.length || 0}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Clientes Ativos</p>
           </motion.div>
 
           <motion.div
             variants={itemVariants}
-            onClick={() => navigate("/gestores")}
-            className="vcd-card group hover:border-primary/30 transition-all duration-300 cursor-pointer"
+            onClick={() => navigate("/modelos")}
+            className="vcd-card group hover:border-blue-500/30 transition-all duration-300 cursor-pointer p-4 bg-gradient-to-br from-blue-500/5 to-transparent"
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Briefcase className="w-6 h-6 text-primary" />
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <FileText className="w-5 h-5 text-blue-400" />
               </div>
             </div>
-            <p className="text-3xl font-bold text-foreground">{stats?.gestores.length || 0}</p>
-            <p className="text-sm text-muted-foreground">Gestores</p>
+            <p className="text-2xl font-bold text-foreground">{stats?.totalRelatorios || 0}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Relatórios (Mês)</p>
+          </motion.div>
+
+          <motion.div
+            variants={itemVariants}
+            className="vcd-card group hover:border-emerald-500/30 transition-all duration-300 p-4 bg-gradient-to-br from-emerald-500/5 to-transparent"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <DollarSign className="w-5 h-5 text-emerald-400" />
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-foreground">
+              {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(stats?.totalInvestido || 0)}
+            </p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Investido (Mês)</p>
           </motion.div>
 
           <motion.div
             variants={itemVariants}
             onClick={() => navigate("/controle")}
-            className="vcd-card group hover:border-primary/30 transition-all duration-300 cursor-pointer"
+            className="vcd-card group hover:border-orange-500/30 transition-all duration-300 cursor-pointer p-4 bg-gradient-to-br from-orange-500/5 to-transparent"
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <CheckCircle2 className="w-6 h-6 text-green-500" />
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Gauge className="w-5 h-5 text-orange-400" />
               </div>
             </div>
-            <p className="text-3xl font-bold text-foreground">{stats?.avgProgress || 0}%</p>
-            <p className="text-sm text-muted-foreground">Média Conclusão</p>
+            <p className="text-2xl font-bold text-foreground">{stats?.avgProgress || 0}%</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Saúde de Setup</p>
           </motion.div>
 
           <motion.div
             variants={itemVariants}
             onClick={() => navigate("/controle")}
-            className="vcd-card group hover:border-primary/30 transition-all duration-300 cursor-pointer"
+            className="vcd-card group hover:border-red-500/30 transition-all duration-300 cursor-pointer p-4 bg-gradient-to-br from-red-500/5 to-transparent"
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <AlertCircle className="w-6 h-6 text-orange-500" />
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <AlertCircle className="w-5 h-5 text-red-400" />
               </div>
             </div>
-            <p className="text-3xl font-bold text-foreground">{stats?.pendentes || 0}</p>
-            <p className="text-sm text-muted-foreground">Pendências</p>
+            <p className="text-2xl font-bold text-foreground">{stats?.pendentes || 0}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Pendências</p>
           </motion.div>
         </div>
 

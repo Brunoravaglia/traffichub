@@ -158,7 +158,7 @@ const GestorLogin = () => {
                   </div>
                 </motion.div>
               ) : (
-                <VCDLogo size="lg" />
+                <VCDLogo size="lg" showText={true} />
               )}
             </div>
 

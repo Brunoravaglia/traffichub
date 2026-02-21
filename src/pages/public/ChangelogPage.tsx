@@ -15,6 +15,33 @@ interface ReleaseItem {
 
 const releases: ReleaseItem[] = [
     {
+        id: "v1.3.0",
+        version: "v1.3.0",
+        date: "Fevereiro 21, 2026",
+        title: "Advanced Reporting & Internal Tools",
+        description: "Nova estrutura de relatórios profissionais A4 e acesso interno às ferramentas estratégicas.",
+        type: "feature",
+        items: [
+            "Refatoração do motor de PDF: Agora com suporte multi-página A4 nativo.",
+            "Central de Ferramentas Interna: Subscribers acessam calculadoras sem sair do dashboard.",
+            "Branding Vurp: Logo revitalizado e em evidência em toda a plataforma.",
+            "Novas Métricas de Assinante: Adição de cálculos premium para LTV/CAC e Retenção."
+        ]
+    },
+    {
+        id: "v1.2.5",
+        version: "v1.2.5",
+        date: "Fevereiro 20, 2026",
+        title: "Correções de Ergonomia e Navegação",
+        description: "Ajustes finos para melhorar o fluxo de trabalho diário do gestor.",
+        type: "improvement",
+        items: [
+            "Reorganização do menu lateral (Sidebar) por grupos lógicos: Performance, Relatórios, Equipe.",
+            "Correção de transbordamento (overflow) na página de Controle de Clientes.",
+            "Melhoria na legibilidade de cards de calculadora na área de Utilidades."
+        ]
+    },
+    {
         id: "v1.2.1",
         version: "v1.2.1",
         date: "Fevereiro 20, 2026",
@@ -24,21 +51,7 @@ const releases: ReleaseItem[] = [
         items: [
             "Redesign completo da tela de Login de Gestor com visual glassmorphism e tema dark neutro.",
             "Correção de layout na página de Controle para isolar a rolagem (scroll) apenas na tabela.",
-            "Novo botão ultra animado na seleção de templates para 'Começar Agora - É Grátis'.",
             "Dashboard Controle: Gráficos aprimorados e simulação de dados visuais atraentes."
-        ]
-    },
-    {
-        id: "v1.2.0",
-        version: "v1.2.0",
-        date: "Fevereiro 20, 2026",
-        title: "Validação Automática e Novos Modelos",
-        description: "Nesta atualização focamos em segurança e precisão para os relatórios emitidos.",
-        type: "feature",
-        items: [
-            "ID de Validação: Agora todo relatório tem um UUID próprio e um link verificável via QR/URL.",
-            "Cálculo Dinâmico de Saldo: O dashboard de clientes agora gasta perfeitamente o saldo com base nos dias corridos.",
-            "Gestão de Modelos: Gestores agora podem criar, duplicar e excluir completamente os modelos de relatório."
         ]
     },
     {

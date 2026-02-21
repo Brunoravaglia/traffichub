@@ -31,7 +31,7 @@ const Controle = () => {
   });
 
   return (
-    <div className="h-[calc(100vh-3.5rem)] bg-background pt-6 px-6 overflow-hidden flex flex-col">
+    <div className="min-h-screen bg-background pt-6 px-6 overflow-y-auto flex flex-col pb-20">
       <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col min-h-0">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

@@ -37,8 +37,7 @@ const VCDLogo = ({ size = "md", className = "", showText = false }: VCDLogoProps
 
       {showText && (
         <div className="flex flex-col">
-          <span className="font-bold text-foreground text-sm leading-tight">Vurp</span>
-          <span className="text-xs text-muted-foreground leading-tight">Performance</span>
+          <span className="font-bold text-foreground text-lg tracking-tight leading-none">Vurp</span>
         </div>
       )}
     </motion.div>
