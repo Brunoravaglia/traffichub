@@ -400,12 +400,12 @@ const Modelos = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-10 animate-fade-in pb-20">
       {/* Hero Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 p-6"
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 p-8 md:p-10 shadow-lg shadow-primary/5"
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -508,11 +508,11 @@ const Modelos = () => {
 
       {/* Templates Grid */}
       {isLoading ? (
-        <div className="flex justify-center py-16">
-          <div className="w-10 h-10 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
+        <div className="flex justify-center py-20">
+          <div className="w-12 h-12 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
         </div>
       ) : filteredTemplates && filteredTemplates.length > 0 ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
           <AnimatePresence mode="popLayout">
             {filteredTemplates.map((template, index) => {
               const stats = getTemplateStats(template);
@@ -755,13 +755,21 @@ const Modelos = () => {
                   .map((metric) => (
                     <div
                       key={metric.key}
+                      role="button"
+                      tabIndex={0}
                       className={cn(
-                        "flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-colors",
+                        "flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50",
                         metric.visible
                           ? "bg-blue-500/10 border-blue-500/30"
                           : "bg-secondary/30 border-border"
                       )}
                       onClick={() => toggleMetric(metric.key)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          toggleMetric(metric.key);
+                        }
+                      }}
                     >
                       <span className="text-sm truncate mr-2">{metric.label}</span>
                       <Switch checked={metric.visible} />
@@ -780,13 +788,21 @@ const Modelos = () => {
                   .map((metric) => (
                     <div
                       key={metric.key}
+                      role="button"
+                      tabIndex={0}
                       className={cn(
-                        "flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-colors",
+                        "flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50",
                         metric.visible
                           ? "bg-purple-500/10 border-purple-500/30"
                           : "bg-secondary/30 border-border"
                       )}
                       onClick={() => toggleMetric(metric.key)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          toggleMetric(metric.key);
+                        }
+                      }}
                     >
                       <span className="text-sm truncate mr-2">{metric.label}</span>
                       <Switch checked={metric.visible} />

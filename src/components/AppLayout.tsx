@@ -56,7 +56,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
     setIsLocked(false);
     setIsPaused(true);
     toast.warning("Sessão pausada por inatividade. Faça login novamente para continuar.");
-    
+
     // Update session to mark pause time
     if (sessionId) {
       await supabase
@@ -64,7 +64,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         .update({ logout_at: new Date().toISOString() })
         .eq("id", sessionId);
     }
-    
+
     await logout();
     navigate("/");
   }, [logout, navigate, sessionId]);
@@ -131,13 +131,13 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:px-6">
             <SidebarTrigger className="h-8 w-8" />
             <div className="flex-1" />
-            
+
             {/* Session Timer */}
             <SessionTimer />
-            
+
             {/* Notification Center */}
             <NotificationCenter />
-            
+
             {/* User Info */}
             {gestor && (
               <div className="flex items-center gap-3">
@@ -159,17 +159,19 @@ const AppLayout = ({ children }: AppLayoutProps) => {
               </div>
             )}
           </header>
-          
+
           {/* Main Content */}
-          <main className="flex-1">
-            {children}
+          <main className="flex-1 p-6 md:p-8 lg:p-10 overflow-x-hidden">
+            <div className="max-w-[1600px] mx-auto w-full">
+              {children}
+            </div>
           </main>
         </SidebarInset>
       </div>
-      
+
       {/* Onboarding Checklist */}
       <OnboardingChecklist />
-      
+
       {/* Welcome Modal */}
       {gestor && (
         <WelcomeModal

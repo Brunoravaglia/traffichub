@@ -102,14 +102,14 @@ const AppSidebar = () => {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="py-2 gap-0 overflow-y-auto">
+      <SidebarContent className="py-6 gap-4 overflow-y-auto">
         {/* Análise */}
         <SidebarGroup>
-          <SidebarGroupLabel className={cn("text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] px-4 mb-2", isCollapsed && "sr-only")}>
+          <SidebarGroupLabel className={cn("text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] px-4 mb-3", isCollapsed && "sr-only")}>
             Performance
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="px-2">
+            <SidebarMenu className="px-3 gap-3">
               {menuItems.analise.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton
@@ -117,7 +117,7 @@ const AppSidebar = () => {
                     isActive={isActive(item.path)}
                     tooltip={item.title}
                     className={cn(
-                      "transition-all duration-200 h-10 rounded-lg mb-1",
+                      "transition-all duration-200 h-11 rounded-xl mb-1",
                       isActive(item.path)
                         ? "bg-primary/15 text-primary shadow-sm ring-1 ring-primary/20"
                         : "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground"
@@ -196,7 +196,7 @@ const AppSidebar = () => {
             Equipe
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="px-2">
+            <SidebarMenu className="px-3 gap-4">
               {menuItems.equipe.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton
@@ -222,7 +222,7 @@ const AppSidebar = () => {
         {/* Utilitários */}
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="px-2">
+            <SidebarMenu className="px-3 gap-4">
               <SidebarMenuItem>
                 <div className="px-2 py-4">
                   <div className="h-px bg-white/[0.05] w-full" />
@@ -248,7 +248,7 @@ const AppSidebar = () => {
 
       {/* Footer - Configuracoes */}
       <SidebarFooter className="border-t border-border/50 p-2">
-        <SidebarMenu>
+        <SidebarMenu className="gap-2">
           {gestor?.is_admin && (
             <SidebarMenuItem>
               <SidebarMenuButton

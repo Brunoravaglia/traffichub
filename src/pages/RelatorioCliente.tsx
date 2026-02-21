@@ -60,6 +60,11 @@ import {
 import { CreativeGrid } from "@/components/report/CreativeGrid";
 import { AdPanelGrid, type AdPanelImage } from "@/components/report/AdPanelGrid";
 import { CustomSectionGrid, type CustomSection } from "@/components/report/CustomSectionGrid";
+import { ReportHeader } from "@/components/report/ReportHeader";
+import { GoogleAdsMetricsView } from "@/components/report/GoogleAdsMetricsView";
+import { MetaAdsMetricsView } from "@/components/report/MetaAdsMetricsView";
+import { ReportFooter } from "@/components/report/ReportFooter";
+import { formatCurrency, formatNumber } from "@/lib/utils";
 
 interface Creative {
   id: string;
@@ -456,7 +461,7 @@ const RelatorioCliente = () => {
         validationId: data.validationId,
         validationPassword: data.validationPassword,
         validationTime: data.validationTime,
-        autoFillSaldos: false // Don't overwrite saved data with auto-fill
+        autoFillSaldos: false
       });
 
       if (existingReport.periodo_inicio) {
@@ -1130,248 +1135,254 @@ const RelatorioCliente = () => {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-[1400px] mx-auto p-6 md:p-8 lg:p-10">
         {!isPreview ? (
           // Editor Mode
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="grid md:grid-cols-2 gap-6 items-start"
+            className="grid lg:grid-cols-12 gap-8 items-start"
           >
-            {/* Period Selection */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <CalendarIcon className="w-5 h-5 text-primary" />
-                  Período do Relatório
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Data Início</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full h-12 justify-start text-left font-normal bg-secondary border-border hover:bg-secondary/80"
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                          {format(periodoInicio, "dd/MM/yyyy")}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-card border-border shadow-xl" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={periodoInicio}
-                          onSelect={(date) => date && setPeriodoInicio(date)}
-                          initialFocus
-                          locale={ptBR}
-                          className="p-3 pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
+            {/* Left Column: Period & Objectives */}
+            <div className="lg:col-span-7 space-y-8">
+              {/* Period Selection */}
+              <Card className="border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <CalendarIcon className="w-5 h-5 text-primary" />
+                    Período do Relatório
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Data Início</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full h-12 justify-start text-left font-normal bg-secondary border-border hover:bg-secondary/80"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                            {format(periodoInicio, "dd/MM/yyyy")}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-card border-border shadow-xl" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={periodoInicio}
+                            onSelect={(date) => date && setPeriodoInicio(date)}
+                            initialFocus
+                            locale={ptBR}
+                            className="p-3 pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Data Fim</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full h-12 justify-start text-left font-normal bg-secondary border-border hover:bg-secondary/80"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                            {format(periodoFim, "dd/MM/yyyy")}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-card border-border shadow-xl" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={periodoFim}
+                            onSelect={(date) => date && setPeriodoFim(date)}
+                            initialFocus
+                            locale={ptBR}
+                            className="p-3 pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Data Fim</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
+                </CardContent>
+              </Card>
+
+              {/* Objectives */}
+              <Card className="border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Target className="w-5 h-5 text-primary" />
+                    Objetivos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {reportData.objetivos.map((obj, index) => (
+                    <div key={`objective-item-${index}-${obj.substring(0, 5)}`} className="flex gap-2">
+                      <Input
+                        value={obj}
+                        onChange={(e) => {
+                          const newObjetivos = [...reportData.objetivos];
+                          newObjetivos[index] = e.target.value;
+                          setReportData({ ...reportData, objetivos: newObjetivos });
+                        }}
+                        placeholder={`Objetivo ${index + 1}`}
+                        className="bg-secondary/50"
+                      />
+                      {reportData.objetivos.length > 1 && (
                         <Button
-                          variant="outline"
-                          className="w-full h-12 justify-start text-left font-normal bg-secondary border-border hover:bg-secondary/80"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() =>
+                            setReportData({
+                              ...reportData,
+                              objetivos: reportData.objetivos.filter((_, i) => i !== index),
+                            })
+                          }
                         >
-                          <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                          {format(periodoFim, "dd/MM/yyyy")}
+                          <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-card border-border shadow-xl" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={periodoFim}
-                          onSelect={(date) => date && setPeriodoFim(date)}
-                          initialFocus
-                          locale={ptBR}
-                          className="p-3 pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                      )}
+                    </div>
+                  ))}
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      setReportData({ ...reportData, objetivos: [...reportData.objetivos, ""] })
+                    }
+                    className="w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar Objetivo
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
 
-            {/* Section Visibility Config */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Eye className="w-5 h-5 text-primary" />
-                  Seções do Relatório
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Mostrar Objetivos</Label>
-                  <Switch
-                    checked={reportData.sectionsConfig.showObjetivos}
-                    onCheckedChange={(checked) =>
-                      setReportData({
-                        ...reportData,
-                        sectionsConfig: { ...reportData.sectionsConfig, showObjetivos: checked },
-                      })
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Mostrar Tráfego Google</Label>
-                  <Switch
-                    checked={reportData.sectionsConfig.showGoogleAds}
-                    onCheckedChange={(checked) =>
-                      setReportData({
-                        ...reportData,
-                        sectionsConfig: { ...reportData.sectionsConfig, showGoogleAds: checked },
-                      })
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Mostrar Tráfego Meta</Label>
-                  <Switch
-                    checked={reportData.sectionsConfig.showMetaAds}
-                    onCheckedChange={(checked) =>
-                      setReportData({
-                        ...reportData,
-                        sectionsConfig: { ...reportData.sectionsConfig, showMetaAds: checked },
-                      })
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Mostrar Criativos Google</Label>
-                  <Switch
-                    checked={reportData.sectionsConfig.showCriativosGoogle}
-                    onCheckedChange={(checked) =>
-                      setReportData({
-                        ...reportData,
-                        sectionsConfig: { ...reportData.sectionsConfig, showCriativosGoogle: checked },
-                      })
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Mostrar Criativos Meta</Label>
-                  <Switch
-                    checked={reportData.sectionsConfig.showCriativosMeta}
-                    onCheckedChange={(checked) =>
-                      setReportData({
-                        ...reportData,
-                        sectionsConfig: { ...reportData.sectionsConfig, showCriativosMeta: checked },
-                      })
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Mostrar Resumo</Label>
-                  <Switch
-                    checked={reportData.sectionsConfig.showResumo}
-                    onCheckedChange={(checked) =>
-                      setReportData({
-                        ...reportData,
-                        sectionsConfig: { ...reportData.sectionsConfig, showResumo: checked },
-                      })
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Mostrar Saldo Restante</Label>
-                  <Switch
-                    checked={reportData.sectionsConfig.showSaldoRestante}
-                    onCheckedChange={(checked) =>
-                      setReportData({
-                        ...reportData,
-                        sectionsConfig: { ...reportData.sectionsConfig, showSaldoRestante: checked },
-                      })
-                    }
-                  />
-                </div>
-                <Separator className="my-2" />
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Mostrar Painéis de Anúncio</Label>
-                  <Switch
-                    checked={reportData.sectionsConfig.showPaineisAnuncio}
-                    onCheckedChange={(checked) =>
-                      setReportData({
-                        ...reportData,
-                        sectionsConfig: { ...reportData.sectionsConfig, showPaineisAnuncio: checked },
-                      })
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Mostrar Seções Personalizadas</Label>
-                  <Switch
-                    checked={reportData.sectionsConfig.showCustomSections}
-                    onCheckedChange={(checked) =>
-                      setReportData({
-                        ...reportData,
-                        sectionsConfig: { ...reportData.sectionsConfig, showCustomSections: checked },
-                      })
-                    }
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Objectives */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Target className="w-5 h-5 text-primary" />
-                  Objetivos
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {reportData.objetivos.map((obj, index) => (
-                  <div key={`objetivo-${index}`} className="flex gap-2">
-                    <Input
-                      value={obj}
-                      onChange={(e) => {
-                        const newObjetivos = [...reportData.objetivos];
-                        newObjetivos[index] = e.target.value;
-                        setReportData({ ...reportData, objetivos: newObjetivos });
-                      }}
-                      placeholder={`Objetivo ${index + 1}`}
+            {/* Right Column: Sections Visibility */}
+            <div className="lg:col-span-5">
+              <Card className="border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Eye className="w-5 h-5 text-primary" />
+                    Seções do Relatório
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Mostrar Objetivos</Label>
+                    <Switch
+                      checked={reportData.sectionsConfig.showObjetivos}
+                      onCheckedChange={(checked) =>
+                        setReportData({
+                          ...reportData,
+                          sectionsConfig: { ...reportData.sectionsConfig, showObjetivos: checked },
+                        })
+                      }
                     />
-                    {reportData.objetivos.length > 1 && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() =>
-                          setReportData({
-                            ...reportData,
-                            objetivos: reportData.objetivos.filter((_, i) => i !== index),
-                          })
-                        }
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
-                    )}
                   </div>
-                ))}
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    setReportData({ ...reportData, objetivos: [...reportData.objetivos, ""] })
-                  }
-                  className="w-full"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Objetivo
-                </Button>
-              </CardContent>
-            </Card>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Mostrar Tráfego Google</Label>
+                    <Switch
+                      checked={reportData.sectionsConfig.showGoogleAds}
+                      onCheckedChange={(checked) =>
+                        setReportData({
+                          ...reportData,
+                          sectionsConfig: { ...reportData.sectionsConfig, showGoogleAds: checked },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Mostrar Tráfego Meta</Label>
+                    <Switch
+                      checked={reportData.sectionsConfig.showMetaAds}
+                      onCheckedChange={(checked) =>
+                        setReportData({
+                          ...reportData,
+                          sectionsConfig: { ...reportData.sectionsConfig, showMetaAds: checked },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Mostrar Criativos Google</Label>
+                    <Switch
+                      checked={reportData.sectionsConfig.showCriativosGoogle}
+                      onCheckedChange={(checked) =>
+                        setReportData({
+                          ...reportData,
+                          sectionsConfig: { ...reportData.sectionsConfig, showCriativosGoogle: checked },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Mostrar Criativos Meta</Label>
+                    <Switch
+                      checked={reportData.sectionsConfig.showCriativosMeta}
+                      onCheckedChange={(checked) =>
+                        setReportData({
+                          ...reportData,
+                          sectionsConfig: { ...reportData.sectionsConfig, showCriativosMeta: checked },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Mostrar Resumo</Label>
+                    <Switch
+                      checked={reportData.sectionsConfig.showResumo}
+                      onCheckedChange={(checked) =>
+                        setReportData({
+                          ...reportData,
+                          sectionsConfig: { ...reportData.sectionsConfig, showResumo: checked },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Mostrar Saldo Restante</Label>
+                    <Switch
+                      checked={reportData.sectionsConfig.showSaldoRestante}
+                      onCheckedChange={(checked) =>
+                        setReportData({
+                          ...reportData,
+                          sectionsConfig: { ...reportData.sectionsConfig, showSaldoRestante: checked },
+                        })
+                      }
+                    />
+                  </div>
+                  <Separator className="my-2" />
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Mostrar Painéis de Anúncio</Label>
+                    <Switch
+                      checked={reportData.sectionsConfig.showPaineisAnuncio}
+                      onCheckedChange={(checked) =>
+                        setReportData({
+                          ...reportData,
+                          sectionsConfig: { ...reportData.sectionsConfig, showPaineisAnuncio: checked },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Mostrar Seções Personalizadas</Label>
+                    <Switch
+                      checked={reportData.sectionsConfig.showCustomSections}
+                      onCheckedChange={(checked) =>
+                        setReportData({
+                          ...reportData,
+                          sectionsConfig: { ...reportData.sectionsConfig, showCustomSections: checked },
+                        })
+                      }
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
             {/* Google Ads Metrics */}
-            <Card className="md:col-span-2">
+            <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <div className="w-6 h-6 bg-blue-500/20 rounded flex items-center justify-center">
@@ -1908,7 +1919,7 @@ const RelatorioCliente = () => {
             </Card>
 
             {/* Meta Ads Metrics */}
-            <Card className="md:col-span-2">
+            <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <div className="w-6 h-6 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded flex items-center justify-center">
@@ -2642,7 +2653,7 @@ const RelatorioCliente = () => {
             </Card>
 
             {/* Saldos / Recarga */}
-            <Card className="md:col-span-2">
+            <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <DollarSign className="w-5 h-5 text-primary" />
@@ -2791,7 +2802,7 @@ const RelatorioCliente = () => {
             </Card>
 
             {/* Ranking Criativos */}
-            <Card className="md:col-span-2">
+            <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -2941,7 +2952,7 @@ const RelatorioCliente = () => {
 
             {/* Custom Sections */}
             {reportData.sectionsConfig.showCustomSections && (
-              <Card className="md:col-span-2">
+              <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-primary" />
@@ -2959,7 +2970,7 @@ const RelatorioCliente = () => {
             )}
 
             {/* Summary */}
-            <Card className="md:col-span-2">
+            <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-lg">Resumo Geral dos Resultados</CardTitle>
               </CardHeader>
@@ -2975,22 +2986,18 @@ const RelatorioCliente = () => {
           </motion.div>
         ) : (
           // Preview Mode - PDF Template
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex justify-center"
-          >
+          <div className="flex justify-center p-4">
             <div
               ref={pdfRef}
               className={cn(
-                "w-full text-white overflow-hidden",
-                reportData.isGeneratingPDF ? "rounded-none shadow-none" : "max-w-[800px] rounded-lg shadow-2xl"
+                "w-full text-zinc-100 bg-[#1e293b] shadow-2xl transition-all duration-300",
+                reportData.isGeneratingPDF ? "rounded-none shadow-none" : "max-w-[850px] rounded-2xl"
               )}
               style={{
                 fontFamily: "Inter, sans-serif",
-                backgroundColor: "#0b1120",
                 width: reportData.isGeneratingPDF ? '800px' : '100%',
-                minHeight: reportData.isGeneratingPDF ? 'auto' : '1000px'
+                minHeight: reportData.isGeneratingPDF ? 'auto' : '1120px',
+                color: '#f8fafc'
               }}
             >
               {/* Header with Client Logo + Name */}
@@ -3290,7 +3297,7 @@ const RelatorioCliente = () => {
                 <ReportFooter reportData={reportData} />
               </div>
             </div>
-          </motion.div >
+          </div>
         )}
       </div >
     </div >

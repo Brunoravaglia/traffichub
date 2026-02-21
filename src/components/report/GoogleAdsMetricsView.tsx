@@ -1,5 +1,5 @@
 import { formatCurrency, formatNumber } from "@/lib/utils";
-import { GoogleLogo } from "@/components/icons/GoogleLogo";
+import { GoogleLogo } from "@/components/BrandLogos";
 
 interface GoogleAdsMetricsViewProps {
     google: any;
@@ -32,12 +32,12 @@ export const GoogleAdsMetricsView = ({ google, metricsConfig }: GoogleAdsMetrics
     if (metricsConfig.showGoogleCustoPorVenda) additionalMetrics.push({ label: "Custo/Venda", value: formatCurrency(google.custoPorVenda), color: "text-red-400" });
 
     return (
-        <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-blue-600/10 via-blue-900/5 to-transparent border border-blue-500/20 shadow-lg">
-            <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                    <GoogleLogo className="w-5 h-5" />
+        <div className="mb-8 p-8 rounded-3xl bg-[#1e293b]/50 border border-blue-500/20 shadow-xl backdrop-blur-sm">
+            <div className="flex items-center gap-3 mb-8">
+                <div className="p-3 bg-blue-500/15 rounded-xl border border-blue-500/30">
+                    <GoogleLogo className="w-6 h-6" />
                 </div>
-                <h3 className="text-md font-bold text-blue-400 tracking-[0.2em] uppercase" style={{ color: '#60a5fa' }}>TRÁFEGO GOOGLE</h3>
+                <h3 className="text-lg font-bold text-blue-400 tracking-[0.2em] uppercase">TRÁFEGO GOOGLE</h3>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">

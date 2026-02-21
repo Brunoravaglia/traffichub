@@ -1,5 +1,5 @@
 import { formatCurrency, formatNumber } from "@/lib/utils";
-import { MetaLogo } from "@/components/icons/MetaLogo";
+import { MetaLogo } from "@/components/BrandLogos";
 
 interface MetaAdsMetricsViewProps {
     meta: any;
@@ -39,12 +39,12 @@ export const MetaAdsMetricsView = ({ meta, metricsConfig }: MetaAdsMetricsViewPr
     if (metricsConfig.showMetaCustoPorVenda) additionalMetrics.push({ label: "Custo/Venda", value: formatCurrency(meta.custoPorVenda), color: "text-red-400" });
 
     return (
-        <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-purple-600/10 via-purple-900/5 to-transparent border border-purple-500/20 shadow-lg">
-            <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
-                    <MetaLogo className="w-5 h-5 text-purple-400" />
+        <div className="mb-8 p-8 rounded-3xl bg-[#1e293b]/50 border border-purple-500/20 shadow-xl backdrop-blur-sm">
+            <div className="flex items-center gap-3 mb-8">
+                <div className="p-3 bg-purple-500/15 rounded-xl border border-purple-500/30">
+                    <MetaLogo className="w-6 h-6 text-purple-400" />
                 </div>
-                <h3 className="text-md font-bold text-purple-400 tracking-[0.2em] uppercase" style={{ color: '#c084fc' }}>TRÁFEGO META ADS</h3>
+                <h3 className="text-lg font-bold text-purple-400 tracking-[0.2em] uppercase">TRÁFEGO META ADS</h3>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
