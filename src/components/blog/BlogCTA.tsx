@@ -49,6 +49,12 @@ const BlogCTA = ({
     imageSrc,
 }: BlogCTAProps) => {
     const tilt = use3DTilt();
+    const fallbackCover = "/blog/cover-1.png";
+    const handleCoverError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+        const img = e.currentTarget;
+        if (img.src.includes(fallbackCover)) return;
+        img.src = fallbackCover;
+    };
 
     // ═══════ VARIANT: IMAGE (with side image + 3D hover) ═══════
     if (variant === "image") {
@@ -73,6 +79,7 @@ const BlogCTA = ({
                                 src={imageSrc || "/blog/cover-1.png"}
                                 alt={title}
                                 className="w-full h-full object-cover min-h-[200px]"
+                                onError={handleCoverError}
                             />
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent to-card/60 sm:block hidden" />
                         </div>

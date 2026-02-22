@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/collapsible";
 import VCDLogo from "./VCDLogo";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 const AppSidebar = () => {
   const location = useLocation();
@@ -46,6 +47,22 @@ const AppSidebar = () => {
   const { state } = useSidebar();
   const { agencia, gestor } = useGestor();
   const isCollapsed = state === "collapsed";
+  const [agencyLogoSrc, setAgencyLogoSrc] = useState<string | null>(null);
+  const [agencyLogoBroken, setAgencyLogoBroken] = useState(false);
+
+  const normalizeLogoUrl = (url?: string | null) => {
+    if (!url) return null;
+    if (url.startsWith("/")) {
+      const base = import.meta.env.VITE_SUPABASE_URL || "";
+      return base ? `${base}${url}` : url;
+    }
+    return url.replace(/^http:\/\//i, "https://");
+  };
+
+  useEffect(() => {
+    setAgencyLogoBroken(false);
+    setAgencyLogoSrc(normalizeLogoUrl(agencia?.logo_black_url) || normalizeLogoUrl(agencia?.logo_url));
+  }, [agencia?.logo_black_url, agencia?.logo_url]);
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
@@ -90,11 +107,19 @@ const AppSidebar = () => {
         style={{ borderBottomColor: agencia?.cor_secundaria ? `${agencia.cor_secundaria}44` : undefined }}
       >
         <div className="flex items-center justify-center w-full py-2">
-          {agencia?.logo_url ? (
+          {agencyLogoSrc && !agencyLogoBroken ? (
             <img
-              src={agencia.logo_url}
-              alt={agencia.nome}
+              src={agencyLogoSrc}
+              alt={agencia?.nome || "Agência"}
               className="max-h-12 w-auto object-contain opacity-90 hover:opacity-100 transition-opacity"
+              onError={() => {
+                const fallback = normalizeLogoUrl(agencia?.logo_url);
+                if (fallback && fallback !== agencyLogoSrc) {
+                  setAgencyLogoSrc(fallback);
+                  return;
+                }
+                setAgencyLogoBroken(true);
+              }}
             />
           ) : (
             <VCDLogo size="lg" showText={true} />

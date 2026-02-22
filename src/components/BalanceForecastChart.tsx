@@ -8,6 +8,7 @@ import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { useGestor } from "@/contexts/GestorContext";
 
 interface BalanceForecastChartProps {
   clienteId?: string;
@@ -23,13 +24,25 @@ const formatCurrency = (value: number): string => {
 
 const BalanceForecastChart = ({ clienteId, gestorFilter }: BalanceForecastChartProps) => {
   const navigate = useNavigate();
+  const { gestor } = useGestor();
+  const agencyId = gestor?.agencia_id ?? null;
   
   const { data: trackingData, isLoading } = useQuery({
-    queryKey: ["balance-forecast", clienteId, gestorFilter],
+    queryKey: ["balance-forecast", agencyId, clienteId, gestorFilter],
     queryFn: async () => {
+      if (!agencyId) return [];
+      const { data: scopedClients, error: clientsError } = await supabase
+        .from("clientes")
+        .select("id")
+        .eq("agencia_id", agencyId);
+      if (clientsError) throw clientsError;
+      const clientIds = (scopedClients || []).map((c) => c.id);
+      if (clientIds.length === 0) return [];
+
       let query = supabase
         .from("client_tracking")
-        .select("*, clientes(id, nome, logo_url, investimento_mensal, redes_sociais, gestor_id)");
+        .select("*, clientes(id, nome, logo_url, investimento_mensal, redes_sociais, gestor_id)")
+        .in("cliente_id", clientIds);
 
       if (clienteId) {
         query = query.eq("cliente_id", clienteId);
@@ -38,6 +51,7 @@ const BalanceForecastChart = ({ clienteId, gestorFilter }: BalanceForecastChartP
       const { data } = await query;
       return data || [];
     },
+    enabled: !!agencyId,
   });
 
   const forecastData = useMemo(() => {

@@ -18,19 +18,23 @@ import CalendarNotes from "@/components/CalendarNotes";
 
 const Calendario = () => {
   const { gestor } = useGestor();
+  const agencyId = gestor?.agencia_id ?? null;
   const [selectedGestor, setSelectedGestor] = useState<string>(gestor?.id || "all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
   // Fetch all gestores for filter
   const { data: gestores } = useQuery({
-    queryKey: ["gestores-filter"],
+    queryKey: ["gestores-filter", agencyId],
     queryFn: async () => {
+      if (!agencyId) return [];
       const { data } = await supabase
         .from("gestores")
         .select("id, nome")
+        .eq("agencia_id", agencyId)
         .order("nome");
       return data || [];
     },
+    enabled: !!agencyId,
   });
 
   return (

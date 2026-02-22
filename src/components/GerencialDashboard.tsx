@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import VCDLogo from "./VCDLogo";
 import ProgressBar from "./ProgressBar";
+import { useGestor } from "@/contexts/GestorContext";
 
 interface GestorStats {
   id: string;
@@ -19,41 +20,54 @@ interface GestorStats {
 
 const GerencialDashboard = () => {
   const navigate = useNavigate();
+  const { gestor } = useGestor();
+  const agencyId = gestor?.agencia_id ?? null;
 
   const { data: gestores } = useQuery({
-    queryKey: ["gestores"],
+    queryKey: ["gestores", agencyId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("gestores").select("*");
+      if (!agencyId) return [];
+      const { data, error } = await supabase.from("gestores").select("*").eq("agencia_id", agencyId);
       if (error) throw error;
       return data;
     },
+    enabled: !!agencyId,
   });
 
   const { data: clientes } = useQuery({
-    queryKey: ["clientes-all"],
+    queryKey: ["clientes-all", agencyId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("clientes").select("*, gestores(nome)");
+      if (!agencyId) return [];
+      const { data, error } = await supabase.from("clientes").select("*, gestores(nome)").eq("agencia_id", agencyId);
       if (error) throw error;
       return data;
     },
+    enabled: !!agencyId,
   });
 
   const { data: checklistsMes } = useQuery({
-    queryKey: ["checklists-mes"],
+    queryKey: ["checklists-mes", agencyId],
     queryFn: async () => {
+      if (!agencyId) return [];
       const now = new Date();
       const start = format(startOfMonth(now), "yyyy-MM-dd");
       const end = format(endOfMonth(now), "yyyy-MM-dd");
+      const { data: clientRows, error: clientError } = await supabase.from("clientes").select("id").eq("agencia_id", agencyId);
+      if (clientError) throw clientError;
+      const clientIds = (clientRows || []).map((c) => c.id);
+      if (clientIds.length === 0) return [];
       
       const { data, error } = await supabase
         .from("checklists")
         .select("*")
+        .in("cliente_id", clientIds)
         .gte("data", start)
         .lte("data", end);
       
       if (error) throw error;
       return data;
     },
+    enabled: !!agencyId,
   });
 
   // Calculate KPIs

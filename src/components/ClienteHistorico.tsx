@@ -10,25 +10,30 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import VCDLogo from "./VCDLogo";
 import ProgressBar from "./ProgressBar";
+import { useGestor } from "@/contexts/GestorContext";
 
 const ClienteHistorico = () => {
+  const { gestor } = useGestor();
+  const agencyId = gestor?.agencia_id ?? null;
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [periodoFiltro, setPeriodoFiltro] = useState("30");
 
   const { data: cliente } = useQuery({
-    queryKey: ["cliente", id],
+    queryKey: ["cliente", id, agencyId],
     queryFn: async () => {
+      if (!agencyId) return null;
       const { data, error } = await supabase
         .from("clientes")
         .select("*, gestores(nome)")
         .eq("id", id)
+        .eq("agencia_id", agencyId)
         .maybeSingle();
 
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && !!agencyId,
   });
 
   const { data: checklists } = useQuery({
@@ -47,7 +52,7 @@ const ClienteHistorico = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && !!cliente,
   });
 
   const { data: allChecklists } = useQuery({
@@ -62,7 +67,7 @@ const ClienteHistorico = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && !!cliente,
   });
 
   const calculateProgress = (checklist: any) => {

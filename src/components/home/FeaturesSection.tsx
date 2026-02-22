@@ -93,7 +93,7 @@ const item = {
 
 const FeaturesSection = () => {
     return (
-        <section id="features" className="relative py-24 sm:py-32 overflow-hidden">
+        <section id="features" className="relative overflow-hidden py-16 sm:py-24 lg:py-32">
             {/* Background accent */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/3 rounded-full blur-3xl pointer-events-none" />
 
@@ -104,16 +104,16 @@ const FeaturesSection = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-100px" }}
                     transition={{ duration: 0.6 }}
-                    className="text-center mb-16 sm:mb-20"
+                    className="mb-10 text-center sm:mb-16 lg:mb-20"
                 >
                     <span className="text-primary text-sm font-semibold uppercase tracking-widest">
                         Funcionalidades
                     </span>
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mt-4 text-foreground">
+                    <h2 className="mt-3 text-2xl font-bold text-foreground sm:mt-4 sm:text-4xl md:text-5xl">
                         Tudo que você precisa,{" "}
                         <span className="vcd-gradient-text">num só lugar</span>
                     </h2>
-                    <p className="text-muted-foreground mt-4 max-w-xl mx-auto text-lg">
+                    <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:mt-4 sm:text-lg">
                         Ferramentas poderosas projetadas especificamente para
                         gestores de tráfego pago.
                     </p>
@@ -125,14 +125,14 @@ const FeaturesSection = () => {
                     initial="hidden"
                     whileInView="show"
                     viewport={{ once: true, margin: "-50px" }}
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+                    className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4"
                 >
                     {features.map((feature) => (
                         <motion.div
                             key={feature.title}
                             variants={item}
                             whileHover={{ y: -6, transition: { duration: 0.2 } }}
-                            className="group relative rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6 transition-all duration-300 hover:border-primary/30 hover:shadow-[0_0_30px_rgba(255,181,0,0.08)] cursor-default"
+                            className="group relative cursor-default rounded-xl border border-border/50 bg-card/50 p-4 backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:shadow-[0_0_30px_rgba(255,181,0,0.08)] sm:rounded-2xl sm:p-6"
                         >
                             {/* Gradient background on hover */}
                             <div
@@ -141,14 +141,14 @@ const FeaturesSection = () => {
 
                             <div className="relative z-10">
                                 <div
-                                    className={`w-12 h-12 rounded-xl bg-card border border-border/50 flex items-center justify-center mb-4 ${feature.iconColor} group-hover:scale-110 transition-transform duration-300`}
+                                    className={`mb-3 flex h-10 w-10 items-center justify-center rounded-lg border border-border/50 bg-card ${feature.iconColor} transition-transform duration-300 group-hover:scale-110 sm:mb-4 sm:h-12 sm:w-12 sm:rounded-xl`}
                                 >
-                                    <feature.icon className="w-6 h-6" />
+                                    <feature.icon className="h-5 w-5 sm:h-6 sm:w-6" />
                                 </div>
-                                <h3 className="text-lg font-semibold text-foreground mb-2">
+                                <h3 className="mb-1.5 text-base font-semibold leading-tight text-foreground sm:mb-2 sm:text-lg">
                                     {feature.title}
                                 </h3>
-                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
                                     {feature.description}
                                 </p>
                             </div>

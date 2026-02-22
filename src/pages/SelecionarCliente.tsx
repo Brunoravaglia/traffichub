@@ -20,6 +20,7 @@ const SelecionarCliente = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const { gestor: loggedGestor, isLoggedIn } = useGestor();
+  const agencyId = loggedGestor?.agencia_id ?? null;
   const [selectedGestorId, setSelectedGestorId] = useState<string>("all");
 
   // Set filter to logged gestor by default
@@ -32,25 +33,30 @@ const SelecionarCliente = () => {
 
   // Fetch all gestores for filter
   const { data: allGestores } = useQuery({
-    queryKey: ["gestores-filter"],
+    queryKey: ["gestores-filter", agencyId],
     queryFn: async () => {
+      if (!agencyId) return [];
       const { data, error } = await supabase
         .from("gestores")
         .select("id, nome, foto_url")
+        .eq("agencia_id", agencyId)
         .order("nome");
       if (error) throw error;
       return data;
     },
+    enabled: !!agencyId,
   });
 
   const gestorFilter = selectedGestorId !== "all" ? selectedGestorId : null;
 
   const { data: clientes, isLoading } = useQuery({
-    queryKey: ["clientes-relatorio", gestorFilter],
+    queryKey: ["clientes-relatorio", agencyId, gestorFilter],
     queryFn: async () => {
+      if (!agencyId) return [];
       let query = supabase
         .from("clientes")
         .select("id, nome, logo_url, gestor_id")
+        .eq("agencia_id", agencyId)
         .order("nome");
 
       if (gestorFilter) {
@@ -61,6 +67,7 @@ const SelecionarCliente = () => {
       if (error) throw error;
       return data;
     },
+    enabled: !!agencyId,
   });
 
   const filteredClientes = clientes?.filter((c) =>

@@ -9,6 +9,7 @@ interface SEOHeadProps {
     title: string;
     description: string;
     path: string;
+    keywords?: string;
     jsonLd?: Record<string, unknown>;
     noindex?: boolean;
     ogType?: "website" | "article";
@@ -22,13 +23,14 @@ interface SEOHeadProps {
 }
 
 const SITE_NAME = "Vurp";
-const BASE_URL = "https://vurp.com.br";
+const BASE_URL = import.meta.env.VITE_SITE_URL || "https://vurp.vercel.app";
 const DEFAULT_IMAGE = `${BASE_URL}/og-image.png`;
 
 const SEOHead = ({
     title,
     description,
     path,
+    keywords,
     jsonLd,
     noindex = false,
     ogType = "website",
@@ -39,7 +41,9 @@ const SEOHead = ({
 }: SEOHeadProps) => {
     const fullTitle = path === "/" ? title : `${title} · ${SITE_NAME}`;
     const canonicalUrl = `${BASE_URL}${path}`;
-    const resolvedImage = ogImage ? `${BASE_URL}${ogImage}` : DEFAULT_IMAGE;
+    const resolvedImage = ogImage
+        ? (ogImage.startsWith("http") ? ogImage : `${BASE_URL}${ogImage}`)
+        : DEFAULT_IMAGE;
 
     /* ── BreadcrumbList JSON-LD ── */
     const breadcrumbLd = breadcrumbs && breadcrumbs.length > 0
@@ -68,6 +72,7 @@ const SEOHead = ({
             {/* Primary */}
             <title>{fullTitle}</title>
             <meta name="description" content={description} />
+            {keywords && <meta name="keywords" content={keywords} />}
             <link rel="canonical" href={canonicalUrl} />
             {noindex
                 ? <meta name="robots" content="noindex, nofollow" />

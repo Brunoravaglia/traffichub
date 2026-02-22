@@ -1,0 +1,21 @@
+{
+  "name": "Vurp",
+  "short_name": "Vurp",
+  "description": "Plataforma para gestores de trafego pago.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070b10",
+  "theme_color": "#058C42",
+  "icons": [
+    {
+      "src": "/favicon.png?v=20260222a",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.ico?v=20260222a",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}

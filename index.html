@@ -14,29 +14,33 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://*.google-analytics.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.google-analytics.com; img-src 'self' data: https://*.supabase.co https://*.google-analytics.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self';">
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://*.google-analytics.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.google-analytics.com https://economia.awesomeapi.com.br https://api.binance.com; img-src 'self' data: https: https://*.supabase.co https://*.google-analytics.com https://www.googletagmanager.com https://images.unsplash.com https://source.unsplash.com https://plus.unsplash.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self';">
 
   <!-- Primary SEO -->
   <title>Vurp — Plataforma para Gestores de Tráfego Pago</title>
   <meta name="description"
-    content="Gerencie clientes, checklists, relatórios e produtividade em um só lugar. O sistema completo para gestores de tráfego pago organizarem e escalarem seus negócios." />
+    content="Importe Google Ads e Meta Ads, transforme em dashboard profissional e envie relatórios prontos em PDF e link. Plataforma completa para gestores de tráfego pago." />
   <meta name="keywords"
-    content="gestão de tráfego pago, gestor de tráfego, relatórios de mídia paga, checklist tráfego, Google Ads, Meta Ads, TikTok Ads, LinkedIn Ads, SaaS, Vurp" />
+    content="google ads dashboard, meta ads dashboard, relatório tráfego pago, dashboard para agência, gestor de tráfego, relatório pdf marketing, automação de relatório, vurp" />
   <meta name="author" content="Vurp" />
+  <meta name="application-name" content="Vurp" />
+  <meta name="apple-mobile-web-app-title" content="Vurp" />
   <meta name="theme-color" content="#058C42" />
-  <link rel="canonical" href="https://vurp.com.br/" />
+  <link rel="canonical" href="https://vurp.vercel.app/" />
+  <link rel="manifest" href="/site.webmanifest?v=20260222a" />
 
   <!-- Favicon -->
-  <link rel="icon" href="/favicon.png" type="image/png" />
-  <link rel="apple-touch-icon" href="/favicon.png" />
+  <link rel="icon" href="/favicon.ico?v=20260222a" sizes="any" />
+  <link rel="icon" href="/favicon.png?v=20260222a" type="image/png" />
+  <link rel="apple-touch-icon" href="/favicon.png?v=20260222a" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://vurp.com.br/" />
+  <meta property="og:url" content="https://vurp.vercel.app/" />
   <meta property="og:title" content="Vurp — Plataforma para Gestores de Tráfego Pago" />
   <meta property="og:description"
-    content="Gerencie clientes, checklists, relatórios e produtividade em um só lugar. O sistema completo para gestores de tráfego pago." />
-  <meta property="og:image" content="https://vurp.com.br/og-image.png" />
+    content="Importe Google Ads e Meta Ads, transforme em dashboard profissional e envie relatórios prontos em PDF e link." />
+  <meta property="og:image" content="https://vurp.vercel.app/og-image.png" />
   <meta property="og:locale" content="pt_BR" />
   <meta property="og:site_name" content="Vurp" />
 
@@ -44,12 +48,12 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Vurp — Plataforma para Gestores de Tráfego Pago" />
   <meta name="twitter:description"
-    content="Gerencie clientes, checklists, relatórios e produtividade em um só lugar. O sistema completo para gestores de tráfego pago." />
-  <meta name="twitter:image" content="https://vurp.com.br/og-image.png" />
+    content="Importe Google Ads e Meta Ads, transforme em dashboard profissional e envie relatórios prontos em PDF e link." />
+  <meta name="twitter:image" content="https://vurp.vercel.app/og-image.png" />
 
   <!-- Language -->
-  <link rel="alternate" hreflang="pt-BR" href="https://vurp.com.br/" />
-  <link rel="alternate" hreflang="x-default" href="https://vurp.com.br/" />
+  <link rel="alternate" hreflang="pt-BR" href="https://vurp.vercel.app/" />
+  <link rel="alternate" hreflang="x-default" href="https://vurp.vercel.app/" />
 
   <!-- Performance -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -59,6 +63,9 @@
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap"
     media="print" onload="this.media='all'" />
+  <link rel="preload" as="image" href="/hero-dashboard-mobile.webp"
+    imagesrcset="/hero-dashboard-mobile.webp 600w, /hero-dashboard.webp 1080w"
+    imagesizes="(max-width: 639px) 600px, 1080px" fetchpriority="high" />
 
   <!-- JSON-LD Structured Data -->
   <script type="application/ld+json">
@@ -67,9 +74,11 @@
       "@graph": [
         {
           "@type": "Organization",
+          "@id": "https://vurp.vercel.app/#organization",
           "name": "Vurp",
-          "url": "https://vurp.com.br",
-          "logo": "https://vurp.com.br/favicon.png",
+          "alternateName": "Vurp Plataforma",
+          "url": "https://vurp.vercel.app",
+          "logo": "https://vurp.vercel.app/favicon.png?v=20260222a",
           "description": "Plataforma completa para gestores de tráfego pago organizarem, reportarem e escalarem seus negócios.",
           "sameAs": []
         },
@@ -79,7 +88,7 @@
           "applicationCategory": "BusinessApplication",
           "operatingSystem": "Web",
           "description": "Sistema de gestão para gestores de tráfego pago com checklists, relatórios profissionais, controle financeiro e gamificação.",
-          "url": "https://vurp.com.br",
+          "url": "https://vurp.vercel.app",
           "offers": [
             {
               "@type": "Offer",
@@ -119,17 +128,37 @@
             "Calendário de entregas",
             "Controle financeiro",
             "Gestão multi-gestor",
-            "Google Ads, Meta Ads, TikTok Ads, LinkedIn Ads"
+            "Importação de dados do Google Ads",
+            "Importação de dados do Meta Ads",
+            "Transformação automática de dashboard",
+            "Resumo com IA para envio ao cliente"
           ]
         },
         {
           "@type": "WebSite",
+          "@id": "https://vurp.vercel.app/#website",
           "name": "Vurp",
-          "url": "https://vurp.com.br",
+          "alternateName": "Vurp - Plataforma para Gestores de Tráfego Pago",
+          "url": "https://vurp.vercel.app",
+          "publisher": {
+            "@id": "https://vurp.vercel.app/#organization"
+          },
           "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://vurp.com.br/faq?q={search_term_string}",
+            "target": "https://vurp.vercel.app/faq?q={search_term_string}",
             "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://vurp.vercel.app/#webpage",
+          "url": "https://vurp.vercel.app/",
+          "name": "Vurp — Plataforma para Gestores de Tráfego Pago",
+          "isPartOf": {
+            "@id": "https://vurp.vercel.app/#website"
+          },
+          "about": {
+            "@id": "https://vurp.vercel.app/#organization"
           }
         }
       ]
@@ -172,11 +201,14 @@
         <li><strong>Agência Pro</strong> — R$197,00/mês (clientes ilimitados)</li>
       </ul>
       <p>7 dias grátis para testar. Cancele quando quiser.</p>
-      <p><a href="https://vurp.com.br/signup">Começar grátis</a> | <a href="https://vurp.com.br/blog">Blog</a> | <a
-          href="https://vurp.com.br/pricing">Preços</a> | <a href="https://vurp.com.br/features">Funcionalidades</a></p>
+      <p><a href="https://vurp.vercel.app/signup">Começar grátis</a> | <a href="https://vurp.vercel.app/blog">Blog</a> |
+        <a href="https://vurp.vercel.app/pricing">Preços</a> | <a
+          href="https://vurp.vercel.app/features">Funcionalidades</a>
+      </p>
       <hr />
-      <p><small>Vurp © 2026 — <a href="https://vurp.com.br/lgpd">LGPD & Segurança</a> | <a
-            href="https://vurp.com.br/privacy">Privacidade</a> | <a href="https://vurp.com.br/terms">Termos</a></small>
+      <p><small>Vurp © 2026 — <a href="https://vurp.vercel.app/lgpd">LGPD & Segurança</a> | <a
+            href="https://vurp.vercel.app/privacy">Privacidade</a> | <a
+            href="https://vurp.vercel.app/terms">Termos</a></small>
       </p>
     </div>
   </noscript>

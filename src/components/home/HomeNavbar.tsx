@@ -51,26 +51,26 @@ const HomeNavbar = () => {
             initial={{ y: -100 }}
             animate={{ y: 0 }}
             transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled
-                ? "bg-background/95 backdrop-blur-md border-b border-border/50 shadow-md py-2"
-                : "bg-transparent py-4"
+            className={`fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/95 py-2.5 backdrop-blur-md transition-all duration-500 ${scrolled
+                ? "md:border-border/50 md:bg-background/95 md:py-1.5 lg:py-2 md:shadow-md"
+                : "md:border-transparent md:bg-transparent md:py-2.5 lg:py-3"
                 }`}
         >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-16 md:h-20">
+            <div className="mx-auto max-w-[1220px] px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between h-14 md:h-16 lg:h-[68px]">
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-2">
                         <VCDLogo size="sm" showText />
                     </Link>
 
                     {/* Desktop links */}
-                    <div className="hidden md:flex items-center gap-8">
+                    <div className="hidden md:flex items-center gap-6 lg:gap-7">
                         {navLinks.map((link) => (
                             <Link
                                 key={link.label}
                                 to={link.to || "/"}
                                 onClick={() => handleNavClick(link)}
-                                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 relative group"
+                                className="text-[13px] lg:text-[14px] font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 relative group"
                             >
                                 {link.label}
                                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
@@ -82,18 +82,18 @@ const HomeNavbar = () => {
                     <div className="hidden md:flex items-center gap-3">
                         <button
                             onClick={toggleTheme}
-                            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card transition-all duration-200"
+                            className="p-1.5 lg:p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card transition-all duration-200"
                             aria-label="Toggle theme"
                         >
-                            {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                            {theme === "dark" ? <Sun className="h-4 w-4 lg:h-5 lg:w-5" /> : <Moon className="h-4 w-4 lg:h-5 lg:w-5" />}
                         </button>
                         <Link to="/login">
-                            <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+                            <Button variant="ghost" className="h-9 px-4 text-[14px] text-muted-foreground hover:text-foreground">
                                 Entrar
                             </Button>
                         </Link>
                         <Link to="/signup">
-                            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 vcd-button-glow">
+                            <Button className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-5 lg:px-6 text-[14px] vcd-button-glow">
                                 Começar Grátis
                             </Button>
                         </Link>

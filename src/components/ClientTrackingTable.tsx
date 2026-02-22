@@ -51,6 +51,7 @@ import {
 } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { useGestor } from "@/contexts/GestorContext";
 
 interface ClientTracking {
   id: string;
@@ -216,6 +217,8 @@ const StatusBadge = ({ value, type }: any) => {
 };
 
 const ClientTrackingTable = ({ gestorFilter }: { gestorFilter?: string }) => {
+  const { gestor } = useGestor();
+  const agencyId = gestor?.agencia_id ?? null;
   const queryClient = useQueryClient();
   const [activeCategory, setActiveCategory] = useState<CategoryType>("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -225,39 +228,65 @@ const ClientTrackingTable = ({ gestorFilter }: { gestorFilter?: string }) => {
   const [newClienteId, setNewClienteId] = useState<string | null>(null);
   const [newClienteNome, setNewClienteNome] = useState<string>("");
 
-  const { data: trackingData, isLoading } = useQuery({
-    queryKey: ["client-tracking", gestorFilter],
+  const { data: scopedClients } = useQuery({
+    queryKey: ["tracking-scoped-clients", agencyId, gestorFilter],
     queryFn: async () => {
+      if (!agencyId) return [];
+      let q = supabase.from("clientes").select("id, nome, gestor_id").eq("agencia_id", agencyId);
+      if (gestorFilter && gestorFilter !== "all") q = q.eq("gestor_id", gestorFilter);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!agencyId,
+    initialData: [],
+  });
+
+  const scopedClientIds = (scopedClients || []).map((c) => c.id);
+
+  const { data: trackingData, isLoading } = useQuery({
+    queryKey: ["client-tracking", agencyId, gestorFilter, scopedClientIds],
+    queryFn: async () => {
+      if (!agencyId || scopedClientIds.length === 0) return [];
       const { data, error } = await supabase
         .from("client_tracking")
-        .select(`*, clientes(nome, logo_url, gestor_id)`);
+        .select(`*, clientes(nome, logo_url, gestor_id)`)
+        .in("cliente_id", scopedClientIds);
       if (error) throw error;
-      return gestorFilter && gestorFilter !== "all"
-        ? (data as any[]).filter(t => t.clientes?.gestor_id === gestorFilter)
-        : data as ClientTracking[];
-    }
+      return data as ClientTracking[];
+    },
+    enabled: !!agencyId,
+    initialData: [],
   });
 
   const { data: clientesSemTracking } = useQuery({
-    queryKey: ["clientes-sem-tracking", gestorFilter],
+    queryKey: ["clientes-sem-tracking", agencyId, gestorFilter, scopedClientIds],
     queryFn: async () => {
-      let q = supabase.from("clientes").select("id, nome, gestor_id");
-      if (gestorFilter && gestorFilter !== "all") q = q.eq("gestor_id", gestorFilter);
-      const { data: c } = await q;
-      const { data: t } = await supabase.from("client_tracking").select("cliente_id");
+      if (!agencyId) return [];
+      const c = scopedClients || [];
+      if (c.length === 0) return [];
+      const { data: t } = await supabase.from("client_tracking").select("cliente_id").in("cliente_id", scopedClientIds);
       const tIds = t?.map(x => x.cliente_id) || [];
       return c?.filter(x => !tIds.includes(x.id)) || [];
-    }
+    },
+    enabled: !!agencyId,
+    initialData: [],
   });
 
   const saveMutation = useMutation({
     mutationFn: async (data: Partial<ClientTracking>) => {
+      if (!agencyId) {
+        throw new Error("Agência não identificada");
+      }
       const gD = data.google_valor_diario! > 0 ? Math.floor(data.google_saldo! / data.google_valor_diario!) : 0;
       const mD = data.meta_valor_diario! > 0 ? Math.floor(data.meta_saldo! / data.meta_valor_diario!) : 0;
       const now = format(new Date(), "yyyy-MM-dd");
       const payload = { ...data, google_dias_restantes: gD, meta_dias_restantes: mD, google_ultima_validacao: now, meta_ultima_validacao: now };
       delete (payload as any).clientes;
-      if (data.id) return supabase.from("client_tracking").update(payload).eq("id", data.id);
+      if (data.id) return supabase.from("client_tracking").update(payload).eq("id", data.id).in("cliente_id", scopedClientIds);
+      if (!data.cliente_id || !scopedClientIds.includes(data.cliente_id)) {
+        throw new Error("Cliente fora da sua agência");
+      }
       return supabase.from("client_tracking").insert([payload]);
     },
     onSuccess: () => {

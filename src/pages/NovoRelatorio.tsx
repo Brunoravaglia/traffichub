@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useId } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Search, DollarSign, Eye, MousePointer, Target, TrendingUp, Award, Save, Edit3, Wallet, Clock } from "lucide-react";
@@ -16,10 +16,13 @@ import VCDLogo from "@/components/VCDLogo";
 import RelatorioPDFExport from "@/components/RelatorioPDFExport";
 import { cn } from "@/lib/utils";
 import { Calendar as CalendarIcon } from "lucide-react";
+import { useGestor } from "@/contexts/GestorContext";
 
 const NovoRelatorio = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { gestor } = useGestor();
+  const agencyId = gestor?.agencia_id ?? null;
   const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showPreview, setShowPreview] = useState(false);
@@ -50,24 +53,27 @@ const NovoRelatorio = () => {
   const [diasMeta, setDiasMeta] = useState("");
 
   const { data: cliente } = useQuery({
-    queryKey: ["cliente", id],
+    queryKey: ["cliente", id, agencyId],
     queryFn: async () => {
+      if (!agencyId) return null;
       const { data, error } = await supabase
         .from("clientes")
         .select("*, gestores(nome)")
         .eq("id", id)
+        .eq("agencia_id", agencyId)
         .maybeSingle();
 
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && !!agencyId,
   });
 
   // Check for existing report on date change
   const { data: existingReport } = useQuery({
-    queryKey: ["relatorio", id, format(selectedDate, "yyyy-MM-dd")],
+    queryKey: ["relatorio", id, format(selectedDate, "yyyy-MM-dd"), agencyId],
     queryFn: async () => {
+      if (!id || !agencyId) return null;
       const dateStr = format(selectedDate, "yyyy-MM-dd");
       const { data, error } = await supabase
         .from("relatorios")
@@ -79,7 +85,7 @@ const NovoRelatorio = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && !!agencyId,
   });
 
   // Load existing report data when found
@@ -122,6 +128,9 @@ const NovoRelatorio = () => {
 
   const saveRelatorioMutation = useMutation({
     mutationFn: async () => {
+      if (!id || !agencyId || !cliente) {
+        throw new Error("Cliente não disponível para a sua agência");
+      }
       const dateStr = format(selectedDate, "yyyy-MM-dd");
       const palavrasArray = palavrasChaves
         .split(",")
@@ -153,7 +162,8 @@ const NovoRelatorio = () => {
         const { error } = await supabase
           .from("relatorios")
           .update(reportData)
-          .eq("id", existingReportId);
+          .eq("id", existingReportId)
+          .eq("cliente_id", id);
         if (error) throw error;
       } else {
         const { error } = await supabase
@@ -395,10 +405,11 @@ const NovoRelatorio = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
+                  <label htmlFor="top-palavras-chave" className="text-sm font-medium text-foreground">
                     Top 3 Palavras-Chave (separadas por vírgula)
                   </label>
                   <Input
+                    id="top-palavras-chave"
                     value={palavrasChaves}
                     onChange={(e) => setPalavrasChaves(e.target.value)}
                     placeholder="Ex: palavra1, palavra2, palavra3"
@@ -591,6 +602,7 @@ const InputField = ({
 }: InputFieldProps) => {
   // For numeric inputs, we want empty field by default with placeholder showing "0"
   const isNumeric = type === "number";
+  const inputId = useId();
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -606,11 +618,12 @@ const InputField = ({
 
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-foreground flex items-center gap-2">
+      <label htmlFor={inputId} className="text-sm font-medium text-foreground flex items-center gap-2">
         <span className="text-primary">{icon}</span>
         {label}
       </label>
       <Input
+        id={inputId}
         type="text"
         inputMode={isNumeric ? "decimal" : "text"}
         value={value}

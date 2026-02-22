@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import VCDLogo from "@/components/VCDLogo";
+import { useGestor } from "@/contexts/GestorContext";
 
 interface ReportWithClient {
   id: string;
@@ -24,11 +25,22 @@ interface ReportWithClient {
 
 const TodosRelatorios = () => {
   const navigate = useNavigate();
+  const { gestor } = useGestor();
+  const agencyId = gestor?.agencia_id ?? null;
   const [search, setSearch] = useState("");
 
   const { data: reports, isLoading } = useQuery({
-    queryKey: ["all-reports"],
+    queryKey: ["all-reports", agencyId],
     queryFn: async () => {
+      if (!agencyId) return [];
+      const { data: scopedClients, error: clientsError } = await supabase
+        .from("clientes")
+        .select("id")
+        .eq("agencia_id", agencyId);
+      if (clientsError) throw clientsError;
+      const clientIds = (scopedClients || []).map((c) => c.id);
+      if (clientIds.length === 0) return [];
+
       const { data, error } = await supabase
         .from("client_reports")
         .select(`
@@ -43,6 +55,7 @@ const TodosRelatorios = () => {
             logo_url
           )
         `)
+        .in("cliente_id", clientIds)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -58,6 +71,7 @@ const TodosRelatorios = () => {
         cliente_logo: report.clientes?.logo_url || null,
       })) as ReportWithClient[];
     },
+    enabled: !!agencyId,
   });
 
   const filteredReports = reports?.filter(
@@ -121,9 +135,9 @@ const TodosRelatorios = () => {
       {/* Reports List */}
       {isLoading ? (
         <div className="grid gap-4">
-          {[1, 2, 3].map((i) => (
+          {["skeleton-1", "skeleton-2", "skeleton-3"].map((skeletonId) => (
             <div
-              key={i}
+              key={skeletonId}
               className="h-24 bg-card border border-border rounded-xl animate-pulse"
             />
           ))}

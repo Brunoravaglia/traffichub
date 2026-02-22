@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { useGestor } from "@/contexts/GestorContext";
 
 const REDES_SOCIAIS = [
   { id: "meta", label: "Meta Ads (Facebook/Instagram)" },
@@ -33,6 +34,8 @@ interface EditClientFormProps {
 
 const EditClientForm = ({ clienteId, onClose, onSuccess }: EditClientFormProps) => {
   const queryClient = useQueryClient();
+  const { gestor } = useGestor();
+  const agencyId = gestor?.agencia_id ?? null;
   const [nome, setNome] = useState("");
   const [gestorId, setGestorId] = useState("");
   const [dataInicio, setDataInicio] = useState<Date>(new Date());
@@ -47,25 +50,30 @@ const EditClientForm = ({ clienteId, onClose, onSuccess }: EditClientFormProps) 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: cliente, isLoading: isLoadingCliente } = useQuery({
-    queryKey: ["cliente-edit", clienteId],
+    queryKey: ["cliente-edit", clienteId, agencyId],
     queryFn: async () => {
+      if (!agencyId) return null;
       const { data, error } = await supabase
         .from("clientes")
         .select("*")
         .eq("id", clienteId)
+        .eq("agencia_id", agencyId)
         .single();
       if (error) throw error;
       return data;
     },
+    enabled: !!agencyId,
   });
 
   const { data: gestores } = useQuery({
-    queryKey: ["gestores"],
+    queryKey: ["gestores", agencyId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("gestores").select("*").order("nome");
+      if (!agencyId) return [];
+      const { data, error } = await supabase.from("gestores").select("*").eq("agencia_id", agencyId).order("nome");
       if (error) throw error;
       return data;
     },
+    enabled: !!agencyId,
   });
 
   useEffect(() => {
@@ -126,6 +134,10 @@ const EditClientForm = ({ clienteId, onClose, onSuccess }: EditClientFormProps) 
 
   const updateClientMutation = useMutation({
     mutationFn: async () => {
+      if (!agencyId) {
+        throw new Error("Agência não identificada");
+      }
+
       let logoUrl = existingLogoUrl;
 
       // Upload new logo if provided
@@ -159,7 +171,8 @@ const EditClientForm = ({ clienteId, onClose, onSuccess }: EditClientFormProps) 
           observacoes: observacoes || null,
           logo_url: logoUrl,
         } as any)
-        .eq("id", clienteId);
+        .eq("id", clienteId)
+        .eq("agencia_id", agencyId);
 
       if (error) throw error;
     },
@@ -212,11 +225,12 @@ const EditClientForm = ({ clienteId, onClose, onSuccess }: EditClientFormProps) 
     >
       {/* Nome do Cliente */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+        <label htmlFor="edit-client-name" className="text-sm font-medium text-foreground flex items-center gap-2">
           <User className="w-4 h-4 text-primary" />
           Nome do Cliente
         </label>
         <Input
+          id="edit-client-name"
           placeholder="Ex: Empresa XYZ"
           value={nome}
           onChange={(e) => setNome(e.target.value)}
@@ -226,11 +240,12 @@ const EditClientForm = ({ clienteId, onClose, onSuccess }: EditClientFormProps) 
 
       {/* Telefone de Contato */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+        <label htmlFor="edit-client-phone" className="text-sm font-medium text-foreground flex items-center gap-2">
           <Phone className="w-4 h-4 text-primary" />
           Telefone de Contato
         </label>
         <Input
+          id="edit-client-phone"
           placeholder="Ex: (11) 99999-9999"
           value={telefoneContato}
           onChange={(e) => setTelefoneContato(e.target.value)}
@@ -240,12 +255,12 @@ const EditClientForm = ({ clienteId, onClose, onSuccess }: EditClientFormProps) 
 
       {/* Gestor Responsável */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+        <label htmlFor="edit-client-gestor" className="text-sm font-medium text-foreground flex items-center gap-2">
           <Briefcase className="w-4 h-4 text-primary" />
           Gestor Responsável
         </label>
         <Select value={gestorId} onValueChange={setGestorId}>
-          <SelectTrigger className="h-12 bg-secondary border-border focus:border-primary">
+          <SelectTrigger id="edit-client-gestor" className="h-12 bg-secondary border-border focus:border-primary">
             <SelectValue placeholder="Selecione o gestor" />
           </SelectTrigger>
           <SelectContent className="bg-card border-border">
@@ -260,13 +275,14 @@ const EditClientForm = ({ clienteId, onClose, onSuccess }: EditClientFormProps) 
 
       {/* Data de Início */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+        <label htmlFor="edit-client-start-date" className="text-sm font-medium text-foreground flex items-center gap-2">
           <Calendar className="w-4 h-4 text-primary" />
           Data de Início
         </label>
         <Popover>
           <PopoverTrigger asChild>
             <Button
+              id="edit-client-start-date"
               variant="outline"
               className="w-full h-12 justify-start text-left font-normal bg-secondary border-border hover:bg-secondary/80"
             >
@@ -288,7 +304,7 @@ const EditClientForm = ({ clienteId, onClose, onSuccess }: EditClientFormProps) 
 
       {/* Logo do Cliente */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+        <label htmlFor="edit-client-logo-input" className="text-sm font-medium text-foreground flex items-center gap-2">
           <ImageIcon className="w-4 h-4 text-primary" />
           Logo do Cliente
         </label>
@@ -311,17 +327,20 @@ const EditClientForm = ({ clienteId, onClose, onSuccess }: EditClientFormProps) 
               </button>
             </div>
           ) : (
-            <div
+            <button
+              type="button"
+              aria-label="Selecionar logo do cliente"
               onClick={() => fileInputRef.current?.click()}
               className="w-24 h-24 rounded-xl border-2 border-dashed border-border hover:border-primary/50 bg-secondary/50 flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors"
             >
               <Upload className="w-6 h-6 text-muted-foreground" />
               <span className="text-xs text-muted-foreground">Upload</span>
-            </div>
+            </button>
           )}
 
           <div className="flex-1">
             <input
+              id="edit-client-logo-input"
               ref={fileInputRef}
               type="file"
               accept="image/*"
@@ -347,10 +366,10 @@ const EditClientForm = ({ clienteId, onClose, onSuccess }: EditClientFormProps) 
 
       {/* Redes Sociais */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+        <p className="text-sm font-medium text-foreground flex items-center gap-2">
           <Share2 className="w-4 h-4 text-primary" />
           Redes Sociais que Anuncia
-        </label>
+        </p>
         <div className="grid grid-cols-2 gap-3">
           {REDES_SOCIAIS.map((rede) => (
             <label
@@ -377,11 +396,12 @@ const EditClientForm = ({ clienteId, onClose, onSuccess }: EditClientFormProps) 
 
       {/* Investimento Mensal */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+        <label htmlFor="edit-client-investment" className="text-sm font-medium text-foreground flex items-center gap-2">
           <DollarSign className="w-4 h-4 text-primary" />
           Investimento Mensal (R$)
         </label>
         <Input
+          id="edit-client-investment"
           type="number"
           placeholder="Ex: 5000"
           value={investimentoMensal}
@@ -392,11 +412,12 @@ const EditClientForm = ({ clienteId, onClose, onSuccess }: EditClientFormProps) 
 
       {/* Expectativa de Resultados */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+        <label htmlFor="edit-client-expectation" className="text-sm font-medium text-foreground flex items-center gap-2">
           <Target className="w-4 h-4 text-primary" />
           Expectativa de Resultados
         </label>
         <Textarea
+          id="edit-client-expectation"
           placeholder="Descreva as expectativas do cliente..."
           value={expectativaResultados}
           onChange={(e) => setExpectativaResultados(e.target.value)}
@@ -406,11 +427,12 @@ const EditClientForm = ({ clienteId, onClose, onSuccess }: EditClientFormProps) 
 
       {/* Observações */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+        <label htmlFor="edit-client-notes" className="text-sm font-medium text-foreground flex items-center gap-2">
           <FileText className="w-4 h-4 text-primary" />
           Observações
         </label>
         <Textarea
+          id="edit-client-notes"
           placeholder="Notas internas sobre o cliente (ex: tags de outras agências, informações importantes)..."
           value={observacoes}
           onChange={(e) => setObservacoes(e.target.value)}

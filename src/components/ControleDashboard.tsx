@@ -28,6 +28,7 @@ import {
   Clock,
   Banknote,
 } from "lucide-react";
+import { useGestor } from "@/contexts/GestorContext";
 
 interface ClientTracking {
   id: string;
@@ -69,37 +70,47 @@ const formatCurrency = (value: number) => {
 };
 
 const ControleDashboard = ({ gestorFilter }: ControleDashboardProps) => {
+  const { gestor } = useGestor();
+  const agencyId = gestor?.agencia_id ?? null;
   const now = new Date();
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
 
   // Fetch all clients for gestor filtering
   const { data: clientesData } = useQuery({
-    queryKey: ["clientes-for-filter", gestorFilter],
+    queryKey: ["clientes-for-filter", agencyId, gestorFilter],
     queryFn: async () => {
+      if (!agencyId) return [];
       let query = supabase.from("clientes").select("id, gestor_id");
+      query = query.eq("agencia_id", agencyId);
       if (gestorFilter && gestorFilter !== "all") {
         query = query.eq("gestor_id", gestorFilter);
       }
       const { data } = await query;
       return data || [];
     },
+    enabled: !!agencyId,
+    initialData: [],
   });
 
   const clienteIds = clientesData?.map((c) => c.id) || [];
 
   const { data: trackingData, isLoading } = useQuery({
-    queryKey: ["client-tracking-dashboard", gestorFilter],
+    queryKey: ["client-tracking-dashboard", agencyId, gestorFilter, clienteIds],
     queryFn: async () => {
+      if (!agencyId || clienteIds.length === 0) return [];
       const { data, error } = await supabase
         .from("client_tracking")
         .select(`
           *,
           clientes(nome, gestor_id)
-        `);
+        `)
+        .in("cliente_id", clienteIds);
       if (error) throw error;
       return data as ClientTracking[];
     },
+    enabled: !!agencyId && clienteIds.length > 0,
+    initialData: [],
   });
 
   // Filter tracking data by gestor
@@ -114,9 +125,14 @@ const ControleDashboard = ({ gestorFilter }: ControleDashboardProps) => {
     queryFn: async () => {
       // NOTE: alguns relatórios antigos salvavam o investido só dentro de `data_values`.
       // Para não zerar o KPI, usamos fallback para `data_values.google/meta.investido`.
+      if (!agencyId || clienteIds.length === 0) {
+        return { google: 0, meta: 0, total: 0 };
+      }
+
       let query = supabase
         .from("client_reports")
         .select("cliente_id, google_investido, meta_investido, data_values")
+        .in("cliente_id", clienteIds)
         .gte("periodo_inicio", format(monthStart, "yyyy-MM-dd"))
         .lte("periodo_fim", format(monthEnd, "yyyy-MM-dd"));
 
@@ -146,14 +162,15 @@ const ControleDashboard = ({ gestorFilter }: ControleDashboardProps) => {
 
       return { google: totalGoogle, meta: totalMeta, total: totalGoogle + totalMeta };
     },
-    enabled: !gestorFilter || gestorFilter === "all" || clienteIds.length > 0,
+    enabled: !!agencyId && clienteIds.length > 0,
+    initialData: { google: 0, meta: 0, total: 0 },
   });
 
-  if (isLoading || !trackingData) {
+  if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="animate-pulse">
+        {["stats-1", "stats-2", "stats-3", "stats-4"].map((cardId) => (
+          <Card key={cardId} className="animate-pulse">
             <CardContent className="h-28" />
           </Card>
         ))}
@@ -434,8 +451,8 @@ const ControleDashboard = ({ gestorFilter }: ControleDashboardProps) => {
                       paddingAngle={4}
                       dataKey="value"
                     >
-                      {healthData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      {healthData.map((entry) => (
+                        <Cell key={`${entry.name}-${entry.color}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Legend 

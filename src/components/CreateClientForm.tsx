@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import VCDLogo from "./VCDLogo";
 import { cn } from "@/lib/utils";
+import { useGestor } from "@/contexts/GestorContext";
 
 const REDES_SOCIAIS = [
   { id: "meta", label: "Meta Ads (Facebook/Instagram)" },
@@ -30,6 +31,8 @@ const REDES_SOCIAIS = [
 const CreateClientForm = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { gestor } = useGestor();
+  const agencyId = gestor?.agencia_id ?? null;
   const [nome, setNome] = useState("");
   const [gestorId, setGestorId] = useState("");
   const [dataInicio, setDataInicio] = useState<Date>(new Date());
@@ -82,12 +85,14 @@ const CreateClientForm = () => {
   };
 
   const { data: gestores } = useQuery({
-    queryKey: ["gestores"],
+    queryKey: ["gestores", agencyId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("gestores").select("*").order("nome");
+      if (!agencyId) return [];
+      const { data, error } = await supabase.from("gestores").select("*").eq("agencia_id", agencyId).order("nome");
       if (error) throw error;
       return data;
     },
+    enabled: !!agencyId,
   });
 
   const toggleRedeSocial = (id: string) => {
@@ -98,12 +103,17 @@ const CreateClientForm = () => {
 
   const createClientMutation = useMutation({
     mutationFn: async () => {
+      if (!agencyId) {
+        throw new Error("Agência não identificada");
+      }
+
       // First create the client
       const { data: clientData, error: clientError } = await supabase
         .from("clientes")
         .insert({
           nome,
           gestor_id: gestorId,
+          agencia_id: agencyId,
           data_inicio: format(dataInicio, "yyyy-MM-dd"),
           redes_sociais: redesSociais,
           investimento_mensal: investimentoMensal ? parseFloat(investimentoMensal) : 0,
@@ -135,7 +145,8 @@ const CreateClientForm = () => {
           await supabase
             .from("clientes")
             .update({ logo_url: publicUrl })
-            .eq("id", clientData.id);
+            .eq("id", clientData.id)
+            .eq("agencia_id", agencyId);
         }
       }
 
@@ -231,11 +242,12 @@ const CreateClientForm = () => {
           >
             {/* Nome do Cliente */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <label htmlFor="create-client-name" className="text-sm font-medium text-foreground flex items-center gap-2">
                 <User className="w-4 h-4 text-primary" />
                 Nome do Cliente
               </label>
               <Input
+                id="create-client-name"
                 placeholder="Ex: Empresa XYZ"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
@@ -245,11 +257,12 @@ const CreateClientForm = () => {
 
             {/* Telefone de Contato */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <label htmlFor="create-client-phone" className="text-sm font-medium text-foreground flex items-center gap-2">
                 <Phone className="w-4 h-4 text-primary" />
                 Telefone de Contato
               </label>
               <Input
+                id="create-client-phone"
                 placeholder="Ex: (11) 99999-9999"
                 value={telefoneContato}
                 onChange={(e) => setTelefoneContato(e.target.value)}
@@ -259,12 +272,12 @@ const CreateClientForm = () => {
 
             {/* Gestor Responsável */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <label htmlFor="create-client-gestor" className="text-sm font-medium text-foreground flex items-center gap-2">
                 <Briefcase className="w-4 h-4 text-primary" />
                 Gestor Responsável
               </label>
               <Select value={gestorId} onValueChange={setGestorId}>
-                <SelectTrigger className="h-12 bg-secondary border-border focus:border-primary">
+                <SelectTrigger id="create-client-gestor" className="h-12 bg-secondary border-border focus:border-primary">
                   <SelectValue placeholder="Selecione o gestor" />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
@@ -279,13 +292,14 @@ const CreateClientForm = () => {
 
             {/* Data de Início */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <label htmlFor="create-client-start-date" className="text-sm font-medium text-foreground flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-primary" />
                 Data de Início
               </label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
+                    id="create-client-start-date"
                     variant="outline"
                     className="w-full h-12 justify-start text-left font-normal bg-secondary border-border hover:bg-secondary/80"
                   >
@@ -307,10 +321,10 @@ const CreateClientForm = () => {
 
             {/* Redes Sociais */}
             <div className="space-y-3">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <p className="text-sm font-medium text-foreground flex items-center gap-2">
                 <Share2 className="w-4 h-4 text-primary" />
                 Redes Sociais que Anuncia
-              </label>
+              </p>
               <div className="grid grid-cols-2 gap-3">
                 {REDES_SOCIAIS.map((rede) => (
                   <label
@@ -337,7 +351,7 @@ const CreateClientForm = () => {
 
             {/* Logo do Cliente */}
             <div className="space-y-3">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <label htmlFor="create-client-logo-input" className="text-sm font-medium text-foreground flex items-center gap-2">
                 <ImageIcon className="w-4 h-4 text-primary" />
                 Logo do Cliente
               </label>
@@ -360,17 +374,20 @@ const CreateClientForm = () => {
                     </button>
                   </div>
                 ) : (
-                  <div
+                  <button
+                    type="button"
+                    aria-label="Selecionar logo do cliente"
                     onClick={() => fileInputRef.current?.click()}
                     className="w-24 h-24 rounded-xl border-2 border-dashed border-border hover:border-primary/50 bg-secondary/50 flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors"
                   >
                     <Upload className="w-6 h-6 text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">Upload</span>
-                  </div>
+                  </button>
                 )}
 
                 <div className="flex-1">
                   <input
+                    id="create-client-logo-input"
                     ref={fileInputRef}
                     type="file"
                     accept="image/*"
@@ -396,11 +413,12 @@ const CreateClientForm = () => {
 
             {/* Investimento Mensal */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <label htmlFor="create-client-monthly-investment" className="text-sm font-medium text-foreground flex items-center gap-2">
                 <DollarSign className="w-4 h-4 text-primary" />
                 Investimento Mensal (R$)
               </label>
               <Input
+                id="create-client-monthly-investment"
                 type="number"
                 placeholder="Ex: 5000"
                 value={investimentoMensal}
@@ -417,8 +435,9 @@ const CreateClientForm = () => {
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-foreground">Investimento Diário (R$)</label>
+                    <label htmlFor="create-google-daily" className="text-xs font-medium text-foreground">Investimento Diário (R$)</label>
                     <Input
+                      id="create-google-daily"
                       type="number"
                       step="0.01"
                       placeholder="Ex: 50"
@@ -428,8 +447,9 @@ const CreateClientForm = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-foreground">Saldo Atual (R$)</label>
+                    <label htmlFor="create-google-balance" className="text-xs font-medium text-foreground">Saldo Atual (R$)</label>
                     <Input
+                      id="create-google-balance"
                       type="number"
                       step="0.01"
                       placeholder="Ex: 500"
@@ -450,8 +470,9 @@ const CreateClientForm = () => {
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-foreground">Investimento Diário (R$)</label>
+                    <label htmlFor="create-meta-daily" className="text-xs font-medium text-foreground">Investimento Diário (R$)</label>
                     <Input
+                      id="create-meta-daily"
                       type="number"
                       step="0.01"
                       placeholder="Ex: 50"
@@ -461,8 +482,9 @@ const CreateClientForm = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-foreground">Saldo Atual (R$)</label>
+                    <label htmlFor="create-meta-balance" className="text-xs font-medium text-foreground">Saldo Atual (R$)</label>
                     <Input
+                      id="create-meta-balance"
                       type="number"
                       step="0.01"
                       placeholder="Ex: 500"
@@ -477,11 +499,12 @@ const CreateClientForm = () => {
 
             {/* Expectativa de Resultados */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <label htmlFor="create-client-expectation" className="text-sm font-medium text-foreground flex items-center gap-2">
                 <Target className="w-4 h-4 text-primary" />
                 Expectativa de Resultados
               </label>
               <Textarea
+                id="create-client-expectation"
                 placeholder="Descreva as expectativas do cliente..."
                 value={expectativaResultados}
                 onChange={(e) => setExpectativaResultados(e.target.value)}
@@ -491,11 +514,12 @@ const CreateClientForm = () => {
 
             {/* Observações */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <label htmlFor="create-client-notes" className="text-sm font-medium text-foreground flex items-center gap-2">
                 <FileText className="w-4 h-4 text-primary" />
                 Observações
               </label>
               <Textarea
+                id="create-client-notes"
                 placeholder="Notas internas sobre o cliente (ex: tags de outras agências, informações importantes)..."
                 value={observacoes}
                 onChange={(e) => setObservacoes(e.target.value)}

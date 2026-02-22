@@ -61,6 +61,8 @@ const formatCurrency = (value: number): string => {
 
 const RechargeCalendarComponent = ({ gestorFilter, onDateSelect, selectedDate: externalSelectedDate }: RechargeCalendarProps) => {
   const navigate = useNavigate();
+  const { gestor } = useGestor();
+  const agencyId = gestor?.agencia_id ?? null;
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [internalSelectedDate, setInternalSelectedDate] = useState<Date | undefined>(externalSelectedDate);
 
@@ -73,11 +75,21 @@ const RechargeCalendarComponent = ({ gestorFilter, onDateSelect, selectedDate: e
   };
 
   const { data: rechargeData, isLoading } = useQuery({
-    queryKey: ["recharge-calendar", gestorFilter],
+    queryKey: ["recharge-calendar", agencyId, gestorFilter],
     queryFn: async () => {
+      if (!agencyId) return [];
+      const { data: scopedClients, error: clientsError } = await supabase
+        .from("clientes")
+        .select("id")
+        .eq("agencia_id", agencyId);
+      if (clientsError) throw clientsError;
+      const clientIds = (scopedClients || []).map((c) => c.id);
+      if (clientIds.length === 0) return [];
+
       let query = supabase
         .from("client_tracking")
         .select("*, clientes(id, nome, logo_url, gestor_id)")
+        .in("cliente_id", clientIds)
         .or("google_proxima_recarga.not.is.null,meta_proxima_recarga.not.is.null");
 
       const { data, error } = await query;
@@ -98,6 +110,7 @@ const RechargeCalendarComponent = ({ gestorFilter, onDateSelect, selectedDate: e
         clientes: { id: string; nome: string; logo_url: string | null; gestor_id: string } | null;
       }>;
     },
+    enabled: !!agencyId,
   });
 
   const events = useMemo(() => {
@@ -231,13 +244,13 @@ const RechargeCalendarComponent = ({ gestorFilter, onDateSelect, selectedDate: e
 
         {/* Calendar days */}
         <div className="grid grid-cols-7 gap-1">
-          {calendarDays.map((day, index) => {
+          {calendarDays.map((day) => {
             const dayEvents = getEventsForDay(day);
             const isCurrentMonth = isSameMonth(day, currentMonth);
             const isCurrentDay = isToday(day);
 
             return (
-              <Popover key={index}>
+              <Popover key={day.toISOString()}>
                 <PopoverTrigger asChild>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
@@ -262,9 +275,9 @@ const RechargeCalendarComponent = ({ gestorFilter, onDateSelect, selectedDate: e
                     </span>
                     {dayEvents.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">
-                        {dayEvents.slice(0, 3).map((event, i) => (
+                        {dayEvents.slice(0, 3).map((event) => (
                           <div
-                            key={i}
+                            key={`${event.clienteId}-${event.platform}-${day.toISOString()}`}
                             className={cn(
                               "w-2 h-2 rounded-full",
                               getPlatformColor(event.platform)
@@ -292,12 +305,12 @@ const RechargeCalendarComponent = ({ gestorFilter, onDateSelect, selectedDate: e
                       </p>
                     </div>
                     <div className="max-h-64 overflow-y-auto">
-                      {dayEvents.map((event, i) => (
+                      {dayEvents.map((event) => (
                         <motion.button
-                          key={i}
+                          key={`${event.clienteId}-${event.platform}-${event.date.toISOString()}`}
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: i * 0.05 }}
+                          transition={{ delay: 0.05 }}
                           onClick={() => navigate(`/cliente/${event.clienteId}`)}
                           className="w-full p-3 flex items-center gap-3 hover:bg-secondary/50 transition-colors border-b border-border/50 last:border-0"
                         >

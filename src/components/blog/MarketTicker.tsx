@@ -30,13 +30,21 @@ const MarketTicker = () => {
 
     const fetchMarketData = async () => {
         try {
-            const [awesomeRes, usdtRes] = await Promise.all([
+            const [awesomeRes, usdtRes] = await Promise.allSettled([
                 fetch("https://economia.awesomeapi.com.br/last/BTC-BRL,ETH-BRL,SOL-BRL"),
                 fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=USDTBRL"),
             ]);
 
-            const awesomeData = await awesomeRes.json();
-            const usdtData = await usdtRes.json();
+            const awesomeData =
+                awesomeRes.status === "fulfilled" && awesomeRes.value.ok
+                    ? await awesomeRes.value.json()
+                    : {};
+
+            const usdtData =
+                usdtRes.status === "fulfilled" && usdtRes.value.ok
+                    ? await usdtRes.value.json()
+                    : null;
+
             const parsed: MarketItem[] = [];
 
             if (awesomeData.BTCBRL) {
@@ -91,6 +99,40 @@ const MarketTicker = () => {
                     icon: <FaDollarSign className="w-6 h-6" />,
                     color: "text-emerald-400",
                 });
+            }
+
+            // Never let the widget disappear entirely.
+            if (parsed.length === 0) {
+                parsed.push(
+                    {
+                        label: "Bitcoin (BTC)",
+                        value: "-",
+                        change: 0,
+                        icon: <FaBitcoin className="w-6 h-6" />,
+                        color: "text-orange-400",
+                    },
+                    {
+                        label: "Ethereum (ETH)",
+                        value: "-",
+                        change: 0,
+                        icon: <FaEthereum className="w-6 h-6" />,
+                        color: "text-indigo-400",
+                    },
+                    {
+                        label: "Solana (SOL)",
+                        value: "-",
+                        change: 0,
+                        icon: <SiSolana className="w-6 h-6" />,
+                        color: "text-violet-400",
+                    },
+                    {
+                        label: "Tether (USDT)",
+                        value: "-",
+                        change: 0,
+                        icon: <FaDollarSign className="w-6 h-6" />,
+                        color: "text-emerald-400",
+                    }
+                );
             }
 
             setItems(parsed);

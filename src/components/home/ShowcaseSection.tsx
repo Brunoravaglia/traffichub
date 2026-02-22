@@ -23,6 +23,8 @@ const tabs = [
                     src="/showcase/dashboard.png"
                     alt="Dashboard Real Vurp"
                     className="w-full h-full object-cover rounded-xl shadow-inner shadow-black/20"
+                    loading="lazy"
+                    decoding="async"
                 />
             </div>
         ),
@@ -41,6 +43,8 @@ const tabs = [
                     src="/showcase/reports.png"
                     alt="Relatórios Profissionais Vurp"
                     className="w-full h-full object-cover rounded-xl shadow-inner shadow-black/20"
+                    loading="lazy"
+                    decoding="async"
                 />
             </div>
         ),
@@ -59,6 +63,8 @@ const tabs = [
                     src="/showcase/checklist.png"
                     alt="Checklist de Setup Vurp"
                     className="w-full h-full object-cover rounded-xl shadow-inner shadow-black/20"
+                    loading="lazy"
+                    decoding="async"
                 />
             </div>
         ),
@@ -77,6 +83,8 @@ const tabs = [
                     src="/showcase/calendar.png"
                     alt="Calendário de Gestão Vurp"
                     className="w-full h-full object-cover rounded-xl shadow-inner shadow-black/20"
+                    loading="lazy"
+                    decoding="async"
                 />
             </div>
         ),
@@ -95,6 +103,8 @@ const tabs = [
                     src="/showcase/productivity.png"
                     alt="Produtividade e Conquistas Vurp"
                     className="w-full h-full object-cover rounded-xl shadow-inner shadow-black/20"
+                    loading="lazy"
+                    decoding="async"
                 />
             </div>
         ),

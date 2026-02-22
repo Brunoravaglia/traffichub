@@ -339,6 +339,7 @@ const RelatorioCliente = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { gestor } = useGestor();
+  const agencyId = gestor?.agencia_id ?? null;
   const pdfRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const rankingInputRef = useRef<HTMLInputElement>(null);
@@ -364,14 +365,15 @@ const RelatorioCliente = () => {
 
   // Fetch and auto-apply template from URL
   const { data: urlTemplate } = useQuery({
-    queryKey: ["template-from-url", templateIdFromUrl],
+    queryKey: ["template-from-url", templateIdFromUrl, gestor?.id],
     queryFn: async () => {
-      if (!templateIdFromUrl) return null;
-      const { data, error } = await supabase
+      if (!templateIdFromUrl || !gestor?.id) return null;
+      let query = supabase
         .from("report_templates")
         .select("*")
-        .eq("id", templateIdFromUrl)
-        .single();
+        .eq("id", templateIdFromUrl);
+      query = query.or(`is_global.eq.true,gestor_id.eq.${gestor.id}`);
+      const { data, error } = await query.single();
       if (error) throw error;
       return {
         id: data.id,
@@ -382,23 +384,24 @@ const RelatorioCliente = () => {
         sections: (data.layout as any)?.sections || {},
       };
     },
-    enabled: !!templateIdFromUrl,
+    enabled: !!templateIdFromUrl && !!gestor?.id,
   });
 
   // Fetch and auto-apply existing report from URL
   const { data: existingReport } = useQuery({
-    queryKey: ["report-from-url", reportIdFromUrl],
+    queryKey: ["report-from-url", reportIdFromUrl, clienteId],
     queryFn: async () => {
-      if (!reportIdFromUrl) return null;
+      if (!reportIdFromUrl || !clienteId) return null;
       const { data, error } = await supabase
         .from("client_reports")
         .select("*")
         .eq("id", reportIdFromUrl)
+        .eq("cliente_id", clienteId)
         .single();
       if (error) throw error;
       return data;
     },
-    enabled: !!reportIdFromUrl,
+    enabled: !!reportIdFromUrl && !!clienteId,
   });
 
   // Apply template to report data
@@ -535,17 +538,19 @@ const RelatorioCliente = () => {
 
   // Fetch client data
   const { data: cliente, isLoading: clienteLoading } = useQuery({
-    queryKey: ["cliente", clienteId],
+    queryKey: ["cliente", clienteId, agencyId],
     queryFn: async () => {
+      if (!agencyId) return null;
       const { data, error } = await supabase
         .from("clientes")
         .select("*, agencias(*), gestores(*)")
         .eq("id", clienteId)
+        .eq("agencia_id", agencyId)
         .single();
       if (error) throw error;
       return data;
     },
-    enabled: !!clienteId,
+    enabled: !!clienteId && !!agencyId,
   });
 
   // Fetch client tracking data for auto-fill
@@ -560,7 +565,7 @@ const RelatorioCliente = () => {
       if (error) return null;
       return data;
     },
-    enabled: !!clienteId,
+    enabled: !!clienteId && !!cliente,
   });
 
   // Auto-fill saldos from client tracking when toggle is on
@@ -1228,7 +1233,7 @@ const RelatorioCliente = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {reportData.objetivos.map((obj, index) => (
-                    <div key={`objective-item-${index}-${obj.substring(0, 5)}`} className="flex gap-2">
+                    <div key={`objective-item-${obj}`} className="flex gap-2">
                       <Input
                         value={obj}
                         onChange={(e) => {

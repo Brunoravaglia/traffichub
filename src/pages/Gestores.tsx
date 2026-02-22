@@ -66,16 +66,20 @@ const StatBox = ({ icon: Icon, value, label, color }: { icon: React.ElementType;
 const Gestores = () => {
   const navigate = useNavigate();
   const { gestor: currentGestor, refreshGestor } = useGestor();
+  const agencyId = currentGestor?.agencia_id ?? null;
   const queryClient = useQueryClient();
   const [editingGestorId, setEditingGestorId] = useState<string | null>(null);
   const [expandedGestorId, setExpandedGestorId] = useState<string | null>(null);
 
   const { data: gestores, isLoading } = useQuery({
-    queryKey: ["gestores-with-stats"],
+    queryKey: ["gestores-with-stats", agencyId],
     queryFn: async () => {
+      if (!agencyId) return [];
+
       const { data: gestoresData, error: gestoresError } = await supabase
         .from("gestores")
         .select("*")
+        .eq("agencia_id", agencyId)
         .order("nome");
 
       if (gestoresError) throw gestoresError;
@@ -85,11 +89,13 @@ const Gestores = () => {
           const { count: clientCount } = await supabase
             .from("clientes")
             .select("*", { count: "exact", head: true })
+            .eq("agencia_id", agencyId)
             .eq("gestor_id", gestor.id);
 
           const { data: clientIds } = await supabase
             .from("clientes")
             .select("id")
+            .eq("agencia_id", agencyId)
             .eq("gestor_id", gestor.id);
 
           let reportCount = 0;
@@ -133,6 +139,7 @@ const Gestores = () => {
 
       return gestoresWithStats;
     },
+    enabled: !!agencyId,
   });
 
   const getActivityLevel = (seconds: number) => {
@@ -203,8 +210,9 @@ const Gestores = () => {
                   )}
                 >
                   {/* Main Row */}
-                  <div 
-                    className="p-5 sm:p-6 cursor-pointer"
+                  <button
+                    type="button"
+                    className="w-full p-5 sm:p-6 cursor-pointer text-left"
                     onClick={() => setExpandedGestorId(isExpanded ? null : gestor.id)}
                   >
                     {/* Top: Avatar + Name + Badge */}
@@ -279,7 +287,7 @@ const Gestores = () => {
                         color="bg-yellow-500/10 text-yellow-500"
                       />
                     </div>
-                  </div>
+                  </button>
 
                   {/* Expanded Details */}
                   <motion.div
@@ -300,9 +308,9 @@ const Gestores = () => {
                             <span>{gestor.telefone}</span>
                           </div>
                         )}
-                        {links.map((link, index) => (
+                        {links.map((link) => (
                           <a
-                            key={index}
+                            key={`${gestor.id}-${link.url}`}
                             href={link.url}
                             target="_blank"
                             rel="noopener noreferrer"

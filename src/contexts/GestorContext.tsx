@@ -209,7 +209,9 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
               dados_completos: false,
               foto_preenchida: !!avatarUrl,
               onboarding_completo: false,
-              agencia_id: agencia?.id || null,
+              // SECURITY: never auto-assign agency on OAuth signup.
+              // Agency membership must be granted by backend/admin flow.
+              agencia_id: null,
             },
             { onConflict: "id" }
           );
@@ -219,6 +221,20 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
             return;
           }
           console.log("[Session] Successfully created gestor record");
+        }
+
+        // SECURITY HOTFIX:
+        // if this is a Google-created account and somehow has agency linked,
+        // remove the link to avoid accidental cross-tenant access.
+        if (existingGestor?.senha === "google-oauth" && existingGestor?.agencia_id) {
+          const { error: clearAgencyError } = await supabase
+            .from("gestores")
+            .update({ agencia_id: null })
+            .eq("id", sessionUser.id);
+
+          if (clearAgencyError) {
+            console.error("[Session] Failed to clear OAuth agency link:", clearAgencyError);
+          }
         }
 
         const { data: finalGestor, error: finalFetchError } = await supabase
@@ -370,7 +386,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [sessionId, saveSessionDuration]);
 
-  // CRITICAL: Save on page unload using sendBeacon for reliability
+  // Save on page unload using sendBeacon (best-effort)
   useEffect(() => {
     if (!sessionId || !sessionStartTime) return;
 
@@ -386,31 +402,9 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
 
       // Use sendBeacon for reliable data sending even when page is closing
       const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/gestor_sessions?id=eq.${storedSessionId}`;
-      const headers = {
-        "Content-Type": "application/json",
-        "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        "Prefer": "return=minimal",
-      };
-
       const data = JSON.stringify({ duration_seconds: durationSeconds });
-
-      // sendBeacon is the most reliable way to send data on page close
       const blob = new Blob([data], { type: "application/json" });
-
-      // Create a FormData-like structure with headers embedded in URL
-      try {
-        // Try fetch with keepalive first (more reliable with headers)
-        fetch(url, {
-          method: "PATCH",
-          headers,
-          body: data,
-          keepalive: true,
-        });
-      } catch {
-        // Fallback: sendBeacon cannot send custom headers, so this is best-effort
-        console.log("[Session] Attempting beacon save on unload");
-      }
+      navigator.sendBeacon(url, blob);
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);

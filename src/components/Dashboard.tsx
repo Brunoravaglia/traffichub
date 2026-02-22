@@ -6,24 +6,64 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { useGestor } from "@/contexts/GestorContext";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { gestor } = useGestor();
+  const agencyId = gestor?.agencia_id ?? null;
   const currentDate = new Date();
   const monthStart = format(startOfMonth(currentDate), "yyyy-MM-dd");
   const monthEnd = format(endOfMonth(currentDate), "yyyy-MM-dd");
 
   // Fetch stats
   const { data: stats, refetch } = useQuery({
-    queryKey: ["dashboard-stats"],
+    queryKey: ["dashboard-stats", agencyId, monthStart, monthEnd],
     staleTime: 0,
     queryFn: async () => {
+      if (!agencyId) {
+        return {
+          clientes: [],
+          gestores: [],
+          totalChecklists: 0,
+          pendentes: 0,
+          avgProgress: 0,
+          hasRecentActivity: false,
+          totalRelatorios: 0,
+          totalInvestido: 0,
+          chartData: [],
+          pieData: [
+            { name: "Completos", value: 0, color: "hsl(var(--primary))" },
+            { name: "Pendentes", value: 100, color: "hsl(var(--muted))" },
+          ],
+          progressColor: "hsl(var(--primary))",
+        };
+      }
+
+      const { data: scopedClients, error: scopedClientsError } = await supabase
+        .from("clientes")
+        .select("id")
+        .eq("agencia_id", agencyId);
+
+      if (scopedClientsError) throw scopedClientsError;
+
+      const clientIds = (scopedClients || []).map((c) => c.id);
+
       const [clientesRes, gestoresRes, checklistsRes, relatoriosRes] = await Promise.all([
-        supabase.from("clientes").select("id, nome, logo_url, created_at").order("created_at", { ascending: false }),
-        supabase.from("gestores").select("id, nome, foto_url"),
-        supabase.from("checklists").select("*").gte("data", monthStart).lte("data", monthEnd),
-        supabase.from("relatorios").select("*").gte("data", monthStart).lte("data", monthEnd),
+        supabase.from("clientes").select("id, nome, logo_url, created_at").eq("agencia_id", agencyId).order("created_at", { ascending: false }),
+        supabase.from("gestores").select("id, nome, foto_url").eq("agencia_id", agencyId),
+        clientIds.length
+          ? supabase.from("checklists").select("*").in("cliente_id", clientIds).gte("data", monthStart).lte("data", monthEnd)
+          : Promise.resolve({ data: [], error: null }),
+        clientIds.length
+          ? supabase.from("relatorios").select("*").in("cliente_id", clientIds).gte("data", monthStart).lte("data", monthEnd)
+          : Promise.resolve({ data: [], error: null }),
       ]);
+
+      if (clientesRes.error) throw clientesRes.error;
+      if (gestoresRes.error) throw gestoresRes.error;
+      if (checklistsRes.error) throw checklistsRes.error;
+      if (relatoriosRes.error) throw relatoriosRes.error;
 
       const checklists = checklistsRes.data || [];
       const pendentes = checklists.length > 0 ? checklists.filter(c =>
@@ -111,6 +151,7 @@ const Dashboard = () => {
         progressColor,
       };
     },
+    enabled: !!agencyId,
   });
 
   const containerVariants = {
@@ -337,7 +378,7 @@ const Dashboard = () => {
                   >
                     {stats?.pieData?.map((entry, index) => (
                       <Cell
-                        key={`cell-${index}`}
+                        key={`${entry.name}-${entry.color}`}
                         fill={entry.color}
                         style={index === 0 && stats?.avgProgress > 0 ? { filter: `drop-shadow(0 0 8px ${entry.color}80)` } : {}}
                       />

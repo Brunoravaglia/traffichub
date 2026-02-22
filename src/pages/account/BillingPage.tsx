@@ -3,6 +3,7 @@ import { CreditCard, Calendar, FileText, ExternalLink, AlertCircle, CheckCircle 
 import { Button } from "@/components/ui/button";
 import AppLayout from "@/components/AppLayout";
 import { formatPrice, redirectToCustomerPortal } from "@/lib/stripe";
+import { toast } from "@/hooks/use-toast";
 
 const invoices = [
     { date: "01/02/2026", amount: 97, status: "Pago", id: "INV-2026-0201" },
@@ -12,6 +13,18 @@ const invoices = [
 ];
 
 const BillingPage = () => {
+    const openPortal = async () => {
+        try {
+            await redirectToCustomerPortal();
+        } catch (err) {
+            toast({
+                title: "Erro ao abrir portal Stripe",
+                description: err instanceof Error ? err.message : "Tente novamente em alguns instantes.",
+                variant: "destructive",
+            });
+        }
+    };
+
     return (
         <div className="max-w-3xl mx-auto py-8 px-4 space-y-8">
             {/* Header */}
@@ -50,7 +63,7 @@ const BillingPage = () => {
 
                 <div className="flex flex-wrap gap-3 mt-6">
                     <Button
-                        onClick={() => redirectToCustomerPortal()}
+                        onClick={openPortal}
                         className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
                     >
                         <ExternalLink className="w-4 h-4 mr-2" />
@@ -128,7 +141,7 @@ const BillingPage = () => {
                 <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => redirectToCustomerPortal()}
+                    onClick={openPortal}
                     className="text-xs text-muted-foreground hover:text-foreground"
                 >
                     Alterar
@@ -180,7 +193,7 @@ const BillingPage = () => {
                         Sem multa ou fidelidade.
                     </p>
                     <button
-                        onClick={() => redirectToCustomerPortal()}
+                        onClick={openPortal}
                         className="text-xs text-amber-400 hover:underline mt-2 inline-block"
                     >
                         Abrir portal de cancelamento →

@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useGestor } from "@/contexts/GestorContext";
 
 interface RechargeItem {
   clienteId: string;
@@ -47,14 +48,26 @@ const formatCurrency = (value: number): string => {
 
 const RechargeList = ({ gestorFilter }: RechargeListProps) => {
   const navigate = useNavigate();
+  const { gestor } = useGestor();
+  const agencyId = gestor?.agencia_id ?? null;
   const [filter, setFilter] = useState<"all" | "google" | "meta" | "urgent">("all");
 
   const { data: trackingData, isLoading } = useQuery({
-    queryKey: ["recharge-list", gestorFilter],
+    queryKey: ["recharge-list", agencyId, gestorFilter],
     queryFn: async () => {
+      if (!agencyId) return [];
+      const { data: scopedClients, error: clientsError } = await supabase
+        .from("clientes")
+        .select("id")
+        .eq("agencia_id", agencyId);
+      if (clientsError) throw clientsError;
+      const clientIds = (scopedClients || []).map((c) => c.id);
+      if (clientIds.length === 0) return [];
+
       const { data, error } = await supabase
         .from("client_tracking")
         .select("*, clientes(id, nome, logo_url, gestor_id)")
+        .in("cliente_id", clientIds)
         .or("google_proxima_recarga.not.is.null,meta_proxima_recarga.not.is.null");
 
       if (error) throw error;
@@ -74,6 +87,7 @@ const RechargeList = ({ gestorFilter }: RechargeListProps) => {
         clientes: { id: string; nome: string; logo_url: string | null; gestor_id: string } | null;
       }>;
     },
+    enabled: !!agencyId,
   });
 
   const recharges = useMemo(() => {

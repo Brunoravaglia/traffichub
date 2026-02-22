@@ -12,6 +12,7 @@ import { useBlogMetrics } from "@/hooks/useBlogMetrics";
 
 const parsePostDate = (dateStr: string) =>
     new Date(dateStr.includes("T") ? dateStr : `${dateStr}T12:00:00`);
+const BLOG_FALLBACK_COVER = "/blog/cover-1.png";
 
 const BlogPage = () => {
     const [activeCategory, setActiveCategory] = useState("Todos");
@@ -122,6 +123,12 @@ const BlogPage = () => {
         { value: "most_liked", label: "Mais curtidos" },
     ];
 
+    const handleCoverError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+        const img = e.currentTarget;
+        if (img.src.includes(BLOG_FALLBACK_COVER)) return;
+        img.src = BLOG_FALLBACK_COVER;
+    }, []);
+
     return (
         <PublicLayout>
             <SEOHead
@@ -210,9 +217,9 @@ const BlogPage = () => {
                             </AnimatePresence>
                         </div>
                         <div className="flex-shrink-0 flex gap-1">
-                            {tickerPosts.map((_, i) => (
+                            {tickerPosts.map((post, i) => (
                                 <button
-                                    key={i}
+                                    key={post.slug}
                                     onClick={() => setTickerIndex(i)}
                                     className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === tickerIndex
                                         ? "bg-primary w-4"
@@ -246,6 +253,7 @@ const BlogPage = () => {
                                                 src={heroPost?.coverImage}
                                                 alt={heroPost?.title}
                                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                onError={handleCoverError}
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                                             <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
@@ -285,9 +293,9 @@ const BlogPage = () => {
 
                             {/* Hero navigation dots */}
                             <div className="flex justify-center gap-2 mt-4">
-                                {heroPosts.map((_, i) => (
+                                {heroPosts.map((post, i) => (
                                     <button
-                                        key={i}
+                                        key={post.slug}
                                         onClick={() => setHeroIndex(i)}
                                         className={`h-1.5 rounded-full transition-all duration-400 ${i === heroIndex
                                             ? "bg-primary w-8"
@@ -314,6 +322,7 @@ const BlogPage = () => {
                                                 alt={post.title}
                                                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                                                 loading="lazy"
+                                                onError={handleCoverError}
                                             />
                                         </div>
                                         <div className="flex-1 min-w-0">
@@ -410,6 +419,7 @@ const BlogPage = () => {
                                                     src={post.coverImage}
                                                     alt={post.title}
                                                     className="w-12 h-8 rounded object-cover flex-shrink-0 mt-0.5"
+                                                    onError={handleCoverError}
                                                 />
                                                 <div className="min-w-0">
                                                     <p className="text-sm font-medium text-foreground truncate">
@@ -497,6 +507,7 @@ const BlogPage = () => {
                                                         alt={post.title}
                                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                                         loading="lazy"
+                                                        onError={handleCoverError}
                                                     />
                                                 </div>
                                                 <div className="p-6 space-y-3">

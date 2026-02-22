@@ -57,6 +57,7 @@ interface CalendarNotesProps {
 
 const CalendarNotes = ({ selectedDate, gestorFilter }: CalendarNotesProps) => {
   const { gestor } = useGestor();
+  const agencyId = gestor?.agencia_id ?? null;
   const queryClient = useQueryClient();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [newNote, setNewNote] = useState({
@@ -77,13 +78,32 @@ const CalendarNotes = ({ selectedDate, gestorFilter }: CalendarNotesProps) => {
     }
   }, [selectedDate]);
 
+  const { data: agencyGestores } = useQuery({
+    queryKey: ["agency-gestores-for-notes", agencyId],
+    queryFn: async () => {
+      if (!agencyId) return [];
+      const { data, error } = await supabase
+        .from("gestores")
+        .select("id")
+        .eq("agencia_id", agencyId);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!agencyId,
+    initialData: [],
+  });
+
+  const allowedGestorIds = (agencyGestores || []).map((g) => g.id);
+
   // Fetch notes for the selected period
   const { data: notes, isLoading } = useQuery({
-    queryKey: ["calendar-notes", gestorFilter, selectedDate?.toISOString()],
+    queryKey: ["calendar-notes", agencyId, gestorFilter, selectedDate?.toISOString(), allowedGestorIds],
     queryFn: async () => {
+      if (!agencyId || allowedGestorIds.length === 0) return [];
       let query = supabase
         .from("calendar_notes")
         .select("*, clientes(nome, logo_url)")
+        .in("gestor_id", allowedGestorIds)
         .order("note_date", { ascending: true })
         .order("created_at", { ascending: false });
 
@@ -95,13 +115,16 @@ const CalendarNotes = ({ selectedDate, gestorFilter }: CalendarNotesProps) => {
       if (error) throw error;
       return data as CalendarNote[];
     },
+    enabled: !!agencyId,
+    initialData: [],
   });
 
   // Fetch clients for dropdown
   const { data: clientes } = useQuery({
-    queryKey: ["clientes-for-notes", gestorFilter],
+    queryKey: ["clientes-for-notes", agencyId, gestorFilter],
     queryFn: async () => {
-      let query = supabase.from("clientes").select("id, nome").order("nome");
+      if (!agencyId) return [];
+      let query = supabase.from("clientes").select("id, nome").eq("agencia_id", agencyId).order("nome");
       
       if (gestorFilter && gestorFilter !== "all") {
         query = query.eq("gestor_id", gestorFilter);
@@ -111,11 +134,14 @@ const CalendarNotes = ({ selectedDate, gestorFilter }: CalendarNotesProps) => {
       if (error) throw error;
       return data || [];
     },
+    enabled: !!agencyId,
+    initialData: [],
   });
 
   // Create note mutation
   const createNoteMutation = useMutation({
     mutationFn: async (note: typeof newNote) => {
+      if (!gestor?.id || !agencyId) throw new Error("Gestor não autenticado");
       const { error } = await supabase.from("calendar_notes").insert({
         gestor_id: gestor?.id,
         cliente_id: note.cliente_id || null,
@@ -146,10 +172,12 @@ const CalendarNotes = ({ selectedDate, gestorFilter }: CalendarNotesProps) => {
   // Delete note mutation
   const deleteNoteMutation = useMutation({
     mutationFn: async (noteId: string) => {
+      if (!agencyId || allowedGestorIds.length === 0) throw new Error("Agência não identificada");
       const { error } = await supabase
         .from("calendar_notes")
         .delete()
-        .eq("id", noteId);
+        .eq("id", noteId)
+        .in("gestor_id", allowedGestorIds);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -164,10 +192,12 @@ const CalendarNotes = ({ selectedDate, gestorFilter }: CalendarNotesProps) => {
   // Toggle reminder mutation
   const toggleReminderMutation = useMutation({
     mutationFn: async ({ noteId, hasReminder }: { noteId: string; hasReminder: boolean }) => {
+      if (!agencyId || allowedGestorIds.length === 0) throw new Error("Agência não identificada");
       const { error } = await supabase
         .from("calendar_notes")
         .update({ has_reminder: hasReminder })
-        .eq("id", noteId);
+        .eq("id", noteId)
+        .in("gestor_id", allowedGestorIds);
       if (error) throw error;
     },
     onSuccess: () => {

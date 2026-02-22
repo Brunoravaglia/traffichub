@@ -40,12 +40,14 @@ const formatDuration = (seconds: number): string => {
 
 const ProductivityDashboard = () => {
   const { gestor } = useGestor();
+  const agencyId = gestor?.agencia_id ?? null;
   const [period, setPeriod] = useState<"week" | "month">("week");
 
   const { data: productivityData, isLoading } = useQuery({
-    queryKey: ["productivity-dashboard", gestor?.id, period],
-    enabled: !!gestor?.id,
+    queryKey: ["productivity-dashboard", gestor?.id, agencyId, period],
+    enabled: !!gestor?.id && !!agencyId,
     queryFn: async () => {
+      if (!gestor?.id || !agencyId) return null;
       const now = new Date();
       let startDate: Date;
       let endDate: Date;
@@ -95,18 +97,23 @@ const ProductivityDashboard = () => {
       const { data: allSessions } = await supabase
         .from("gestor_sessions")
         .select("gestor_id, duration_seconds")
+        .in("gestor_id", (
+          await supabase.from("gestores").select("id").eq("agencia_id", agencyId)
+        ).data?.map((g) => g.id) || [])
         .gte("login_at", startDate.toISOString())
         .lte("login_at", endDate.toISOString());
 
       // Fetch all gestores for comparison
       const { data: allGestores } = await supabase
         .from("gestores")
-        .select("id, nome");
+        .select("id, nome")
+        .eq("agencia_id", agencyId);
 
       // Fetch gestor's clients
       const { data: gestorClientes } = await supabase
         .from("clientes")
         .select("id")
+        .eq("agencia_id", agencyId)
         .eq("gestor_id", gestor!.id);
       
       const clienteIds = gestorClientes?.map(c => c.id) || [];

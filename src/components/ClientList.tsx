@@ -22,6 +22,7 @@ const ClientList = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { gestor: loggedGestor, isLoggedIn } = useGestor();
+  const agencyId = loggedGestor?.agencia_id ?? null;
   
   // Initialize filter with URL param or logged gestor's ID
   const urlGestor = searchParams.get("gestor");
@@ -45,41 +46,46 @@ const ClientList = () => {
     } else if (selectedGestorId === "all") {
       setSearchParams({});
     }
-  }, [selectedGestorId]);
+  }, [selectedGestorId, setSearchParams]);
 
   const gestorFilter = selectedGestorId !== "all" ? selectedGestorId : null;
 
   // Fetch all gestores for the filter dropdown
   const { data: allGestores } = useQuery({
-    queryKey: ["gestores-filter"],
+    queryKey: ["gestores-filter", agencyId],
     queryFn: async () => {
+      if (!agencyId) return [];
       const { data, error } = await supabase
         .from("gestores")
         .select("id, nome, foto_url")
+        .eq("agencia_id", agencyId)
         .order("nome");
       if (error) throw error;
       return data;
     },
+    enabled: !!agencyId,
   });
 
   const { data: gestorInfo } = useQuery({
-    queryKey: ["gestor", gestorFilter],
+    queryKey: ["gestor", gestorFilter, agencyId],
     queryFn: async () => {
-      if (!gestorFilter) return null;
+      if (!gestorFilter || !agencyId) return null;
       const { data, error } = await supabase
         .from("gestores")
         .select("*")
         .eq("id", gestorFilter)
+        .eq("agencia_id", agencyId)
         .maybeSingle();
       if (error) throw error;
       return data;
     },
-    enabled: !!gestorFilter,
+    enabled: !!gestorFilter && !!agencyId,
   });
 
   const { data: clientes, isLoading } = useQuery({
-    queryKey: ["clientes", gestorFilter],
+    queryKey: ["clientes", gestorFilter, agencyId],
     queryFn: async () => {
+      if (!agencyId) return [];
       let query = supabase
         .from("clientes")
         .select(`
@@ -87,6 +93,7 @@ const ClientList = () => {
           gestores(nome),
           checklists(*)
         `)
+        .eq("agencia_id", agencyId)
         .order("updated_at", { ascending: false });
 
       if (gestorFilter) {
@@ -97,6 +104,7 @@ const ClientList = () => {
       if (error) throw error;
       return data;
     },
+    enabled: !!agencyId,
     refetchOnWindowFocus: false,
     staleTime: 30000,
   });
@@ -267,8 +275,9 @@ const ClientList = () => {
                       </Avatar>
 
                       {/* Client Info */}
-                      <div 
-                        className="flex-1 min-w-0 cursor-pointer"
+                      <button
+                        type="button"
+                        className="flex-1 min-w-0 cursor-pointer text-left"
                         onClick={() => navigate(`/cliente/${cliente.id}`)}
                       >
                         <div className="flex items-center gap-3 mb-2">
@@ -290,7 +299,7 @@ const ClientList = () => {
                             </span>
                           )}
                         </div>
-                      </div>
+                      </button>
 
                       {/* Progress */}
                       <div className="w-32">

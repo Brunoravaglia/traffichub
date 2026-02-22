@@ -52,15 +52,17 @@ function ParallaxText({ children, baseVelocity = 100 }: ParallaxProps) {
     });
 
     return (
-        <div className="overflow-hidden tracking-tighter leading-[0.8] m-0 whitespace-nowrap flex flex-nowrap py-4">
+        <div className="overflow-hidden tracking-tight leading-[0.82] m-0 whitespace-nowrap flex flex-nowrap py-0.5 sm:py-1">
             <motion.div
                 style={{ x }}
-                className="font-bold uppercase text-lg sm:text-2xl md:text-3xl flex whitespace-nowrap flex-nowrap will-change-transform text-primary dark:text-accent opacity-[0.15]"
+                className="font-extrabold uppercase text-sm sm:text-lg md:text-xl flex whitespace-nowrap flex-nowrap will-change-transform bg-gradient-to-r from-[#0a3b1f] via-[#10b65f] to-[#d9ff3f] bg-clip-text text-transparent opacity-[0.42] drop-shadow-[0_0_10px_rgba(120,255,80,0.14)]"
             >
-                <span className="block mr-12">{children} </span>
-                <span className="block mr-12">{children} </span>
-                <span className="block mr-12">{children} </span>
-                <span className="block mr-12">{children} </span>
+                <span className="block mr-6 sm:mr-8">{children} </span>
+                <span className="block mr-6 sm:mr-8">{children} </span>
+                <span className="block mr-6 sm:mr-8">{children} </span>
+                <span className="block mr-6 sm:mr-8">{children} </span>
+                <span className="block mr-6 sm:mr-8">{children} </span>
+                <span className="block mr-6 sm:mr-8">{children} </span>
             </motion.div>
         </div>
     );
@@ -68,23 +70,25 @@ function ParallaxText({ children, baseVelocity = 100 }: ParallaxProps) {
 
 export default function ParallaxTextScroll() {
     return (
-        <section className="relative w-full py-12 bg-background overflow-hidden border-y border-primary/10">
+        <section className="relative w-full py-3 sm:py-3.5 bg-background overflow-hidden border-y border-primary/15">
             {/* Background Grid */}
             <div
-                className="absolute inset-0 z-0 pointer-events-none opacity-[0.03]"
+                className="absolute inset-0 z-0 pointer-events-none opacity-[0.08]"
                 style={{
                     backgroundImage: `
-            linear-gradient(to right, #16DB65 1px, transparent 1px),
-            linear-gradient(to bottom, #16DB65 1px, transparent 1px)
+            linear-gradient(to right, rgba(8, 74, 38, 0.55) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(160, 255, 48, 0.24) 1px, transparent 1px)
           `,
-                    backgroundSize: '40px 40px'
+                    backgroundSize: '36px 36px'
                 }}
             />
 
-            <div className="relative z-10 flex flex-col gap-4">
+            <div className="relative z-10 flex flex-col gap-0.5">
                 <ParallaxText baseVelocity={-2}>Gestão Profissional de Tráfego</ParallaxText>
                 <ParallaxText baseVelocity={2}>Relatórios que Impressionam Clientes</ParallaxText>
                 <ParallaxText baseVelocity={-1.5}>Escalabilidade para sua Agência</ParallaxText>
+                <ParallaxText baseVelocity={1.8}>Dashboards Claros e Sem Planilhas Caóticas</ParallaxText>
+                <ParallaxText baseVelocity={-1.2}>Mais Controle, Menos Retrabalho Operacional</ParallaxText>
             </div>
         </section>
     );

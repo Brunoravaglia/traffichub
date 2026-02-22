@@ -8,24 +8,54 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import VCDLogo from "./VCDLogo";
 import ProgressBar from "./ProgressBar";
+import { useGestor } from "@/contexts/GestorContext";
+
+const checklistItemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.3 },
+  },
+};
+
+const ChecklistItemReadOnly = ({ label, checked }: { label: string; checked: boolean }) => (
+  <motion.div
+    variants={checklistItemVariants}
+    className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
+      checked ? "bg-primary/10" : "bg-red-500/10"
+    }`}
+  >
+    {checked ? (
+      <CheckCircle2 className="w-5 h-5 text-primary" />
+    ) : (
+      <XCircle className="w-5 h-5 text-red-500" />
+    )}
+    <span className={`text-sm ${checked ? "text-foreground" : "text-muted-foreground"}`}>{label}</span>
+  </motion.div>
+);
 
 const RelatorioView = () => {
+  const { gestor } = useGestor();
+  const agencyId = gestor?.agencia_id ?? null;
   const { id, data } = useParams<{ id: string; data: string }>();
   const navigate = useNavigate();
 
   const { data: cliente } = useQuery({
-    queryKey: ["cliente", id],
+    queryKey: ["cliente", id, agencyId],
     queryFn: async () => {
+      if (!agencyId) return null;
       const { data: clienteData, error } = await supabase
         .from("clientes")
         .select("*, gestores(nome)")
         .eq("id", id)
+        .eq("agencia_id", agencyId)
         .maybeSingle();
 
       if (error) throw error;
       return clienteData;
     },
-    enabled: !!id,
+    enabled: !!id && !!agencyId,
   });
 
   const { data: checklist } = useQuery({
@@ -41,7 +71,7 @@ const RelatorioView = () => {
       if (error) throw error;
       return checklistData;
     },
-    enabled: !!id && !!data,
+    enabled: !!id && !!data && !!cliente,
   });
 
   const calculateProgress = () => {
@@ -58,33 +88,6 @@ const RelatorioView = () => {
     const completed = fields.filter(Boolean).length;
     return Math.round((completed / fields.length) * 100);
   };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.3 },
-    },
-  };
-
-  const ChecklistItemReadOnly = ({ label, checked }: { label: string; checked: boolean }) => (
-    <motion.div
-      variants={itemVariants}
-      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
-        checked ? 'bg-primary/10' : 'bg-red-500/10'
-      }`}
-    >
-      {checked ? (
-        <CheckCircle2 className="w-5 h-5 text-primary" />
-      ) : (
-        <XCircle className="w-5 h-5 text-red-500" />
-      )}
-      <span className={`text-sm ${checked ? 'text-foreground' : 'text-muted-foreground'}`}>
-        {label}
-      </span>
-    </motion.div>
-  );
 
   if (!cliente || !checklist) {
     return (
@@ -161,7 +164,7 @@ const RelatorioView = () => {
             className="grid md:grid-cols-2 gap-6"
           >
             {/* Faturamento */}
-            <motion.div variants={itemVariants} className="vcd-card">
+            <motion.div variants={checklistItemVariants} className="vcd-card">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                   <CreditCard className="w-5 h-5 text-primary" />
@@ -176,7 +179,7 @@ const RelatorioView = () => {
             </motion.div>
 
             {/* Rastreamento */}
-            <motion.div variants={itemVariants} className="vcd-card">
+            <motion.div variants={checklistItemVariants} className="vcd-card">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                   <BarChart3 className="w-5 h-5 text-primary" />
@@ -191,7 +194,7 @@ const RelatorioView = () => {
             </motion.div>
 
             {/* Criativos */}
-            <motion.div variants={itemVariants} className="vcd-card">
+            <motion.div variants={checklistItemVariants} className="vcd-card">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                   <Palette className="w-5 h-5 text-primary" />
@@ -206,7 +209,7 @@ const RelatorioView = () => {
             </motion.div>
 
             {/* Pendências */}
-            <motion.div variants={itemVariants} className="vcd-card">
+            <motion.div variants={checklistItemVariants} className="vcd-card">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                   <FileText className="w-5 h-5 text-primary" />

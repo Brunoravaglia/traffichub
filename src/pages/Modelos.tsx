@@ -124,6 +124,7 @@ type PlatformFilter = "all" | "google" | "meta";
 const Modelos = () => {
   const navigate = useNavigate();
   const { gestor } = useGestor();
+  const agencyId = gestor?.agencia_id ?? null;
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -236,25 +237,30 @@ const Modelos = () => {
 
   // Fetch gestores for client filter
   const { data: allGestores } = useQuery({
-    queryKey: ["gestores-filter-modelos"],
+    queryKey: ["gestores-filter-modelos", agencyId],
     queryFn: async () => {
+      if (!agencyId) return [];
       const { data, error } = await supabase
         .from("gestores")
         .select("id, nome, foto_url")
+        .eq("agencia_id", agencyId)
         .order("nome");
       if (error) throw error;
       return data;
     },
+    enabled: !!agencyId,
   });
 
   // Fetch clients for selection modal
   const gestorFilter = selectedGestorId !== "all" ? selectedGestorId : null;
   const { data: clientes, isLoading: clientesLoading } = useQuery({
-    queryKey: ["clientes-modelos", gestorFilter],
+    queryKey: ["clientes-modelos", agencyId, gestorFilter],
     queryFn: async () => {
+      if (!agencyId) return [];
       let query = supabase
         .from("clientes")
         .select("id, nome, logo_url, gestor_id")
+        .eq("agencia_id", agencyId)
         .order("nome");
 
       if (gestorFilter) {
@@ -265,6 +271,7 @@ const Modelos = () => {
       if (error) throw error;
       return data;
     },
+    enabled: !!agencyId,
   });
 
   const filteredClientes = clientes?.filter((c) =>

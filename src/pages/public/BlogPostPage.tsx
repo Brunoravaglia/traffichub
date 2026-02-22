@@ -23,6 +23,8 @@ import { useTrackView, useLike } from "@/hooks/useBlogMetrics";
 
 const parsePostDate = (dateStr: string) =>
     new Date(dateStr.includes("T") ? dateStr : `${dateStr}T12:00:00`);
+const BLOG_FALLBACK_COVER = "/blog/cover-1.png";
+const BASE_URL = import.meta.env.VITE_SITE_URL || "https://vurp.vercel.app";
 
 const BlogPostPage = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -35,7 +37,7 @@ const BlogPostPage = () => {
 
     // Scroll to top when article changes
     useEffect(() => {
-        window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+        window.scrollTo({ top: 0, behavior: "auto" });
     }, [slug]);
 
     // Reading progress bar
@@ -50,14 +52,19 @@ const BlogPostPage = () => {
         return () => window.removeEventListener("scroll", onScroll);
     }, []);
 
-    const isPublished = post ? parsePostDate(post.date).getTime() <= Date.now() : false;
+    const postDate = post ? parsePostDate(post.date).getTime() : NaN;
+    const isPublished = post ? Number.isFinite(postDate) && postDate <= Date.now() : false;
 
     if (!post || !isPublished) {
         return <Navigate to="/blog" replace />;
     }
 
     const relatedPosts = blogPosts
-        .filter((p) => p.slug !== slug && parsePostDate(p.date).getTime() <= Date.now())
+        .filter((p) => {
+            if (p.slug === slug) return false;
+            const ts = parsePostDate(p.date).getTime();
+            return Number.isFinite(ts) && ts <= Date.now();
+        })
         .slice(0, 3);
 
     const formatDate = (dateStr: string) => {
@@ -82,8 +89,12 @@ const BlogPostPage = () => {
         }
     };
 
+    const safeContent = typeof post.content === "string" ? post.content : "";
+    const safeCoverImage = typeof post.coverImage === "string" && post.coverImage.length > 0 ? post.coverImage : BLOG_FALLBACK_COVER;
+    const absoluteCover = safeCoverImage.startsWith("http") ? safeCoverImage : `${BASE_URL}${safeCoverImage}`;
+
     // Split content in half for mid-article CTA insertion
-    const paragraphs = post.content.split("\n\n");
+    const paragraphs = safeContent.split("\n\n");
     const midPoint = Math.floor(paragraphs.length / 2);
     const firstHalf = paragraphs.slice(0, midPoint).join("\n\n");
     const secondHalf = paragraphs.slice(midPoint).join("\n\n");
@@ -107,6 +118,12 @@ const BlogPostPage = () => {
         [&_tbody_tr:nth-child(even)]:bg-card/30
     `;
 
+    const handleCoverError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+        const img = e.currentTarget;
+        if (img.src.includes(BLOG_FALLBACK_COVER)) return;
+        img.src = BLOG_FALLBACK_COVER;
+    };
+
     return (
         <PublicLayout>
             <SEOHead
@@ -126,27 +143,27 @@ const BlogPostPage = () => {
                     "@type": "Article",
                     headline: post.title,
                     description: post.metaDescription,
-                    image: `https://vurp.com.br${post.coverImage}`,
+                    image: absoluteCover,
                     datePublished: post.date,
                     dateModified: post.date,
-                    wordCount: post.content.split(/\s+/).length,
+                    wordCount: safeContent.split(/\s+/).length,
                     mainEntityOfPage: {
                         "@type": "WebPage",
-                        "@id": `https://vurp.com.br/blog/${post.slug}`,
+                        "@id": `${BASE_URL}/blog/${post.slug}`,
                     },
                     articleSection: post.category,
                     inLanguage: "pt-BR",
                     author: {
                         "@type": "Organization",
                         name: "Vurp",
-                        url: "https://vurp.com.br",
+                        url: BASE_URL,
                     },
                     publisher: {
                         "@type": "Organization",
                         name: "Vurp",
                         logo: {
                             "@type": "ImageObject",
-                            url: "https://vurp.com.br/og-image.png",
+                            url: `${BASE_URL}/og-image.png`,
                         },
                     },
                 }}
@@ -249,9 +266,10 @@ const BlogPostPage = () => {
                                 className="aspect-[16/9] rounded-2xl overflow-hidden mb-12"
                             >
                                 <img
-                                    src={post.coverImage}
+                                    src={safeCoverImage}
                                     alt={post.title}
                                     className="w-full h-full object-cover"
+                                    onError={handleCoverError}
                                 />
                             </motion.div>
 
@@ -283,7 +301,7 @@ const BlogPostPage = () => {
                                 buttonLabel={post.ctaLabel}
                                 to={post.ctaTarget}
                                 variant="image"
-                                imageSrc={post.coverImage}
+                                imageSrc={safeCoverImage}
                             />
 
                             {/* Article Body - Second Half */}
@@ -346,6 +364,7 @@ const BlogPostPage = () => {
                                                         alt={rPost.title}
                                                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                                                         loading="lazy"
+                                                        onError={handleCoverError}
                                                     />
                                                 </div>
                                                 <h4 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">

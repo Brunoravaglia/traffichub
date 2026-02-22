@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import brandMark from "@/assets/brand-mark.png";
+import brandMark from "@/assets/brand-mark.webp";
 
 interface VCDLogoProps {
   size?: "sm" | "md" | "lg";

@@ -31,6 +31,27 @@ const GestorLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [agencyLogoSrc, setAgencyLogoSrc] = useState<string | null>(null);
+  const [agencyLogoBroken, setAgencyLogoBroken] = useState(false);
+
+  const normalizeLogoUrl = (url?: string | null) => {
+    if (!url) return null;
+    if (url.startsWith("/")) {
+      const base = import.meta.env.VITE_SUPABASE_URL || "";
+      return base ? `${base}${url}` : url;
+    }
+    return url.replace(/^http:\/\//i, "https://");
+  };
+
+  useEffect(() => {
+    if (!agencia) {
+      setAgencyLogoSrc(null);
+      setAgencyLogoBroken(false);
+      return;
+    }
+    setAgencyLogoBroken(false);
+    setAgencyLogoSrc(normalizeLogoUrl(agencia.logo_black_url) || normalizeLogoUrl(agencia.logo_url));
+  }, [agencia]);
 
   // Fetch gestores only when agency is selected
   useEffect(() => {
@@ -128,12 +149,21 @@ const GestorLogin = () => {
                   className="flex flex-col items-center gap-4"
                 >
                   <div className="relative group flex justify-center w-full">
-                    {agencia.logo_url ? (
+                    {agencyLogoSrc && !agencyLogoBroken ? (
                       <div className="h-28 max-w-[240px] flex items-center justify-center p-4 rounded-2xl bg-black/40 border border-white/5 shadow-inner">
                         <img
-                          src={agencia.logo_url}
+                          src={agencyLogoSrc}
                           alt={agencia.nome}
                           className="max-h-full max-w-full object-contain filter drop-shadow-md"
+                          onError={() => {
+                            if (!agencyLogoSrc) return;
+                            const fallback = normalizeLogoUrl(agencia.logo_url);
+                            if (fallback && fallback !== agencyLogoSrc) {
+                              setAgencyLogoSrc(fallback);
+                              return;
+                            }
+                            setAgencyLogoBroken(true);
+                          }}
                         />
                       </div>
                     ) : (
@@ -185,11 +215,10 @@ const GestorLogin = () => {
                     <div className="relative">
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
                       <Input
-                        placeholder="Identificador da agência (vcd, etc)"
+                        placeholder="Identificador da agência (ex: sua-agencia)"
                         value={agencySlug}
                         onChange={(e) => setAgencySlug(e.target.value)}
                         className="pl-12 h-14 text-base bg-black/40 border border-white/10 focus:border-white/30 text-white placeholder:text-zinc-500 rounded-xl transition-all"
-                        autoFocus
                       />
                     </div>
                     <Button

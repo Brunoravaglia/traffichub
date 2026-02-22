@@ -21,6 +21,7 @@ import ClientDashboard from "./ClientDashboard";
 import ClientNotes from "./ClientNotes";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { useGestor } from "@/contexts/GestorContext";
 
 interface ChecklistData {
   id?: string;
@@ -39,6 +40,8 @@ interface ChecklistData {
 }
 
 const ClientChecklist = () => {
+  const { gestor } = useGestor();
+  const agencyId = gestor?.agencia_id ?? null;
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get("tab") || "dados";
@@ -52,18 +55,20 @@ const ClientChecklist = () => {
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
 
   const { data: cliente } = useQuery({
-    queryKey: ["cliente", id],
+    queryKey: ["cliente", id, agencyId],
     queryFn: async () => {
+      if (!agencyId) return null;
       const { data, error } = await supabase
         .from("clientes")
         .select(`*, gestores(nome)`)
         .eq("id", id)
+        .eq("agencia_id", agencyId)
         .maybeSingle();
 
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && !!agencyId,
   });
 
   const { data: checklistData, refetch: refetchChecklist } = useQuery({
@@ -80,7 +85,7 @@ const ClientChecklist = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && !!cliente,
   });
 
   // Query to get all filled dates for the calendar
@@ -100,7 +105,7 @@ const ClientChecklist = () => {
       if (error) throw error;
       return data?.map(d => parseISO(d.data)) || [];
     },
-    enabled: !!id,
+    enabled: !!id && !!cliente,
   });
 
   useEffect(() => {

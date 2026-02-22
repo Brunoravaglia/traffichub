@@ -4,6 +4,7 @@ import { Check, ArrowRight, Zap, Star, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AppLayout from "@/components/AppLayout";
 import { PLANS, formatPrice, redirectToCheckout } from "@/lib/stripe";
+import { toast } from "@/hooks/use-toast";
 
 const icons = [Zap, Star, Crown];
 
@@ -113,9 +114,25 @@ const PlanSelectionPage = () => {
                                 </Button>
                             ) : (
                                 <Button
-                                    onClick={() => {
+                                    onClick={async () => {
                                         const priceId = annual ? plan.stripePriceIdYearly : plan.stripePriceIdMonthly;
-                                        if (priceId) redirectToCheckout(priceId);
+                                        if (!priceId) {
+                                            toast({
+                                                title: "Plano sem Price ID",
+                                                description: "Configure os IDs de preço da Stripe no ambiente.",
+                                                variant: "destructive",
+                                            });
+                                            return;
+                                        }
+                                        try {
+                                            await redirectToCheckout(priceId);
+                                        } catch (err) {
+                                            toast({
+                                                title: "Erro ao abrir checkout",
+                                                description: err instanceof Error ? err.message : "Tente novamente em alguns instantes.",
+                                                variant: "destructive",
+                                            });
+                                        }
                                     }}
                                     className={`w-full h-11 font-semibold transition-all ${isUpgrade
                                             ? "bg-primary hover:bg-primary/90 text-primary-foreground vcd-button-glow"

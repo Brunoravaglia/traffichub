@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import PublicLayout from "@/components/home/PublicLayout";
 import { PLANS, formatPrice, redirectToCheckout } from "@/lib/stripe";
 import SEOHead from "@/components/SEOHead";
+import { toast } from "@/hooks/use-toast";
 
 const featureComparison = [
     { feature: "Contas de anúncios", solo: "Até 5", agency: "Até 50", pro: "Até 50" },
@@ -160,9 +161,25 @@ const PricingPage = () => {
                                     </ul>
 
                                     <Button
-                                        onClick={() => {
+                                        onClick={async () => {
                                             const priceId = annual ? plan.stripePriceIdYearly : plan.stripePriceIdMonthly;
-                                            if (priceId) redirectToCheckout(priceId);
+                                            if (!priceId) {
+                                                toast({
+                                                    title: "Plano sem Price ID",
+                                                    description: "Configure os IDs de preço da Stripe no ambiente.",
+                                                    variant: "destructive",
+                                                });
+                                                return;
+                                            }
+                                            try {
+                                                await redirectToCheckout(priceId);
+                                            } catch (err) {
+                                                toast({
+                                                    title: "Erro ao abrir checkout",
+                                                    description: err instanceof Error ? err.message : "Tente novamente em alguns instantes.",
+                                                    variant: "destructive",
+                                                });
+                                            }
                                         }}
                                         className={`w-full h-12 font-semibold text-base transition-all duration-300 ${isPopular
                                             ? "bg-primary hover:bg-primary/90 text-primary-foreground vcd-button-glow hover:scale-[1.02]"

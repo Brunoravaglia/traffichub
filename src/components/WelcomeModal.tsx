@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import VCDLogo from "./VCDLogo";
 import { useGestor } from "@/contexts/GestorContext";
 
@@ -17,6 +17,22 @@ interface WelcomeModalProps {
 const WelcomeModal = ({ isOpen, onClose, gestorName }: WelcomeModalProps) => {
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const { agencia } = useGestor();
+  const [agencyLogoSrc, setAgencyLogoSrc] = useState<string | null>(null);
+  const [agencyLogoBroken, setAgencyLogoBroken] = useState(false);
+
+  const normalizeLogoUrl = (url?: string | null) => {
+    if (!url) return null;
+    if (url.startsWith("/")) {
+      const base = import.meta.env.VITE_SUPABASE_URL || "";
+      return base ? `${base}${url}` : url;
+    }
+    return url.replace(/^http:\/\//i, "https://");
+  };
+
+  useEffect(() => {
+    setAgencyLogoBroken(false);
+    setAgencyLogoSrc(normalizeLogoUrl(agencia?.logo_black_url) || normalizeLogoUrl(agencia?.logo_url));
+  }, [agencia?.logo_black_url, agencia?.logo_url]);
 
   const features = [
     { icon: CheckCircle2, text: "Gerencie checklists de mídia paga" },
@@ -58,9 +74,21 @@ const WelcomeModal = ({ isOpen, onClose, gestorName }: WelcomeModalProps) => {
 
             <div className="relative z-10">
               <div className="flex justify-center mb-4">
-                {agencia?.logo_url ? (
+                {agencyLogoSrc && !agencyLogoBroken ? (
                   <div className="p-3 bg-white/50 backdrop-blur-sm rounded-xl border border-primary/10 shadow-sm">
-                    <img src={agencia.logo_url} alt={agencia.nome} className="h-16 w-auto object-contain" />
+                    <img
+                      src={agencyLogoSrc}
+                      alt={agencia?.nome || "Agência"}
+                      className="h-16 w-auto object-contain"
+                      onError={() => {
+                        const fallback = normalizeLogoUrl(agencia?.logo_url);
+                        if (fallback && fallback !== agencyLogoSrc) {
+                          setAgencyLogoSrc(fallback);
+                          return;
+                        }
+                        setAgencyLogoBroken(true);
+                      }}
+                    />
                   </div>
                 ) : (
                   <VCDLogo size="lg" showText={false} />
@@ -93,7 +121,7 @@ const WelcomeModal = ({ isOpen, onClose, gestorName }: WelcomeModalProps) => {
             <div className="space-y-3">
               {features.map((feature, index) => (
                 <motion.div
-                  key={index}
+                  key={feature.text}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.4 + index * 0.1 }}
