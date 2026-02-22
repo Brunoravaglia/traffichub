@@ -10,42 +10,59 @@ interface ReportHeaderProps {
 
 export const ReportHeader = ({ cliente, periodoInicio, periodoFim }: ReportHeaderProps) => {
     return (
-        <div className="p-8 pb-4">
-            <div className="flex items-start justify-between mb-8">
-                <div className="flex items-center gap-6">
-                    {cliente?.logo_url ? (
-                        <div className="h-24 max-w-[280px] rounded-2xl overflow-hidden shadow-lg flex items-center justify-center bg-black/20" style={{ height: '96px', maxWidth: '280px' }}>
-                            <img
-                                src={cliente.logo_url}
-                                alt={cliente.nome}
-                                className="w-full h-full object-cover"
-                                style={{ height: '96px', width: '100%', objectFit: 'cover' }}
-                                crossOrigin="anonymous"
-                            />
+        <div className="p-10 pb-6 bg-gradient-to-b from-black/40 to-transparent">
+            <div className="flex items-start justify-between mb-10">
+                <div className="flex items-center gap-8">
+                    {cliente?.logo_url || (cliente?.agencias as any)?.logo_url ? (
+                        <div className="p-1 bg-gradient-to-br from-[#ffb500] to-[#cc9200] rounded-2xl shadow-[0_0_20px_rgba(255,181,0,0.2)]">
+                            <div className="h-24 max-w-[280px] rounded-xl overflow-hidden flex items-center justify-center bg-black/90" style={{ height: '96px', maxWidth: '280px' }}>
+                                <img
+                                    src={cliente.logo_url || (cliente?.agencias as any)?.logo_url}
+                                    alt={cliente.nome}
+                                    className="w-full h-full object-contain p-2"
+                                    style={{ height: '96px', width: '100%' }}
+                                    crossOrigin="anonymous"
+                                />
+                            </div>
                         </div>
                     ) : (
-                        <div className="w-24 h-24 rounded-2xl bg-[#ffb500]/10 border border-[#ffb500]/20 text-[#ffb500] flex items-center justify-center shadow-lg">
-                            <span className="text-4xl font-medium tracking-widest">{cliente?.nome?.charAt(0)}</span>
+                        <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#ffb500] to-[#cc9200] flex items-center justify-center shadow-xl">
+                            <span className="text-4xl font-bold text-black tracking-widest">{cliente?.nome?.charAt(0)}</span>
                         </div>
                     )}
-                    <div className="space-y-1">
-                        <p className="text-3xl font-bold text-[#ffb500] tracking-wide uppercase leading-tight">{cliente?.nome}</p>
-                        <p className="text-sm text-gray-400 font-normal tracking-wider">Relatório de Performance</p>
+                    <div className="space-y-2">
+                        <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#ffb500] via-[#ffd700] to-[#cc9200] tracking-tight uppercase leading-none">
+                            {cliente?.nome}
+                        </p>
+                        <p className="text-xs text-gray-400 font-bold tracking-[0.3em] uppercase opacity-70">
+                            Performance Analytics Report
+                        </p>
                     </div>
                 </div>
                 <div className="text-right flex flex-col justify-center">
-                    <h1 className="text-3xl font-medium text-white mb-1 tracking-wider leading-none">RESULTADOS DE</h1>
-                    <h1 className="text-3xl font-extrabold text-[#ffb500] mb-2 tracking-wider leading-none">CAMPANHA</h1>
-                    <p className="text-xl text-gray-500 uppercase font-medium tracking-widest">
-                        Mês de {format(periodoInicio, "MMMM", { locale: ptBR })}
-                    </p>
+                    <h1 className="text-4xl font-light text-white mb-0 tracking-tighter leading-none opacity-40 italic">RESULTS</h1>
+                    <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-tr from-[#ffb500] to-[#ffd700] mb-3 tracking-tighter leading-none">
+                        INSIGHTS
+                    </h1>
+                    <div className="flex flex-col items-end gap-1">
+                        <p className="text-sm text-[#ffb500] uppercase font-bold tracking-[0.2em] bg-[#ffb500]/10 px-3 py-1 rounded-sm border border-[#ffb500]/20">
+                            {format(periodoInicio, "MMMM yyyy", { locale: ptBR })}
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            <div className="text-center mb-8">
-                <span className="px-6 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300 tracking-[0.2em] font-bold uppercase">
-                    Campanhas de {format(periodoInicio, "dd/MM")} à {format(periodoFim, "dd/MM")}
-                </span>
+            <div className="flex justify-center mb-10">
+                <div className="relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-[#ffb500]/20 to-[#cc9200]/20 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+                    <div className="relative px-8 py-3 rounded-full bg-black/40 border border-[#ffb500]/30 backdrop-blur-sm">
+                        <p className="text-xs text-gray-200 tracking-[0.25em] font-black uppercase flex items-center gap-3">
+                            <span className="w-1 h-1 rounded-full bg-[#ffb500] animate-pulse"></span>
+                            Período: {format(periodoInicio, "dd/MM")} — {format(periodoFim, "dd/MM")}
+                            <span className="w-1 h-1 rounded-full bg-[#ffb500] animate-pulse"></span>
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     );

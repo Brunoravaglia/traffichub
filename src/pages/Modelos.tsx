@@ -66,6 +66,7 @@ import {
 import { useGestor } from "@/contexts/GestorContext";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { GradientButton } from "@/components/ui/gradient-button";
 
 interface MetricConfig {
   key: string;
@@ -281,11 +282,11 @@ const Modelos = () => {
     setClientSelectOpen(true);
   };
 
-  // Navigate to report creation with template
+  // Navigate to report creation
   const handleSelectClient = (clienteId: string) => {
-    if (selectedTemplate?.id) {
-      navigate(`/cliente/${clienteId}/enviar-relatorio?templateId=${selectedTemplate.id}`);
-    }
+    const baseUrl = `/cliente/${clienteId}/enviar-relatorio`;
+    const templateParam = selectedTemplate?.id ? `?templateId=${selectedTemplate.id}` : "";
+    navigate(`${baseUrl}${templateParam}`);
     setClientSelectOpen(false);
   };
 
@@ -420,10 +421,10 @@ const Modelos = () => {
               </p>
             </div>
           </div>
-          <Button onClick={handleNewTemplate} className="gap-2">
+          <GradientButton onClick={handleNewTemplate} className="gap-2 shadow-lg shadow-primary/10">
             <Plus className="w-4 h-4" />
             Novo Modelo
-          </Button>
+          </GradientButton>
         </div>
       </motion.div>
 
@@ -513,6 +514,58 @@ const Modelos = () => {
         </div>
       ) : filteredTemplates && filteredTemplates.length > 0 ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* Start Without Template Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div
+              className={cn(
+                "relative group rounded-2xl overflow-hidden transition-all duration-300 h-full",
+                "bg-card border-2 border-border hover:border-primary/40 hover:shadow-lg flex flex-col"
+              )}
+            >
+              <div className="relative p-5 flex flex-col h-full space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2.5 rounded-xl bg-secondary group-hover:bg-primary/10 transition-all duration-300">
+                    <Plus className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-foreground truncate">
+                      Começar sem modelo
+                    </h4>
+                    <Badge variant="secondary" className="mt-1 text-[10px] px-2 py-0 bg-secondary text-muted-foreground">
+                      Básico
+                    </Badge>
+                  </div>
+                </div>
+
+                <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
+                  Crie um relatório do zero escolhendo as métricas manualmente.
+                </p>
+
+                <div className="mt-auto pt-4 border-t border-border/50">
+                  <GradientButton
+                    onClick={() => {
+                      setSelectedTemplate(null);
+                      setClientSearch("");
+                      if (gestor?.id) setSelectedGestorId(gestor.id);
+                      setClientSelectOpen(true);
+                    }}
+                    variant="variant"
+                    className="w-full gap-2 transition-all shadow-xl"
+                    size="sm"
+                  >
+                    <Layout className="w-4 h-4" />
+                    Criar do Zero
+                    <ChevronRight className="w-4 h-4" />
+                  </GradientButton>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
           <AnimatePresence mode="popLayout">
             {filteredTemplates.map((template, index) => {
               const stats = getTemplateStats(template);

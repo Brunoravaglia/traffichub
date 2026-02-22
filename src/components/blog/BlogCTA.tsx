@@ -70,8 +70,8 @@ const BlogCTA = ({
                         {/* Image */}
                         <div className="sm:col-span-2 relative overflow-hidden">
                             <img
-                                src={imageSrc || "/blog/trafego-pago-para-negocios-locais.webp"}
-                                alt=""
+                                src={imageSrc || "/blog/cover-1.png"}
+                                alt={title}
                                 className="w-full h-full object-cover min-h-[200px]"
                             />
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent to-card/60 sm:block hidden" />

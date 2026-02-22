@@ -21,6 +21,9 @@ import remarkGfm from "remark-gfm";
 import { useTheme } from "@/components/ThemeProvider";
 import { useTrackView, useLike } from "@/hooks/useBlogMetrics";
 
+const parsePostDate = (dateStr: string) =>
+    new Date(dateStr.includes("T") ? dateStr : `${dateStr}T12:00:00`);
+
 const BlogPostPage = () => {
     const { slug } = useParams<{ slug: string }>();
     const post = blogPosts.find((p) => p.slug === slug);
@@ -47,20 +50,24 @@ const BlogPostPage = () => {
         return () => window.removeEventListener("scroll", onScroll);
     }, []);
 
-    if (!post) {
+    const isPublished = post ? parsePostDate(post.date).getTime() <= Date.now() : false;
+
+    if (!post || !isPublished) {
         return <Navigate to="/blog" replace />;
     }
 
     const relatedPosts = blogPosts
-        .filter((p) => p.slug !== slug)
+        .filter((p) => p.slug !== slug && parsePostDate(p.date).getTime() <= Date.now())
         .slice(0, 3);
 
     const formatDate = (dateStr: string) => {
-        return new Date(dateStr + "T12:00:00").toLocaleDateString("pt-BR", {
+        const date = parsePostDate(dateStr);
+        const hasTime = dateStr.includes("T");
+        return date.toLocaleDateString("pt-BR", {
             day: "numeric",
             month: "long",
             year: "numeric",
-        });
+        }) + (hasTime ? ` às ${date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "");
     };
 
     const handleShare = () => {

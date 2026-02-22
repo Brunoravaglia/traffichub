@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Table,
   TableBody,
@@ -27,13 +27,30 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
-import { Pencil, ExternalLink, Check, X, AlertTriangle, Plus, RefreshCw } from "lucide-react";
+import {
+  Pencil,
+  ExternalLink,
+  Check,
+  X,
+  AlertTriangle,
+  Plus,
+  RefreshCw,
+  LayoutGrid,
+  Globe,
+  Share2,
+  Wallet,
+  Search,
+  SortAsc,
+  Filter,
+  Eye,
+  Settings2
+} from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 interface ClientTracking {
   id: string;
@@ -62,6 +79,7 @@ interface ClientTracking {
   clientes?: {
     nome: string;
     logo_url: string | null;
+    gestor_id: string | null;
   };
 }
 
@@ -71,15 +89,9 @@ const RECARGA_OPTIONS = [
   { value: "continuo", label: "Contínuo (Cartão)" },
 ];
 
-interface EditDialogProps {
-  tracking: ClientTracking | null;
-  clienteId?: string;
-  clienteNome?: string;
-  onClose: () => void;
-  onSave: (data: Partial<ClientTracking>) => void;
-}
+type CategoryType = "all" | "google" | "meta" | "financial" | "technical";
 
-const EditTrackingDialog = ({ tracking, clienteId, clienteNome, onClose, onSave }: EditDialogProps) => {
+const EditTrackingDialog = ({ tracking, clienteId, clienteNome, onClose, onSave }: any) => {
   const [formData, setFormData] = useState<Partial<ClientTracking>>(
     tracking || {
       cliente_id: clienteId,
@@ -102,568 +114,423 @@ const EditTrackingDialog = ({ tracking, clienteId, clienteNome, onClose, onSave 
   );
 
   return (
-    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-border shadow-2xl">
       <DialogHeader>
-        <DialogTitle>
-          {tracking ? "Editar Tracking" : "Novo Tracking"} - {tracking?.clientes?.nome || clienteNome}
+        <DialogTitle className="flex items-center gap-2 text-xl">
+          <Settings2 className="w-5 h-5 text-primary" />
+          {tracking ? "Configurar Tracking" : "Novo Tracking"}
+          <span className="text-muted-foreground ml-1">| {tracking?.clientes?.nome || clienteNome}</span>
         </DialogTitle>
       </DialogHeader>
 
-      <div className="grid grid-cols-2 gap-4 py-4">
-        <div className="space-y-2">
-          <Label>GTM ID</Label>
-          <Input
-            value={formData.gtm_id || ""}
-            onChange={(e) => setFormData({ ...formData, gtm_id: e.target.value })}
-            placeholder="GTM-XXXXXXXX"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>GA4 ID</Label>
-          <Input
-            value={formData.ga4_id || ""}
-            onChange={(e) => setFormData({ ...formData, ga4_id: e.target.value })}
-            placeholder="G-XXXXXXXXXX"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Google Ads Status</Label>
-          <Input
-            value={formData.google_ads_status || ""}
-            onChange={(e) => setFormData({ ...formData, google_ads_status: e.target.value })}
-            placeholder="validar campanha"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Search Console</Label>
-          <Input
-            value={formData.search_console_status || ""}
-            onChange={(e) => setFormData({ ...formData, search_console_status: e.target.value })}
-            placeholder="sim / não"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>GMN Status</Label>
-          <Input
-            value={formData.gmn_status || ""}
-            onChange={(e) => setFormData({ ...formData, gmn_status: e.target.value })}
-            placeholder="sim / não - enviado"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>URL</Label>
-          <Input
-            value={formData.url || ""}
-            onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-            placeholder="https://..."
-          />
-        </div>
-
-        <div className="col-span-2 grid grid-cols-3 gap-4">
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={formData.clarity_installed}
-              onCheckedChange={(v) => setFormData({ ...formData, clarity_installed: v })}
-            />
-            <Label>Clarity</Label>
-          </div>
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={formData.meta_ads_active}
-              onCheckedChange={(v) => setFormData({ ...formData, meta_ads_active: v })}
-            />
-            <Label>Meta Ads</Label>
-          </div>
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={formData.pixel_installed}
-              onCheckedChange={(v) => setFormData({ ...formData, pixel_installed: v })}
-            />
-            <Label>Pixel</Label>
-          </div>
-        </div>
-
-        <div className="col-span-2 border-t border-border pt-4 mt-2">
-          <h4 className="font-semibold text-foreground mb-3">Saldos Google Ads</h4>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Saldo Google (R$)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={formData.google_saldo || 0}
-                onChange={(e) => setFormData({ ...formData, google_saldo: parseFloat(e.target.value) || 0 })}
-              />
+      <div className="grid grid-cols-2 gap-6 py-6 font-inter">
+        <div className="space-y-4 col-span-2 md:col-span-1">
+          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/50 mb-2">Google Ecosystem</h4>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-gray-400">GTM ID</Label>
+              <Input className="bg-secondary/40 border-border/50 h-9 font-mono text-xs" value={formData.gtm_id || ""} onChange={(e) => setFormData({ ...formData, gtm_id: e.target.value })} placeholder="GTM-XXXXXXXX" />
             </div>
-            <div className="space-y-2">
-              <Label>Valor Diário (R$)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={formData.google_valor_diario || 0}
-                onChange={(e) => setFormData({ ...formData, google_valor_diario: parseFloat(e.target.value) || 0 })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Tipo de Recarga</Label>
-              <Select
-                value={formData.google_recarga_tipo || "mensal"}
-                onValueChange={(v) => setFormData({ ...formData, google_recarga_tipo: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {RECARGA_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-gray-400">GA4 ID</Label>
+              <Input className="bg-secondary/40 border-border/50 h-9 font-mono text-xs" value={formData.ga4_id || ""} onChange={(e) => setFormData({ ...formData, ga4_id: e.target.value })} placeholder="G-XXXXXXXXXX" />
             </div>
           </div>
         </div>
 
-        <div className="col-span-2 border-t border-border pt-4 mt-2">
-          <h4 className="font-semibold text-foreground mb-3">Saldos Meta Ads</h4>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Saldo Meta (R$)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={formData.meta_saldo || 0}
-                onChange={(e) => setFormData({ ...formData, meta_saldo: parseFloat(e.target.value) || 0 })}
-              />
+        <div className="space-y-4 col-span-2 md:col-span-1">
+          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/50 mb-2">Site & Analytics</h4>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-gray-400">URL do Projeto</Label>
+              <Input className="bg-secondary/40 border-border/50 h-9 text-xs" value={formData.url || ""} onChange={(e) => setFormData({ ...formData, url: e.target.value })} placeholder="https://..." />
             </div>
-            <div className="space-y-2">
-              <Label>Valor Diário (R$)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={formData.meta_valor_diario || 0}
-                onChange={(e) => setFormData({ ...formData, meta_valor_diario: parseFloat(e.target.value) || 0 })}
-              />
+            <div className="flex items-center gap-6 pt-4">
+              <div className="flex items-center gap-2">
+                <Switch checked={formData.clarity_installed} onCheckedChange={(v) => setFormData({ ...formData, clarity_installed: v })} />
+                <Label className="text-xs font-bold">Clarity</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={formData.pixel_installed} onCheckedChange={(v) => setFormData({ ...formData, pixel_installed: v })} />
+                <Label className="text-xs font-bold">Pixel Meta</Label>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Tipo de Recarga</Label>
-              <Select
-                value={formData.meta_recarga_tipo || "mensal"}
-                onValueChange={(v) => setFormData({ ...formData, meta_recarga_tipo: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {RECARGA_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          </div>
+        </div>
+
+        <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border/50">
+          <div className="space-y-4">
+            <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-400/80">
+              <RefreshCw className="w-3 h-3" /> Financeiro Google
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-400">Saldo (R$)</Label>
+                <Input type="number" step="0.01" className="bg-secondary/40 h-9" value={formData.google_saldo || 0} onChange={(e) => setFormData({ ...formData, google_saldo: parseFloat(e.target.value) || 0 })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-400">Diário (R$)</Label>
+                <Input type="number" step="0.01" className="bg-secondary/40 h-9" value={formData.google_valor_diario || 0} onChange={(e) => setFormData({ ...formData, google_valor_diario: parseFloat(e.target.value) || 0 })} />
+              </div>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-purple-400/80">
+              <RefreshCw className="w-3 h-3" /> Financeiro Meta
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-400">Saldo (R$)</Label>
+                <Input type="number" step="0.01" className="bg-secondary/40 h-9" value={formData.meta_saldo || 0} onChange={(e) => setFormData({ ...formData, meta_saldo: parseFloat(e.target.value) || 0 })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-400">Diário (R$)</Label>
+                <Input type="number" step="0.01" className="bg-secondary/40 h-9" value={formData.meta_valor_diario || 0} onChange={(e) => setFormData({ ...formData, meta_valor_diario: parseFloat(e.target.value) || 0 })} />
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onClose}>
-          Cancelar
-        </Button>
-        <Button onClick={() => onSave(formData)}>
-          Salvar
-        </Button>
+      <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
+        <Button variant="ghost" onClick={onClose} className="rounded-xl font-bold text-xs">Cancelar</Button>
+        <Button onClick={() => onSave(formData)} className="rounded-xl font-black text-xs px-8 bg-primary hover:bg-primary/90 text-white shadow-lg">Salvar Alterações</Button>
       </div>
     </DialogContent>
   );
 };
 
-const StatusBadge = ({ value, type }: { value: boolean | string | null; type?: "boolean" | "text" }) => {
+const StatusBadge = ({ value, type }: any) => {
   if (type === "boolean" || typeof value === "boolean") {
     return value ? (
-      <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20">
-        <Check className="w-3 h-3 mr-1" /> sim
-      </Badge>
+      <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+        <Check className="w-3 h-3" /> installed
+      </div>
     ) : (
-      <Badge variant="secondary" className="bg-red-500/10 text-red-600 border-red-500/20">
-        <X className="w-3 h-3 mr-1" /> não
-      </Badge>
+      <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-red-400 bg-red-400/10 px-2 py-0.5 rounded-md border border-red-400/20">
+        <X className="w-3 h-3" /> missing
+      </div>
     );
   }
-
-  if (!value) return <span className="text-muted-foreground">-</span>;
-
-  if (value.includes("não") && value.includes("enviado")) {
-    return (
-      <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
-        <AlertTriangle className="w-3 h-3 mr-1" /> {value}
-      </Badge>
-    );
-  }
-
-  if (value === "sim") {
-    return (
-      <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20">
-        <Check className="w-3 h-3 mr-1" /> sim
-      </Badge>
-    );
-  }
-
-  return <span className="text-sm text-foreground">{value}</span>;
+  return <span className="text-xs font-bold text-gray-400">{value || "-"}</span>;
 };
 
-const RecargaBadge = ({ tipo }: { tipo: string | null }) => {
-  const option = RECARGA_OPTIONS.find(o => o.value === tipo);
-
-  if (!tipo || tipo === "mensal") {
-    return (
-      <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-blue-500/20 text-xs">
-        Mensal
-      </Badge>
-    );
-  }
-
-  if (tipo === "semanal") {
-    return (
-      <Badge variant="secondary" className="bg-purple-500/10 text-purple-600 border-purple-500/20 text-xs">
-        Semanal
-      </Badge>
-    );
-  }
-
-  if (tipo === "continuo") {
-    return (
-      <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20 text-xs">
-        <RefreshCw className="w-3 h-3 mr-1" /> Contínuo
-      </Badge>
-    );
-  }
-
-  return <span className="text-muted-foreground text-xs">{option?.label || tipo}</span>;
-};
-
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value);
-};
-
-interface ClientTrackingTableProps {
-  gestorFilter?: string;
-}
-
-const ClientTrackingTable = ({ gestorFilter }: ClientTrackingTableProps) => {
+const ClientTrackingTable = ({ gestorFilter }: { gestorFilter?: string }) => {
   const queryClient = useQueryClient();
+  const [activeCategory, setActiveCategory] = useState<CategoryType>("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [editingTracking, setEditingTracking] = useState<ClientTracking | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newClienteId, setNewClienteId] = useState<string | null>(null);
   const [newClienteNome, setNewClienteNome] = useState<string>("");
 
-  // Fetch clients without tracking
-  const { data: clientesSemTracking } = useQuery({
-    queryKey: ["clientes-sem-tracking", gestorFilter],
-    queryFn: async () => {
-      let clientesQuery = supabase
-        .from("clientes")
-        .select("id, nome, gestor_id")
-        .order("nome");
-
-      if (gestorFilter && gestorFilter !== "all") {
-        clientesQuery = clientesQuery.eq("gestor_id", gestorFilter);
-      }
-
-      const { data: clientes } = await clientesQuery;
-
-      const { data: tracking } = await supabase
-        .from("client_tracking")
-        .select("cliente_id");
-
-      const trackingIds = tracking?.map((t) => t.cliente_id) || [];
-      return clientes?.filter((c) => !trackingIds.includes(c.id)) || [];
-    },
-  });
-
-  // Fetch tracking data
   const { data: trackingData, isLoading } = useQuery({
     queryKey: ["client-tracking", gestorFilter],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("client_tracking")
-        .select(`
-          *,
-          clientes(nome, logo_url, gestor_id)
-        `)
-        .order("created_at", { ascending: false });
-
+        .select(`*, clientes(nome, logo_url, gestor_id)`);
       if (error) throw error;
-
-      // Filter by gestor if specified
-      const filteredData = gestorFilter && gestorFilter !== "all"
-        ? (data as any[])?.filter((t) => t.clientes?.gestor_id === gestorFilter)
-        : data;
-
-      return filteredData as ClientTracking[];
-    },
+      return gestorFilter && gestorFilter !== "all"
+        ? (data as any[]).filter(t => t.clientes?.gestor_id === gestorFilter)
+        : data as ClientTracking[];
+    }
   });
 
-  // Save mutation
+  const { data: clientesSemTracking } = useQuery({
+    queryKey: ["clientes-sem-tracking", gestorFilter],
+    queryFn: async () => {
+      let q = supabase.from("clientes").select("id, nome, gestor_id");
+      if (gestorFilter && gestorFilter !== "all") q = q.eq("gestor_id", gestorFilter);
+      const { data: c } = await q;
+      const { data: t } = await supabase.from("client_tracking").select("cliente_id");
+      const tIds = t?.map(x => x.cliente_id) || [];
+      return c?.filter(x => !tIds.includes(x.id)) || [];
+    }
+  });
+
   const saveMutation = useMutation({
     mutationFn: async (data: Partial<ClientTracking>) => {
-      // Calculate dias restantes
-      const googleDias = data.google_valor_diario && data.google_valor_diario > 0
-        ? Math.floor((data.google_saldo || 0) / data.google_valor_diario)
-        : 0;
-      const metaDias = data.meta_valor_diario && data.meta_valor_diario > 0
-        ? Math.floor((data.meta_saldo || 0) / data.meta_valor_diario)
-        : 0;
-
-      const now = new Date();
-      const googleProxima = new Date(now);
-      googleProxima.setDate(googleProxima.getDate() + googleDias);
-      const metaProxima = new Date(now);
-      metaProxima.setDate(metaProxima.getDate() + metaDias);
-
-      const payload = {
-        cliente_id: data.cliente_id || data.id, // ensure cliente_id is set
-        gtm_id: data.gtm_id,
-        ga4_id: data.ga4_id,
-        google_ads_status: data.google_ads_status,
-        clarity_installed: data.clarity_installed,
-        meta_ads_active: data.meta_ads_active,
-        pixel_installed: data.pixel_installed,
-        search_console_status: data.search_console_status,
-        gmn_status: data.gmn_status,
-        google_saldo: data.google_saldo,
-        google_valor_diario: data.google_valor_diario,
-        google_dias_restantes: googleDias,
-        google_recarga_tipo: data.google_recarga_tipo || "mensal",
-        meta_saldo: data.meta_saldo,
-        meta_valor_diario: data.meta_valor_diario,
-        meta_dias_restantes: metaDias,
-        meta_recarga_tipo: data.meta_recarga_tipo || "mensal",
-        google_ultima_validacao: format(now, "yyyy-MM-dd"),
-        meta_ultima_validacao: format(now, "yyyy-MM-dd"),
-        google_proxima_recarga: format(googleProxima, "yyyy-MM-dd"),
-        meta_proxima_recarga: format(metaProxima, "yyyy-MM-dd"),
-        url: data.url,
-      };
-
-      if (data.id) {
-        const { error } = await supabase
-          .from("client_tracking")
-          .update(payload)
-          .eq("id", data.id);
-        if (error) throw error;
-      } else {
-        // For insert, we need cliente_id from the function parameter
-        const insertPayload = {
-          ...payload,
-          cliente_id: data.cliente_id!,
-        };
-        const { error } = await supabase
-          .from("client_tracking")
-          .insert([insertPayload]);
-        if (error) throw error;
-      }
+      const gD = data.google_valor_diario! > 0 ? Math.floor(data.google_saldo! / data.google_valor_diario!) : 0;
+      const mD = data.meta_valor_diario! > 0 ? Math.floor(data.meta_saldo! / data.meta_valor_diario!) : 0;
+      const now = format(new Date(), "yyyy-MM-dd");
+      const payload = { ...data, google_dias_restantes: gD, meta_dias_restantes: mD, google_ultima_validacao: now, meta_ultima_validacao: now };
+      delete (payload as any).clientes;
+      if (data.id) return supabase.from("client_tracking").update(payload).eq("id", data.id);
+      return supabase.from("client_tracking").insert([payload]);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["client-tracking"] });
       queryClient.invalidateQueries({ queryKey: ["clientes-sem-tracking"] });
-      toast({ title: "Tracking salvo com sucesso!" });
+      toast({ title: "Dados atualizados" });
       setIsDialogOpen(false);
-      setEditingTracking(null);
-      setNewClienteId(null);
-    },
-    onError: (error) => {
-      toast({
-        title: "Erro ao salvar",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
+    }
   });
 
-  const handleEdit = (tracking: ClientTracking) => {
-    setEditingTracking(tracking);
-    setNewClienteId(null);
-    setIsDialogOpen(true);
-  };
+  const filteredData = useMemo(() => {
+    if (!trackingData) return [];
+    let data = [...trackingData];
+    if (searchTerm) data = data.filter(t => t.clientes?.nome?.toLowerCase().includes(searchTerm.toLowerCase()));
+    data.sort((a, b) => sortOrder === "asc" ? (a.clientes?.nome || "").localeCompare(b.clientes?.nome || "") : (b.clientes?.nome || "").localeCompare(a.clientes?.nome || ""));
+    return data;
+  }, [trackingData, searchTerm, sortOrder]);
 
-  const handleAddNew = (clienteId: string, clienteNome: string) => {
-    setEditingTracking(null);
-    setNewClienteId(clienteId);
-    setNewClienteNome(clienteNome);
-    setIsDialogOpen(true);
-  };
+  const sidebarItems = [
+    { id: "all", label: "Visão Geral", icon: LayoutGrid },
+    { id: "google", label: "Google Ecosystem", icon: Globe },
+    { id: "meta", label: "Paid Social (Meta)", icon: Share2 },
+    { id: "financial", label: "Financeiro & Saldos", icon: Wallet },
+    { id: "technical", label: "Technical Setup", icon: Settings2 },
+  ];
 
-  const handleSave = (data: Partial<ClientTracking>) => {
-    if (!data.id && newClienteId) {
-      data.cliente_id = newClienteId;
-    }
-    saveMutation.mutate(data);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center py-20">
-        <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  if (isLoading) return <div className="h-96 flex items-center justify-center"><RefreshCw className="w-8 h-8 animate-spin text-primary/30" /></div>;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col gap-4 pb-4"
-    >
-      {/* Add new client tracking */}
-      {clientesSemTracking && clientesSemTracking.length > 0 && (
-        <div className="flex flex-wrap gap-2 p-4 bg-secondary/30 rounded-lg border border-border">
-          <span className="text-sm text-muted-foreground self-center mr-2">
-            Adicionar tracking para:
-          </span>
-          {clientesSemTracking.map((c) => (
-            <Button
-              key={c.id}
-              variant="outline"
-              size="sm"
-              onClick={() => handleAddNew(c.id, c.nome)}
-              className="gap-1"
-            >
-              <Plus className="w-3 h-3" />
-              {c.nome}
-            </Button>
-          ))}
+    <div className="flex h-[calc(100vh-320px)] min-h-[600px] border border-border/50 rounded-[2rem] bg-card/30 backdrop-blur-xl overflow-hidden font-inter shadow-2xl">
+      {/* Sidebar - High End Nav */}
+      <div className="w-64 border-r border-border/50 bg-black/20 p-6 flex flex-col gap-8">
+        <div>
+          <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-6">Categorias</h3>
+          <div className="space-y-1.5">
+            {sidebarItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveCategory(item.id as CategoryType)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300",
+                  activeCategory === item.id
+                    ? "bg-primary text-white shadow-[0_4px_12px_rgba(5,140,66,0.2)]"
+                    : "text-gray-500 hover:text-white hover:bg-white/5"
+                )}
+              >
+                <item.icon className={cn("w-4 h-4", activeCategory === item.id ? "text-white" : "text-gray-500")} />
+                {item.label}
+              </button>
+            ))}
+          </div>
         </div>
-      )}
 
-      {/* Tracking Table */}
-      <div className="rounded-lg border border-border bg-card">
-        <ScrollArea className="h-[600px] w-full max-h-[70vh]">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="sticky left-0 bg-muted/50 z-10 min-w-[150px]">Cliente</TableHead>
-                <TableHead className="min-w-[120px]">GTM</TableHead>
-                <TableHead className="min-w-[120px]">GA4</TableHead>
-                <TableHead className="min-w-[140px]">Google Ads</TableHead>
-                <TableHead className="min-w-[80px]">Clarity</TableHead>
-                <TableHead className="min-w-[90px]">Meta Ads</TableHead>
-                <TableHead className="min-w-[70px]">Pixel</TableHead>
-                <TableHead className="min-w-[130px]">Search Console</TableHead>
-                <TableHead className="min-w-[110px]">GMN</TableHead>
-                <TableHead className="min-w-[100px]">Saldo G</TableHead>
-                <TableHead className="min-w-[80px]">Dias G</TableHead>
-                <TableHead className="min-w-[100px]">Recarga G</TableHead>
-                <TableHead className="min-w-[100px]">Saldo M</TableHead>
-                <TableHead className="min-w-[80px]">Dias M</TableHead>
-                <TableHead className="min-w-[100px]">Recarga M</TableHead>
-                <TableHead className="min-w-[180px]">URL</TableHead>
-                <TableHead className="min-w-[60px]">Ações</TableHead>
+        <div className="mt-auto pt-6 border-t border-border/30">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-600 mb-4">Quick Filters</h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-gray-500">Com Clarity</span>
+              <Switch className="scale-75" />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-gray-500">Ads Ativos</span>
+              <Switch className="scale-75" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Toolbar - Sheets Style */}
+        <div className="h-20 border-b border-border/50 bg-black/10 px-8 flex items-center justify-between gap-6">
+          <div className="flex-1 max-w-md relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Input
+              placeholder="Pesquisar cliente..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-10 bg-black/20 border-border/50 rounded-xl focus:ring-primary/30"
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Button variant="outline" onClick={() => setSortOrder(prev => prev === "asc" ? "desc" : "asc")} className="h-10 px-4 rounded-xl border-border/50 font-bold text-xs gap-2">
+              <SortAsc className="w-4 h-4" /> A-Z
+            </Button>
+            <div className="h-6 w-px bg-border/50 mx-2" />
+            <Select>
+              <SelectTrigger className="w-40 h-10 border-border/50 rounded-xl font-bold text-xs">
+                <div className="flex items-center gap-2"><Filter className="w-3 h-3" /><SelectValue placeholder="Status" /></div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ok">Operante</SelectItem>
+                <SelectItem value="warn">Atenção</SelectItem>
+                <SelectItem value="err">Bloqueado</SelectItem>
+              </SelectContent>
+            </Select>
+            {clientesSemTracking && clientesSemTracking.length > 0 && (
+              <Button
+                className="h-10 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-black text-xs gap-2 shadow-lg"
+                onClick={() => {
+                  setNewClienteId(clientesSemTracking[0].id);
+                  setNewClienteNome(clientesSemTracking[0].nome);
+                  setIsDialogOpen(true);
+                }}
+              >
+                <Plus className="w-4 h-4" /> Novo Tracking
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Content - Dense Grid */}
+        <ScrollArea className="flex-1 w-full bg-[#020202]">
+          <Table className="border-collapse table-fixed w-full">
+            <TableHeader className="sticky top-0 bg-[#020202] z-20 shadow-sm border-b border-white/5">
+              <TableRow className="hover:bg-transparent border-none">
+                <TableHead className="w-[200px] border-r border-white/5 text-[10px] font-black uppercase tracking-widest text-gray-500 pl-8">Cliente</TableHead>
+                {activeCategory === "all" && (
+                  <>
+                    <TableHead className="w-[120px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">Clarity</TableHead>
+                    <TableHead className="w-[120px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">G-Ads</TableHead>
+                    <TableHead className="w-[120px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">M-Ads</TableHead>
+                    <TableHead className="w-[150px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">Saldo Total</TableHead>
+                  </>
+                )}
+                {activeCategory === "google" && (
+                  <>
+                    <TableHead className="w-[150px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">Google Status</TableHead>
+                    <TableHead className="w-[150px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">GTM ID</TableHead>
+                    <TableHead className="w-[150px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">GA4 ID</TableHead>
+                    <TableHead className="w-[150px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">S. Console</TableHead>
+                  </>
+                )}
+                {activeCategory === "meta" && (
+                  <>
+                    <TableHead className="w-[150px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">Meta Status</TableHead>
+                    <TableHead className="w-[150px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">Pixel Status</TableHead>
+                    <TableHead className="w-[150px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">Business ID</TableHead>
+                  </>
+                )}
+                {activeCategory === "financial" && (
+                  <>
+                    <TableHead className="w-[140px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">Saldo G-Ads</TableHead>
+                    <TableHead className="w-[100px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center text-red-400">Burn Rate (G)</TableHead>
+                    <TableHead className="w-[140px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">Saldo Meta</TableHead>
+                    <TableHead className="w-[100px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center text-red-400">Burn Rate (M)</TableHead>
+                  </>
+                )}
+                {activeCategory === "technical" && (
+                  <>
+                    <TableHead className="w-[180px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">GTM Integration</TableHead>
+                    <TableHead className="w-[180px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">GA4 Stream</TableHead>
+                    <TableHead className="w-[180px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">Clarity Heatmaps</TableHead>
+                  </>
+                )}
+                <TableHead className="flex-1 text-[10px] font-black uppercase tracking-widest text-gray-500 text-right pr-8">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {trackingData?.map((tracking) => {
-                let googleSaldoCalc = tracking.google_saldo || 0;
-                let metaSaldoCalc = tracking.meta_saldo || 0;
+              <AnimatePresence>
+                {filteredData.map((t, idx) => (
+                  <motion.tr
+                    key={t.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.03 }}
+                    className="group hover:bg-white/[0.03] border-b border-white/[0.02] transition-all"
+                  >
+                    <TableCell className="border-r border-white/5 pl-8 py-4 sticky left-0 bg-[#020202] group-hover:bg-[#080808] z-10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-emerald-800 flex items-center justify-center text-[10px] font-black text-white">
+                          {t.clientes?.nome?.charAt(0)}
+                        </div>
+                        <span className="text-sm font-bold text-gray-200 group-hover:text-primary transition-colors truncate">{t.clientes?.nome}</span>
+                      </div>
+                    </TableCell>
 
-                if (tracking.google_ultima_validacao && tracking.google_valor_diario > 0 && googleSaldoCalc > 0) {
-                  const daysPassed = differenceInDays(new Date(), new Date(tracking.google_ultima_validacao));
-                  if (daysPassed > 0) googleSaldoCalc = Math.max(0, googleSaldoCalc - (daysPassed * tracking.google_valor_diario));
-                }
+                    {activeCategory === "all" && (
+                      <>
+                        <TableCell className="text-center"><StatusBadge value={t.clarity_installed} type="boolean" /></TableCell>
+                        <TableCell className="text-center font-bold text-xs text-gray-400">{t.google_ads_status || "N/A"}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline" className={cn("text-[9px] font-bold uppercase", t.meta_ads_active ? "text-blue-400 border-blue-400/30" : "text-gray-600 border-gray-600/30")}>
+                            {t.meta_ads_active ? "Ativo" : "Off"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center font-mono text-xs font-black text-emerald-400">
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((t.google_saldo || 0) + (t.meta_saldo || 0))}
+                        </TableCell>
+                      </>
+                    )}
 
-                if (tracking.meta_ultima_validacao && tracking.meta_valor_diario > 0 && metaSaldoCalc > 0) {
-                  const daysPassed = differenceInDays(new Date(), new Date(tracking.meta_ultima_validacao));
-                  if (daysPassed > 0) metaSaldoCalc = Math.max(0, metaSaldoCalc - (daysPassed * tracking.meta_valor_diario));
-                }
+                    {activeCategory === "google" && (
+                      <>
+                        <TableCell className="text-center"><StatusBadge value={t.google_ads_status} /></TableCell>
+                        <TableCell className="text-center font-mono text-[10px] text-gray-500">{t.gtm_id || "-"}</TableCell>
+                        <TableCell className="text-center font-mono text-[10px] text-gray-500">{t.ga4_id || "-"}</TableCell>
+                        <TableCell className="text-center"><StatusBadge value={t.search_console_status} /></TableCell>
+                      </>
+                    )}
 
-                const googleDiasCalc = tracking.google_valor_diario > 0 ? Math.floor(googleSaldoCalc / tracking.google_valor_diario) : 0;
-                const metaDiasCalc = tracking.meta_valor_diario > 0 ? Math.floor(metaSaldoCalc / tracking.meta_valor_diario) : 0;
+                    {activeCategory === "financial" && (
+                      <>
+                        <TableCell className="text-center font-bold text-xs">
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(t.google_saldo || 0)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex flex-col items-center">
+                            <span className="text-[10px] font-black text-red-400">-{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(t.google_valor_diario || 0)}</span>
+                            <span className="text-[8px] font-bold text-gray-600 uppercase">per day</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center font-bold text-xs">
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(t.meta_saldo || 0)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex flex-col items-center">
+                            <span className="text-[10px] font-black text-red-400">-{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(t.meta_valor_diario || 0)}</span>
+                            <span className="text-[8px] font-bold text-gray-600 uppercase">per day</span>
+                          </div>
+                        </TableCell>
+                      </>
+                    )}
 
-                return (
-                  <TableRow key={tracking.id} className="hover:bg-muted/30">
-                    <TableCell className="sticky left-0 bg-card z-10 font-medium">
-                      {tracking.clientes?.nome || "-"}
+                    {activeCategory === "technical" && (
+                      <>
+                        <TableCell className="text-center font-mono text-[10px] text-gray-400 italic">{t.gtm_id || "GTM-NONE"}</TableCell>
+                        <TableCell className="text-center font-mono text-[10px] text-gray-400 italic">{t.ga4_id || "G-NONE"}</TableCell>
+                        <TableCell className="text-center"><StatusBadge value={t.clarity_installed} type="boolean" /></TableCell>
+                      </>
+                    )}
+
+                    <TableCell className="pr-8 text-right">
+                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(t)} className="h-8 w-8 hover:bg-primary/20 hover:text-primary rounded-lg">
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        {t.url && (
+                          <Button variant="ghost" size="icon" asChild className="h-8 w-8 hover:bg-blue-400/20 hover:text-blue-400 rounded-lg">
+                            <a href={t.url} target="_blank" rel="noreferrer"><ExternalLink className="w-3.5 h-3.5" /></a>
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-emerald-400/20 hover:text-emerald-400 rounded-lg">
+                          <Eye className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
                     </TableCell>
-                    <TableCell className="font-mono text-xs">{tracking.gtm_id || "-"}</TableCell>
-                    <TableCell className="font-mono text-xs">{tracking.ga4_id || "-"}</TableCell>
-                    <TableCell>{tracking.google_ads_status || "-"}</TableCell>
-                    <TableCell><StatusBadge value={tracking.clarity_installed} type="boolean" /></TableCell>
-                    <TableCell><StatusBadge value={tracking.meta_ads_active} type="boolean" /></TableCell>
-                    <TableCell><StatusBadge value={tracking.pixel_installed} type="boolean" /></TableCell>
-                    <TableCell><StatusBadge value={tracking.search_console_status} /></TableCell>
-                    <TableCell><StatusBadge value={tracking.gmn_status} /></TableCell>
-                    <TableCell className={googleSaldoCalc < 100 ? "text-red-500 font-medium" : ""}>
-                      {formatCurrency(googleSaldoCalc)}
-                    </TableCell>
-                    <TableCell className={googleDiasCalc < 5 ? "text-red-500 font-medium" : ""}>
-                      {googleDiasCalc}
-                    </TableCell>
-                    <TableCell>
-                      <RecargaBadge tipo={tracking.google_recarga_tipo} />
-                    </TableCell>
-                    <TableCell className={metaSaldoCalc < 100 ? "text-red-500 font-medium" : ""}>
-                      {formatCurrency(metaSaldoCalc)}
-                    </TableCell>
-                    <TableCell className={metaDiasCalc < 5 ? "text-red-500 font-medium" : ""}>
-                      {metaDiasCalc}
-                    </TableCell>
-                    <TableCell>
-                      <RecargaBadge tipo={tracking.meta_recarga_tipo} />
-                    </TableCell>
-                    <TableCell>
-                      {tracking.url ? (
-                        <a
-                          href={tracking.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline flex items-center gap-1 text-xs"
-                        >
-                          {tracking.url.replace(/https?:\/\//, "").substring(0, 25)}...
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(tracking)}
-                        className="h-8 w-8"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
             </TableBody>
           </Table>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
+
+        {/* Footer Info */}
+        <div className="h-10 border-t border-border/50 bg-black/40 px-8 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Páginas: 1 de 1</span>
+            <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Total: {filteredData.length} records</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">Real-time Sync Active</span>
+          </div>
+        </div>
       </div>
 
-      {/* Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <EditTrackingDialog
-          tracking={editingTracking}
-          clienteId={newClienteId || undefined}
-          clienteNome={newClienteNome}
-          onClose={() => {
-            setIsDialogOpen(false);
-            setEditingTracking(null);
-            setNewClienteId(null);
-          }}
-          onSave={handleSave}
-        />
+        <EditTrackingDialog tracking={editingTracking} clienteId={newClienteId} clienteNome={newClienteNome} onClose={() => setIsDialogOpen(false)} onSave={(data: any) => saveMutation.mutate(data)} />
       </Dialog>
-    </motion.div >
+    </div>
   );
 };
 

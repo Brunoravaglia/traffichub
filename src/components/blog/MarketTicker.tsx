@@ -4,7 +4,9 @@ import { TrendingUp, TrendingDown, RefreshCw, Clock } from "lucide-react";
 import {
     FaBitcoin,
     FaDollarSign,
+    FaEthereum,
 } from "react-icons/fa6";
+import { SiSolana } from "react-icons/si";
 
 interface MarketItem {
     label: string;
@@ -15,6 +17,11 @@ interface MarketItem {
 }
 
 const REFRESH_INTERVAL = 60_000; // 1 minute
+const formatCurrency = (value: number, decimals = 2) =>
+    `R$ ${value.toLocaleString("pt-BR", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+    })}`;
 
 const MarketTicker = () => {
     const [items, setItems] = useState<MarketItem[]>([]);
@@ -23,69 +30,66 @@ const MarketTicker = () => {
 
     const fetchMarketData = async () => {
         try {
-            const [awesomeRes] = await Promise.all([
-                fetch("https://economia.awesomeapi.com.br/last/USD-BRL,BTC-BRL,EUR-BRL"),
+            const [awesomeRes, usdtRes] = await Promise.all([
+                fetch("https://economia.awesomeapi.com.br/last/BTC-BRL,ETH-BRL,SOL-BRL"),
+                fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=USDTBRL"),
             ]);
 
             const awesomeData = await awesomeRes.json();
+            const usdtData = await usdtRes.json();
             const parsed: MarketItem[] = [];
-
-            if (awesomeData.USDBRL) {
-                const d = awesomeData.USDBRL;
-                parsed.push({
-                    label: "Dólar Comercial",
-                    value: `R$ ${parseFloat(d.bid).toFixed(2)}`,
-                    change: parseFloat(d.pctChange),
-                    icon: <FaDollarSign className="w-6 h-6" />,
-                    color: "text-emerald-400",
-                });
-            }
 
             if (awesomeData.BTCBRL) {
                 const d = awesomeData.BTCBRL;
                 const price = parseFloat(d.bid);
                 parsed.push({
                     label: "Bitcoin (BTC)",
-                    value: price >= 1000
-                        ? `R$ ${(price / 1000).toFixed(1)}k`
-                        : `R$ ${price.toFixed(2)}`,
+                    value: `R$ ${Math.round(price).toLocaleString("pt-BR")}`,
                     change: parseFloat(d.pctChange),
                     icon: <FaBitcoin className="w-6 h-6" />,
                     color: "text-orange-400",
                 });
             }
 
-            if (awesomeData.EURBRL) {
-                const d = awesomeData.EURBRL;
+            if (awesomeData.ETHBRL) {
+                const d = awesomeData.ETHBRL;
                 parsed.push({
-                    label: "Euro Comercial",
-                    value: `R$ ${parseFloat(d.bid).toFixed(2)}`,
+                    label: "Ethereum (ETH)",
+                    value: `R$ ${Math.round(parseFloat(d.bid)).toLocaleString("pt-BR")}`,
                     change: parseFloat(d.pctChange),
-                    icon: <span className="text-xl font-bold">€</span>,
-                    color: "text-blue-400",
+                    icon: <FaEthereum className="w-6 h-6" />,
+                    color: "text-indigo-400",
                 });
             }
 
-            try {
-                const goldRes = await fetch("https://economia.awesomeapi.com.br/last/XAU-BRL");
-                const goldData = await goldRes.json();
-                if (goldData.XAUBRL) {
-                    const g = goldData.XAUBRL;
-                    parsed.push({
-                        label: "Ouro (Gramas)",
-                        value: `R$ ${parseFloat(g.bid).toFixed(0)}`,
-                        change: parseFloat(g.pctChange),
-                        icon: <span className="text-xl font-bold">🪙</span>,
-                        color: "text-amber-400",
-                    });
-                }
-            } catch {
+            if (awesomeData.SOLBRL) {
+                const d = awesomeData.SOLBRL;
                 parsed.push({
-                    label: "Ouro",
+                    label: "Solana (SOL)",
+                    value: formatCurrency(parseFloat(d.bid), 2),
+                    change: parseFloat(d.pctChange),
+                    icon: <SiSolana className="w-6 h-6" />,
+                    color: "text-violet-400",
+                });
+            }
+
+            if (usdtData?.lastPrice) {
+                const usdtPrice = parseFloat(usdtData.lastPrice);
+                const usdtChange = parseFloat(usdtData.priceChangePercent ?? "0");
+                parsed.push({
+                    label: "Tether (USDT)",
+                    value: formatCurrency(usdtPrice, 2),
+                    change: usdtChange,
+                    icon: <FaDollarSign className="w-6 h-6" />,
+                    color: "text-emerald-400",
+                });
+            } else {
+                parsed.push({
+                    label: "Tether (USDT)",
                     value: "-",
                     change: 0,
-                    icon: <span className="text-xl">🪙</span>,
-                    color: "text-amber-400",
+                    icon: <FaDollarSign className="w-6 h-6" />,
+                    color: "text-emerald-400",
                 });
             }
 
@@ -116,67 +120,65 @@ const MarketTicker = () => {
     if (items.length === 0) return null;
 
     return (
-        <section className="space-y-4">
+        <section className="space-y-2">
             {/* Header / Meta Info */}
-            <div className="flex items-center justify-between px-2">
+            <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
                     <div className="relative">
-                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping absolute inset-0" />
-                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 relative" />
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping absolute inset-0" />
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 relative" />
                     </div>
-                    <span className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground/80">
-                        Mercado em Tempo Real
+                    <span className="text-[10px] font-black uppercase tracking-[0.16em] text-foreground/80">
+                        Cripto em Alta
                     </span>
-                    <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 text-[9px] font-bold uppercase tracking-wider">
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500 text-[8px] font-bold uppercase tracking-wider">
                         Live
                     </span>
                 </div>
                 {lastUpdate && (
-                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
-                        <Clock className="w-3 h-3" />
-                        Última Atualização: {lastUpdate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                    <div className="flex items-center gap-1 text-[9px] text-muted-foreground font-medium uppercase tracking-tight">
+                        <Clock className="w-2.5 h-2.5" />
+                        Atualizado {lastUpdate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                     </div>
                 )}
             </div>
 
             {/* Ticker Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
                 {items.map((item, i) => (
                     <motion.a
                         key={item.label}
                         href="https://www.binance.com/referral/earn-together/refer2earn-usdc/claim?hl=pt-BR&ref=GRO_28502_WCBJT&utm_source=default"
                         target="_blank"
                         rel="noopener noreferrer"
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.1 }}
+                        transition={{ delay: i * 0.06 }}
                         className="group relative block"
                     >
-                        <div className="absolute -inset-0.5 bg-gradient-to-br from-primary/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur" />
-                        <div className="relative flex flex-col gap-3 p-4 rounded-2xl bg-card border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5">
-                            <div className="flex items-start justify-between">
-                                <div className={`p-2.5 rounded-xl bg-muted/50 ${item.color.replace('text-', 'bg-')}/10 ${item.color} shadow-inner`}>
-                                    {item.icon}
+                        <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-cyan-400/0 via-fuchsia-400/25 to-emerald-400/0 opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-60 group-active:opacity-60" />
+                        <div className="relative rounded-xl border border-border/50 bg-card/95 p-2.5 transition-all duration-300 h-[104px] group-hover:border-cyan-300/40 group-active:border-cyan-300/40 group-hover:shadow-[0_0_18px_rgba(34,211,238,0.16),0_0_34px_rgba(217,70,239,0.10)] group-active:shadow-[0_0_18px_rgba(34,211,238,0.16),0_0_34px_rgba(217,70,239,0.10)]">
+                            <div className="relative h-full flex items-center rounded-lg border border-white/10 bg-black/15 px-2.5 py-2.5">
+                                <div className="flex items-center gap-3 min-w-0 pr-24">
+                                    <div className={`p-2 rounded-lg bg-muted/50 ${item.color.replace('text-', 'bg-')}/10 ${item.color} shrink-0`}>
+                                        {item.icon}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5 truncate">
+                                            {item.label}
+                                        </p>
+                                        <p className="text-2xl font-black text-foreground tracking-tight tabular-nums leading-none whitespace-nowrap">
+                                            {item.value}
+                                        </p>
+                                    </div>
                                 </div>
                                 {item.change !== 0 && (
-                                    <div className={`flex items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] font-black ${item.change > 0 ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"}`}>
-                                        {item.change > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                    <div className={`absolute top-2.5 right-2.5 flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black whitespace-nowrap ${item.change > 0 ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"}`}>
+                                        {item.change > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
                                         {item.change > 0 ? "+" : ""}{item.change.toFixed(2)}%
                                     </div>
                                 )}
                             </div>
-
-                            <div>
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                                    {item.label}
-                                </p>
-                                <p className="text-xl font-black text-foreground tracking-tight tabular-nums">
-                                    {item.value}
-                                </p>
-                            </div>
-
-                            {/* Decorative Sparkle Gradient */}
-                            <div className={`absolute bottom-0 right-0 w-16 h-16 bg-gradient-to-br ${item.color.replace('text-', 'from-')}/5 to-transparent rounded-br-2xl pointer-events-none opacity-50`} />
                         </div>
                     </motion.a>
                 ))}

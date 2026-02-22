@@ -32,34 +32,47 @@ export const GoogleAdsMetricsView = ({ google, metricsConfig }: GoogleAdsMetrics
     if (metricsConfig.showGoogleCustoPorVenda) additionalMetrics.push({ label: "Custo/Venda", value: formatCurrency(google.custoPorVenda), color: "text-red-400" });
 
     return (
-        <div className="mb-8 p-8 rounded-3xl bg-[#1e293b]/50 border border-blue-500/20 shadow-xl backdrop-blur-sm">
-            <div className="flex items-center gap-3 mb-8">
-                <div className="p-3 bg-blue-500/15 rounded-xl border border-blue-500/30">
-                    <GoogleLogo className="w-6 h-6" />
+        <div className="mb-8 p-10 rounded-[2.5rem] bg-gradient-to-br from-black/60 to-black/30 border border-[#ffb500]/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-md relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#ffb500]/5 rounded-full blur-[100px] -mr-32 -mt-32"></div>
+
+            <div className="flex items-center justify-between mb-10 relative">
+                <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-[#ffb500]/20 to-transparent rounded-2xl border border-[#ffb500]/20 shadow-[0_0_15px_rgba(255,181,0,0.1)]">
+                        <GoogleLogo className="w-7 h-7" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-black text-white tracking-[0.2em] uppercase">Google Ads</h3>
+                        <p className="text-[10px] text-gray-500 font-bold tracking-[0.3em] uppercase">Network Performance</p>
+                    </div>
                 </div>
-                <h3 className="text-lg font-bold text-blue-400 tracking-[0.2em] uppercase">TRÁFEGO GOOGLE</h3>
+                <div className="px-4 py-1.5 rounded-full bg-[#ffb500]/10 border border-[#ffb500]/20">
+                    <span className="text-[10px] font-black text-[#ffb500] tracking-widest uppercase">Verified Data</span>
+                </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4 relative">
                 {[
-                    { label: "Cliques", value: formatNumber(google.cliques) },
-                    { label: "Impressões", value: formatNumber(google.impressoes) },
-                    { label: "Conversões", value: formatNumber(google.contatos) },
-                    { label: "Investidos", value: formatCurrency(google.investido) }
+                    { label: "Cliques", value: formatNumber(google.cliques), icon: "🖱️" },
+                    { label: "Impressões", value: formatNumber(google.impressoes), icon: "👁️" },
+                    { label: "Conversões", value: formatNumber(google.contatos), icon: "🎯" },
+                    { label: "Investido", value: formatCurrency(google.investido), icon: "💰" }
                 ].map((m) => (
-                    <div key={m.label} className="text-center p-4 rounded-xl bg-white/[0.04] border border-white/[0.04] hover:bg-white/[0.06] transition-colors">
-                        <p className="text-2xl font-bold text-white mb-1">{m.value}</p>
-                        <p className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">{m.label}</p>
+                    <div key={m.label} className="p-6 rounded-3xl bg-white/[0.02] border border-white/[0.05] hover:border-[#ffb500]/30 transition-all duration-500 group/item">
+                        <p className="text-3xl font-black text-white mb-2 tracking-tight group-hover:text-[#ffb500] transition-colors">{m.value}</p>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] opacity-50">{m.icon}</span>
+                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">{m.label}</p>
+                        </div>
                     </div>
                 ))}
             </div>
 
             {additionalMetrics.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 relative">
                     {additionalMetrics.map((metric) => (
-                        <div key={metric.label} className="text-center p-4 rounded-xl bg-white/[0.04] border border-white/[0.04] hover:bg-white/[0.06] transition-colors">
-                            <p className={`text-xl font-bold ${metric.color} mb-1`}>{metric.value}</p>
-                            <p className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">{metric.label}</p>
+                        <div key={metric.label} className="p-5 rounded-2xl bg-white/[0.01] border border-white/[0.03] hover:bg-white/[0.04] transition-all duration-300">
+                            <p className="text-lg font-bold text-[#ffb500] mb-1 tracking-tight">{metric.value}</p>
+                            <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.15em]">{metric.label}</p>
                         </div>
                     ))}
                 </div>

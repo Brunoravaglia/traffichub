@@ -32,9 +32,9 @@ const getDefaultConfig = (type: ReportBlockType): Record<string, unknown> => {
     case 'section-title':
       return { title: 'TRÁFEGO GOOGLE', platform: 'google' };
     case 'metric-row':
-      return { 
-        title: '', 
-        platform: 'google', 
+      return {
+        title: '',
+        platform: 'google',
         metrics: [
           { icon: 'click', label: 'Cliques', value: '0' },
           { icon: 'eye', label: 'Impressões', value: '0' },
@@ -76,7 +76,7 @@ interface ReportBuilderProps {
 export function ReportBuilder({ clienteId, reportId }: ReportBuilderProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  
+
   const [blocks, setBlocks] = useState<ReportBlock[]>([]);
   const [reportName, setReportName] = useState('Novo Relatório');
   const [periodoInicio, setPeriodoInicio] = useState('');
@@ -136,7 +136,7 @@ export function ReportBuilder({ clienteId, reportId }: ReportBuilderProps) {
   const saveReportMutation = useMutation({
     mutationFn: async () => {
       if (!clienteId) throw new Error('Cliente não selecionado');
-      
+
       const reportData = {
         cliente_id: clienteId,
         nome: reportName,
@@ -163,9 +163,13 @@ export function ReportBuilder({ clienteId, reportId }: ReportBuilderProps) {
       toast.success('Relatório salvo com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['client-reports'] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Save error:', error);
-      toast.error('Erro ao salvar relatório');
+      if (error?.message?.includes('Limite de relatórios')) {
+        toast.error(error.message);
+      } else {
+        toast.error('Erro ao salvar relatório. Verifique os dados e tente novamente.');
+      }
     },
   });
 
@@ -187,7 +191,7 @@ export function ReportBuilder({ clienteId, reportId }: ReportBuilderProps) {
         type: blockType,
         config: getDefaultConfig(blockType),
       };
-      
+
       // Find position to insert
       const overId = over.id as string;
       if (overId === 'report-canvas') {
@@ -235,7 +239,7 @@ export function ReportBuilder({ clienteId, reportId }: ReportBuilderProps) {
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ChevronLeft className="w-5 h-5" />
         </Button>
-        
+
         <Input
           value={reportName}
           onChange={(e) => setReportName(e.target.value)}
@@ -270,8 +274,8 @@ export function ReportBuilder({ clienteId, reportId }: ReportBuilderProps) {
           {isEditing ? 'Preview' : 'Editar'}
         </Button>
 
-        <Button 
-          variant="default" 
+        <Button
+          variant="default"
           size="sm"
           onClick={() => saveReportMutation.mutate()}
           disabled={saveReportMutation.isPending}
@@ -290,7 +294,7 @@ export function ReportBuilder({ clienteId, reportId }: ReportBuilderProps) {
           onDragEnd={handleDragEnd}
         >
           {isEditing && <BlockPalette />}
-          
+
           <ReportCanvas
             blocks={blocks}
             onUpdateBlock={handleUpdateBlock}

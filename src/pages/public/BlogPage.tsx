@@ -10,9 +10,13 @@ import MarketTicker from "@/components/blog/MarketTicker";
 import { AnimatePresence } from "framer-motion";
 import { useBlogMetrics } from "@/hooks/useBlogMetrics";
 
+const parsePostDate = (dateStr: string) =>
+    new Date(dateStr.includes("T") ? dateStr : `${dateStr}T12:00:00`);
+
 const BlogPage = () => {
     const [activeCategory, setActiveCategory] = useState("Todos");
     const [searchQuery, setSearchQuery] = useState("");
+    const [sortBy, setSortBy] = useState<"newest" | "oldest" | "most_viewed" | "most_liked">("newest");
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [tickerIndex, setTickerIndex] = useState(0);
     const [heroIndex, setHeroIndex] = useState(0);
@@ -21,13 +25,17 @@ const BlogPage = () => {
     const { metrics, getMetric, loading: metricsLoading } = useBlogMetrics();
 
     // ─── Derived: sort posts by views for featured/trending ───
+    const now = new Date();
     const postsWithMetrics = blogPosts.map((post) => ({
         ...post,
         ...getMetric(post.slug),
     }));
+    const publishedPostsWithMetrics = postsWithMetrics.filter(
+        (post) => parsePostDate(post.date).getTime() <= now.getTime()
+    );
 
-    const postsByViews = [...postsWithMetrics].sort((a, b) => b.views - a.views);
-    const postsByLikes = [...postsWithMetrics].sort((a, b) => b.likes - a.likes);
+    const postsByViews = [...publishedPostsWithMetrics].sort((a, b) => b.views - a.views);
+    const postsByLikes = [...publishedPostsWithMetrics].sort((a, b) => b.likes - a.likes);
 
     // Hero: top 5 by views (or first 5 if no data yet)
     const heroPosts = postsByViews.slice(0, 5);
@@ -66,7 +74,7 @@ const BlogPage = () => {
     }, []);
 
     const suggestions = searchQuery.length >= 2
-        ? blogPosts
+        ? publishedPostsWithMetrics
             .filter(
                 (p) =>
                     p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -75,7 +83,7 @@ const BlogPage = () => {
             .slice(0, 5)
         : [];
 
-    const filteredPosts = blogPosts.filter((post) => {
+    const filteredPosts = publishedPostsWithMetrics.filter((post) => {
         const matchesCategory =
             activeCategory === "Todos" || post.category === activeCategory;
         const matchesSearch =
@@ -85,8 +93,17 @@ const BlogPage = () => {
         return matchesCategory && matchesSearch;
     });
 
+    const sortedFilteredPosts = [...filteredPosts].sort((a, b) => {
+        if (sortBy === "most_viewed") return b.views - a.views;
+        if (sortBy === "most_liked") return b.likes - a.likes;
+        const dateA = parsePostDate(a.date).getTime();
+        const dateB = parsePostDate(b.date).getTime();
+        if (sortBy === "oldest") return dateA - dateB;
+        return dateB - dateA; // default: newest first
+    });
+
     const formatDate = (dateStr: string) => {
-        return new Date(dateStr + "T12:00:00").toLocaleDateString("pt-BR", {
+        return parsePostDate(dateStr).toLocaleDateString("pt-BR", {
             day: "numeric",
             month: "long",
             year: "numeric",
@@ -97,6 +114,13 @@ const BlogPage = () => {
         if (n >= 1000) return `${(n / 1000).toFixed(1).replace(".0", "")}k`;
         return String(n);
     };
+
+    const sortOptions: Array<{ value: "newest" | "oldest" | "most_viewed" | "most_liked"; label: string }> = [
+        { value: "newest", label: "Mais novos" },
+        { value: "oldest", label: "Mais antigos" },
+        { value: "most_viewed", label: "Mais visualizados" },
+        { value: "most_liked", label: "Mais curtidos" },
+    ];
 
     return (
         <PublicLayout>
@@ -266,8 +290,8 @@ const BlogPage = () => {
                                         key={i}
                                         onClick={() => setHeroIndex(i)}
                                         className={`h-1.5 rounded-full transition-all duration-400 ${i === heroIndex
-                                                ? "bg-primary w-8"
-                                                : "bg-muted-foreground/20 w-1.5 hover:bg-muted-foreground/40"
+                                            ? "bg-primary w-8"
+                                            : "bg-muted-foreground/20 w-1.5 hover:bg-muted-foreground/40"
                                             }`}
                                     />
                                 ))}
@@ -352,64 +376,80 @@ const BlogPage = () => {
             {/* ═══════ SEARCH + CATEGORIES ═══════ */}
             <section className="pb-6">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 justify-between">
+                    <div className="space-y-4">
                         {/* Autocomplete Search */}
-                        <div ref={searchRef} className="relative w-full sm:max-w-sm">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
-                            <input
-                                type="text"
-                                placeholder="Buscar artigos..."
-                                value={searchQuery}
-                                onChange={(e) => {
-                                    setSearchQuery(e.target.value);
-                                    setShowSuggestions(e.target.value.length >= 2);
-                                }}
-                                onFocus={() => {
-                                    if (searchQuery.length >= 2) setShowSuggestions(true);
-                                }}
-                                className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm"
-                            />
-                            {showSuggestions && suggestions.length > 0 && (
-                                <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-2xl shadow-black/20 overflow-hidden z-50">
-                                    {suggestions.map((post) => (
-                                        <button
-                                            key={post.slug}
-                                            onClick={() => {
-                                                setShowSuggestions(false);
-                                                setSearchQuery("");
-                                                navigate(`/blog/${post.slug}`);
-                                            }}
-                                            className="w-full flex items-start gap-3 px-4 py-3 hover:bg-primary/5 transition-colors text-left border-b border-border/50 last:border-0"
-                                        >
-                                            <img
-                                                src={post.coverImage}
-                                                alt=""
-                                                className="w-12 h-8 rounded object-cover flex-shrink-0 mt-0.5"
-                                            />
-                                            <div className="min-w-0">
-                                                <p className="text-sm font-medium text-foreground truncate">
-                                                    {post.title}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground flex items-center gap-2">
-                                                    <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-medium">
-                                                        {post.category}
-                                                    </span>
-                                                    <span>{post.readTime} min de leitura</span>
-                                                </p>
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
+                        <div className="flex flex-col lg:flex-row items-stretch gap-3">
+                            <div ref={searchRef} className="relative flex-1">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar artigos..."
+                                    value={searchQuery}
+                                    onChange={(e) => {
+                                        setSearchQuery(e.target.value);
+                                        setShowSuggestions(e.target.value.length >= 2);
+                                    }}
+                                    onFocus={() => {
+                                        if (searchQuery.length >= 2) setShowSuggestions(true);
+                                    }}
+                                    className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm"
+                                />
+                                {showSuggestions && suggestions.length > 0 && (
+                                    <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-2xl shadow-black/20 overflow-hidden z-50">
+                                        {suggestions.map((post) => (
+                                            <button
+                                                key={post.slug}
+                                                onClick={() => {
+                                                    setShowSuggestions(false);
+                                                    setSearchQuery("");
+                                                    navigate(`/blog/${post.slug}`);
+                                                }}
+                                                className="w-full flex items-start gap-3 px-4 py-3 hover:bg-primary/5 transition-colors text-left border-b border-border/50 last:border-0"
+                                            >
+                                                <img
+                                                    src={post.coverImage}
+                                                    alt={post.title}
+                                                    className="w-12 h-8 rounded object-cover flex-shrink-0 mt-0.5"
+                                                />
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-medium text-foreground truncate">
+                                                        {post.title}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground flex items-center gap-2">
+                                                        <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-medium">
+                                                            {post.category}
+                                                        </span>
+                                                        <span>{post.readTime} min de leitura</span>
+                                                    </p>
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex flex-wrap gap-2">
+                                {sortOptions.map((option) => (
+                                    <button
+                                        key={option.value}
+                                        onClick={() => setSortBy(option.value)}
+                                        className={`px-3 py-2 rounded-full text-[11px] font-semibold tracking-wide transition-all ${sortBy === option.value
+                                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                                            : "bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30"
+                                            }`}
+                                    >
+                                        {option.label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
-                        {/* Categories */}
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                             {blogCategories.map((cat) => (
                                 <button
                                     key={cat}
                                     onClick={() => setActiveCategory(cat)}
-                                    className={`px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider transition-all ${activeCategory === cat
+                                    className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider transition-all ${activeCategory === cat
                                         ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
                                         : "bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30"
                                         }`}
@@ -425,7 +465,7 @@ const BlogPage = () => {
             {/* ═══════ POST GRID ═══════ */}
             <section className="pb-20 sm:pb-28">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {filteredPosts.length === 0 ? (
+                    {sortedFilteredPosts.length === 0 ? (
                         <div className="text-center py-20">
                             <p className="text-muted-foreground text-lg">
                                 Nenhum artigo encontrado.
@@ -433,8 +473,8 @@ const BlogPage = () => {
                         </div>
                     ) : (
                         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                            {filteredPosts.map((post, i) => {
-                                const metric = getMetric(post.slug);
+                            {sortedFilteredPosts.map((post, i) => {
+                                const metric = { views: post.views, likes: post.likes };
                                 return (
                                     <motion.article
                                         key={post.slug}

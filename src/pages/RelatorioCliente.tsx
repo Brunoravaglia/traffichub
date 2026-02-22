@@ -63,6 +63,7 @@ import { CustomSectionGrid, type CustomSection } from "@/components/report/Custo
 import { ReportHeader } from "@/components/report/ReportHeader";
 import { GoogleAdsMetricsView } from "@/components/report/GoogleAdsMetricsView";
 import { MetaAdsMetricsView } from "@/components/report/MetaAdsMetricsView";
+import { StrategicInsightsView } from "@/components/report/StrategicInsightsView";
 import { ReportFooter } from "@/components/report/ReportFooter";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 
@@ -223,6 +224,7 @@ interface ReportData {
     showSaldoRestante: boolean;
     showPaineisAnuncio: boolean;
     showCustomSections: boolean;
+    showStrategicInsights: boolean;
   };
   paineisAnuncio: AdPanelImage[];
   customSections: CustomSection[];
@@ -323,6 +325,7 @@ const defaultReportData: ReportData = {
     showSaldoRestante: true,
     showPaineisAnuncio: false,
     showCustomSections: false,
+    showStrategicInsights: true,
   },
   paineisAnuncio: [],
   customSections: [],
@@ -421,6 +424,7 @@ const RelatorioCliente = () => {
           showSaldoRestante: template.sections.showSaldoRestante ?? true,
           showPaineisAnuncio: template.sections.showPaineisAnuncio ?? false,
           showCustomSections: template.sections.showCustomSections ?? false,
+          showStrategicInsights: template.sections.showStrategicInsights ?? true,
         },
         metricsConfig: applyMetricsFromTemplate(template.metrics || []),
       }));
@@ -682,7 +686,12 @@ const RelatorioCliente = () => {
       queryClient.invalidateQueries({ queryKey: ["client-reports", clienteId] });
     },
     onError: (error: any) => {
-      toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+      console.error('Save error:', error);
+      if (error?.message?.includes('Limite de relatórios')) {
+        toast({ title: "Limite atingido", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Erro ao salvar", description: error.message || "Erro desconhecido", variant: "destructive" });
+      }
     },
   });
 
@@ -799,11 +808,19 @@ const RelatorioCliente = () => {
 
     toast({ title: "Gerando PDF...", description: "Por favor aguarde" });
 
+    let originalStyle = "";
+
     try {
       const element = pdfRef.current;
       const captureWidth = 800;
+
+      // Temporary style to ensure it's fully expanded for capture
+      originalStyle = element.style.cssText;
+      element.style.height = 'auto';
+      element.style.overflow = 'visible';
+
       // Get exact height including padding/content
-      const captureHeight = element.getBoundingClientRect().height;
+      const captureHeight = element.scrollHeight;
 
       const canvas = await html2canvas(element, {
         scale: 2, // 2 is usually enough and faster
@@ -815,33 +832,20 @@ const RelatorioCliente = () => {
       });
 
       const imgData = canvas.toDataURL("image/jpeg", 0.95);
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const pdfWidth = 210; // A4 width in mm
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
       const ratio = pdfWidth / imgWidth;
       const totalImgHeightInMm = imgHeight * ratio;
 
-      let heightLeft = totalImgHeightInMm;
-      let position = 0;
+      // Create PDF with custom height to avoid page breaks
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: [pdfWidth, totalImgHeightInMm],
+      });
 
-      // Add the first page
-      pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, totalImgHeightInMm);
-      heightLeft -= pdfHeight;
-
-      // Add subsequent pages if needed
-      while (heightLeft > 0) {
-        position = heightLeft - totalImgHeightInMm;
-        pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, totalImgHeightInMm);
-        heightLeft -= pdfHeight;
-      }
+      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, totalImgHeightInMm);
 
       const clienteName = cliente?.nome || "Relatorio";
       const period = format(periodoInicio, "MMMM", { locale: ptBR });
@@ -850,6 +854,10 @@ const RelatorioCliente = () => {
       toast({ title: "PDF gerado com sucesso!" });
     } catch (error: any) {
       toast({ title: "Erro ao gerar PDF", description: error.message, variant: "destructive" });
+    } finally {
+      if (pdfRef.current) {
+        pdfRef.current.style.cssText = originalStyle;
+      }
     }
   };
 
@@ -963,10 +971,13 @@ const RelatorioCliente = () => {
   const formatNumber = (value: number) =>
     new Intl.NumberFormat("pt-BR").format(value);
 
-  if (clienteLoading) {
+  if (clienteLoading || !cliente) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      <div className="flex items-center justify-center min-h-screen bg-[#0b1120]">
+        <div className="space-y-4 text-center">
+          <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
+          <p className="text-gray-400 font-medium">Carregando dados do cliente...</p>
+        </div>
       </div>
     );
   }
@@ -2760,7 +2771,7 @@ const RelatorioCliente = () => {
             </Card>
 
             {/* Creatives - Google */}
-            <Card>
+            <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <div className="w-6 h-6 bg-blue-500/20 rounded flex items-center justify-center">
@@ -2781,7 +2792,7 @@ const RelatorioCliente = () => {
             </Card>
 
             {/* Creatives - Meta */}
-            <Card>
+            <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <div className="w-6 h-6 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded flex items-center justify-center">
@@ -2907,7 +2918,7 @@ const RelatorioCliente = () => {
             {/* Ad Panels - Google */}
             {reportData.sectionsConfig.showPaineisAnuncio && (
               <>
-                <Card>
+                <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                       <div className="w-6 h-6 bg-blue-500/20 rounded flex items-center justify-center">
@@ -2928,7 +2939,7 @@ const RelatorioCliente = () => {
                 </Card>
 
                 {/* Ad Panels - Meta */}
-                <Card>
+                <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                       <div className="w-6 h-6 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded flex items-center justify-center">
@@ -3294,7 +3305,7 @@ const RelatorioCliente = () => {
                   )}
 
                 {/* Footer */}
-                <ReportFooter reportData={reportData} />
+                <ReportFooter reportData={reportData} cliente={cliente} />
               </div>
             </div>
           </div>

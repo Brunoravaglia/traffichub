@@ -62,6 +62,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
   const [isFirstLogin, setIsFirstLogin] = useState(false);
   const lastSavedDurationRef = useRef<number>(0);
   const saveIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const oauthSyncInProgressRef = useRef(false);
 
   // Function to save session duration to database
   const saveSessionDuration = useCallback(async (isLogout = false) => {
@@ -169,91 +170,129 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       }
     }
 
-    // Auth listener for Supabase Auth (e.g. Google OAuth return)
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
-        // If we don't have a local session, it means they just logged in via OAuth
+    const syncSupabaseOAuthSession = async (sessionUser: { id: string; email?: string; user_metadata?: Record<string, unknown> }) => {
+      if (oauthSyncInProgressRef.current) return;
+      oauthSyncInProgressRef.current = true;
+
+      try {
         const currentLocalGestor = sessionStorage.getItem("vcd_gestor_id");
-        if (!currentLocalGestor) {
-          try {
-            const user = session.user;
+        if (currentLocalGestor === sessionUser.id && sessionStorage.getItem("vcd_session_id")) {
+          return;
+        }
 
-            // 1. Check if gestor already exists mapped to this auth user ID
-            const { data: existingGestor } = await supabase
-              .from("gestores")
-              .select("*")
-              .eq("id", user.id)
-              .single();
+        const { data: existingGestor, error: fetchError } = await supabase
+          .from("gestores")
+          .select("*")
+          .eq("id", sessionUser.id)
+          .single();
 
-            // 2. If it doesn't exist, create it (New Account via Google)
-            if (!existingGestor) {
-              const fullName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || "Novo Gestor";
-              const avatarUrl = user.user_metadata?.avatar_url || null;
+        if (fetchError && fetchError.code !== "PGRST116") {
+          console.error("[Session] Error fetching existing gestor:", fetchError);
+        }
 
-              // We must insert the gestor. Note: `auth.users` trigger might already do this if it exists,
-              // but doing it with `upsert` or checking first is safer if the trigger is missing.
-              await supabase.from("gestores").upsert({
-                id: user.id, // Link to auth.users ID
-                nome: fullName,
-                foto_url: avatarUrl,
-                senha: "google-oauth", // Placeholder since they use Google
-                dados_completos: false,
-                foto_preenchida: !!avatarUrl,
-                onboarding_completo: false,
-              }, { onConflict: 'id' });
-            }
+        if (!existingGestor) {
+          console.log("[Session] Creating new gestor record for Google Auth user:", sessionUser.id);
+          const metadata = sessionUser.user_metadata || {};
+          const fullName =
+            (metadata.full_name as string | undefined) ||
+            (metadata.name as string | undefined) ||
+            sessionUser.email?.split("@")[0] ||
+            "Novo Gestor";
+          const avatarUrl = (metadata.avatar_url as string | undefined) || null;
 
-            // 3. Log them in locally (fetch fresh data to ensure we have it)
-            const { data: finalGestor } = await supabase
-              .from("gestores")
-              .select("*")
-              .eq("id", user.id)
-              .single();
+          const { error: upsertError } = await supabase.from("gestores").upsert(
+            {
+              id: sessionUser.id,
+              nome: fullName,
+              foto_url: avatarUrl,
+              senha: "google-oauth",
+              dados_completos: false,
+              foto_preenchida: !!avatarUrl,
+              onboarding_completo: false,
+              agencia_id: agencia?.id || null,
+            },
+            { onConflict: "id" }
+          );
 
-            if (finalGestor) {
-              // Create session locally
-              const { data: sessionData } = await supabase
-                .from("gestor_sessions")
-                .insert({ gestor_id: user.id, duration_seconds: 0 })
-                .select()
-                .single();
-
-              if (sessionData) {
-                const now = new Date();
-                // @ts-ignore - Handle missing is_admin
-                setGestor({ ...finalGestor, is_admin: false });
-                setIsFirstLogin(!finalGestor.first_login_at);
-                setSessionId(sessionData.id);
-                setSessionStartTime(now);
-                setSessionDuration(0);
-                lastSavedDurationRef.current = 0;
-
-                sessionStorage.setItem("vcd_gestor_id", finalGestor.id);
-                sessionStorage.setItem("vcd_session_id", sessionData.id);
-                sessionStorage.setItem("vcd_session_start", now.toISOString());
-                sessionStorage.setItem("vcd_unlocked", "true");
-
-                if (finalGestor.agencia_id) {
-                  const { data: agencyData } = await supabase
-                    .from("agencias")
-                    .select("*")
-                    .eq("id", finalGestor.agencia_id)
-                    .single();
-                  if (agencyData) setAgencia(agencyData as unknown as Agencia);
-                }
-              }
-            }
-          } catch (err) {
-            console.error("[Session] Error syncing Supabase Auth:", err);
+          if (upsertError) {
+            console.error("[Session] Failed to upsert new gestor:", upsertError);
+            return;
           }
+          console.log("[Session] Successfully created gestor record");
         }
+
+        const { data: finalGestor, error: finalFetchError } = await supabase
+          .from("gestores")
+          .select("*")
+          .eq("id", sessionUser.id)
+          .single();
+
+        if (finalFetchError || !finalGestor) {
+          console.error("[Session] Error fetching gestor after sync:", finalFetchError);
+          return;
+        }
+
+        const { data: sessionData, error: localSessionError } = await supabase
+          .from("gestor_sessions")
+          .insert({ gestor_id: sessionUser.id, duration_seconds: 0 })
+          .select()
+          .single();
+
+        if (localSessionError || !sessionData) {
+          console.error("[Session] Failed to create local gestor session:", localSessionError);
+          return;
+        }
+
+        const now = new Date();
+        // @ts-ignore - Handle missing is_admin
+        setGestor({ ...finalGestor, is_admin: false });
+        setIsFirstLogin(!finalGestor.first_login_at);
+        setSessionId(sessionData.id);
+        setSessionStartTime(now);
+        setSessionDuration(0);
+        lastSavedDurationRef.current = 0;
+
+        sessionStorage.setItem("vcd_gestor_id", finalGestor.id);
+        sessionStorage.setItem("vcd_session_id", sessionData.id);
+        sessionStorage.setItem("vcd_session_start", now.toISOString());
+        sessionStorage.setItem("vcd_unlocked", "true");
+
+        if (finalGestor.agencia_id) {
+          const { data: agencyData } = await supabase
+            .from("agencias")
+            .select("*")
+            .eq("id", finalGestor.agencia_id)
+            .single();
+          if (agencyData) setAgencia(agencyData as unknown as Agencia);
+        }
+      } catch (err) {
+        console.error("[Session] Error syncing Supabase Auth:", err);
+      } finally {
+        oauthSyncInProgressRef.current = false;
+      }
+    };
+
+    // Auth listener for Supabase Auth (Google OAuth)
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if ((event === "INITIAL_SESSION" || event === "SIGNED_IN") && session?.user) {
+        await syncSupabaseOAuthSession(session.user as unknown as { id: string; email?: string; user_metadata?: Record<string, unknown> });
       } else if (event === "SIGNED_OUT") {
-        // If Supabase signs out, clear our local session as well
-        if (sessionStorage.getItem("vcd_gestor_id")) {
-          // Don't call logout() directly here to avoid loop if logout() called SIGNED_OUT
-          setGestor(null);
-          sessionStorage.removeItem("vcd_gestor_id");
-        }
+        setGestor(null);
+        setSessionId(null);
+        setSessionStartTime(null);
+        setSessionDuration(0);
+        setIsFirstLogin(false);
+        sessionStorage.removeItem("vcd_gestor_id");
+        sessionStorage.removeItem("vcd_session_id");
+        sessionStorage.removeItem("vcd_session_start");
+        sessionStorage.removeItem("vcd_unlocked");
+      }
+    });
+
+    // Also sync immediately in case the session is already present after redirect
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user) {
+        syncSupabaseOAuthSession(data.session.user as unknown as { id: string; email?: string; user_metadata?: Record<string, unknown> });
       }
     });
 
@@ -466,6 +505,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     // Save final duration with logout timestamp
     await saveSessionDuration(true);
+    await supabase.auth.signOut();
 
     setGestor(null);
     setAgencia(null);

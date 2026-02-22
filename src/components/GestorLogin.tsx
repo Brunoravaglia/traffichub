@@ -71,7 +71,7 @@ const GestorLogin = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}/login`,
       },
     });
     if (error) {
@@ -358,4 +358,3 @@ const GestorLogin = () => {
 };
 
 export default GestorLogin;
-
