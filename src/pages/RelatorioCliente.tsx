@@ -3770,13 +3770,20 @@ const RelatorioCliente = () => {
                               className="rounded-lg overflow-hidden border border-white/20"
                               style={{
                                 width: image.width ? `${image.width}px` : '200px',
-                                height: image.height ? `${image.height}px` : 'auto'
+                                height: reportData.isGeneratingPDF
+                                  ? 'auto'
+                                  : image.height
+                                    ? `${image.height}px`
+                                    : 'auto'
                               }}
                             >
                               <img
                                 src={image.url}
                                 alt={image.name}
-                                className="w-full h-full object-contain"
+                                className={cn(
+                                  "block w-full object-contain",
+                                  reportData.isGeneratingPDF ? "h-auto" : "h-full"
+                                )}
                                 crossOrigin="anonymous"
                               />
                             </div>

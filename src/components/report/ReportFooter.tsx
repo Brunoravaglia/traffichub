@@ -9,6 +9,9 @@ interface ReportFooterProps {
 
 export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
     const isExporting = Boolean(reportData?.isGeneratingPDF);
+    const validationUrl = reportData?.validationId
+        ? `https://vurp.vercel.app/validar-relatorio?id=${reportData.validationId}`
+        : "https://vurp.vercel.app/validar-relatorio";
 
     const handleCopy = async (value?: string) => {
         if (!value) return;
@@ -101,7 +104,7 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
                     <div className="flex flex-col items-center md:items-end gap-2">
                         <p className="text-[9px] font-black text-[#ffb500] uppercase tracking-[0.2em] mb-1">VERIFICAR AUTENTICIDADE EM:</p>
                         <a
-                            href={`https://vurp.vercel.app/validar-relatorio?id=${reportData.validationId}`}
+                            href={validationUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-[10px] text-gray-400 font-bold hover:text-[#ffb500] transition-colors border-b border-white/10 pb-0.5 select-text"
@@ -111,7 +114,7 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
                         {!isExporting && (
                             <button
                                 type="button"
-                                onClick={() => handleCopy("https://vurp.vercel.app/validar-relatorio")}
+                                onClick={() => handleCopy(validationUrl)}
                                 className="inline-flex h-7 w-7 items-center justify-center rounded border border-[#ffb500]/20 bg-[#ffb500]/5 text-[#ffb500] hover:bg-[#ffb500]/10 transition-colors"
                                 aria-label="Copiar link de verificação"
                                 title="Copiar link de verificação"
