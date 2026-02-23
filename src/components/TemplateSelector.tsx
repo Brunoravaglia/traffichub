@@ -19,6 +19,7 @@ import {
   Zap,
   PieChart,
   TrendingUp,
+  Plus,
 } from "lucide-react";
 import { useGestor } from "@/contexts/GestorContext";
 import { cn } from "@/lib/utils";

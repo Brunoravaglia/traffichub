@@ -291,9 +291,12 @@ const Modelos = () => {
 
   // Navigate to report creation
   const handleSelectClient = (clienteId: string) => {
-    const baseUrl = `/cliente/${clienteId}/enviar-relatorio`;
-    const templateParam = selectedTemplate?.id ? `?templateId=${selectedTemplate.id}` : "";
-    navigate(`${baseUrl}${templateParam}`);
+    if (selectedTemplate?.id) {
+      navigate(`/cliente/${clienteId}/enviar-relatorio?templateId=${selectedTemplate.id}`);
+    } else {
+      // Fluxo sem modelo: usar rota estável de criação manual para evitar tela preta.
+      navigate(`/cliente/${clienteId}/novo-relatorio`);
+    }
     setClientSelectOpen(false);
   };
 
@@ -383,6 +386,13 @@ const Modelos = () => {
     setDeleteDialogOpen(true);
   };
 
+  const handleStartWithoutTemplate = () => {
+    setSelectedTemplate(null);
+    setClientSearch("");
+    if (gestor?.id) setSelectedGestorId(gestor.id);
+    setClientSelectOpen(true);
+  };
+
   const handleSave = () => {
     if (!formData.nome.trim()) {
       toast({ title: "Nome obrigatório", variant: "destructive" });
@@ -428,9 +438,9 @@ const Modelos = () => {
               </p>
             </div>
           </div>
-          <GradientButton onClick={handleNewTemplate} className="gap-2 shadow-lg shadow-primary/10">
+          <GradientButton onClick={handleStartWithoutTemplate} className="gap-2 shadow-lg shadow-primary/10">
             <Plus className="w-4 h-4" />
-            Novo Modelo
+            Novo Relatório
           </GradientButton>
         </div>
       </motion.div>
@@ -465,6 +475,11 @@ const Modelos = () => {
             className="pl-10 bg-secondary/50 border-border focus:border-primary"
           />
         </div>
+
+        <Button onClick={handleNewTemplate} className="gap-2">
+          <Plus className="w-4 h-4" />
+          Criar novo modelo
+        </Button>
       </motion.div>
 
       {/* Platform Filters */}
@@ -521,7 +536,7 @@ const Modelos = () => {
         </div>
       ) : filteredTemplates && filteredTemplates.length > 0 ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {/* Start Without Template Card */}
+          {/* Quick New Template Card */}
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -540,34 +555,28 @@ const Modelos = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-foreground truncate">
-                      Começar sem modelo
+                      Novo modelo
                     </h4>
                     <Badge variant="secondary" className="mt-1 text-[10px] px-2 py-0 bg-secondary text-muted-foreground">
-                      Básico
+                      Template
                     </Badge>
                   </div>
                 </div>
 
                 <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
-                  Crie um relatório do zero escolhendo as métricas manualmente.
+                  Crie um template para reutilizar sua estrutura em novos relatórios.
                 </p>
 
                 <div className="mt-auto pt-4 border-t border-border/50">
-                  <GradientButton
-                    onClick={() => {
-                      setSelectedTemplate(null);
-                      setClientSearch("");
-                      if (gestor?.id) setSelectedGestorId(gestor.id);
-                      setClientSelectOpen(true);
-                    }}
-                    variant="variant"
-                    className="w-full gap-2 transition-all shadow-xl"
+                  <Button
+                    onClick={handleNewTemplate}
+                    className="w-full gap-2 transition-all"
                     size="sm"
                   >
-                    <Layout className="w-4 h-4" />
-                    Criar do Zero
+                    <LayoutTemplate className="w-4 h-4" />
+                    Novo modelo
                     <ChevronRight className="w-4 h-4" />
-                  </GradientButton>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -915,7 +924,9 @@ const Modelos = () => {
               Selecionar Cliente
             </DialogTitle>
             <p className="text-sm text-muted-foreground">
-              Escolha o cliente para criar um relatório com o modelo "{selectedTemplate?.nome}"
+              {selectedTemplate?.nome
+                ? `Escolha o cliente para criar um relatório com o modelo "${selectedTemplate.nome}"`
+                : "Escolha o cliente para criar um relatório sem modelo"}
             </p>
           </DialogHeader>
 
@@ -1009,6 +1020,20 @@ const Modelos = () => {
               <div className="text-center py-12 text-muted-foreground">
                 <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p>Nenhum cliente encontrado</p>
+                <p className="mt-1 text-sm">
+                  Você precisa criar o primeiro cliente para gerar relatórios.
+                </p>
+                <Button
+                  type="button"
+                  className="mt-4"
+                  onClick={() => {
+                    setClientSelectOpen(false);
+                    navigate("/novo-cliente");
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Criar primeiro cliente
+                </Button>
               </div>
             )}
           </div>

@@ -6,9 +6,10 @@ interface ReportHeaderProps {
     cliente: any;
     periodoInicio: Date;
     periodoFim: Date;
+    isExporting?: boolean;
 }
 
-export const ReportHeader = ({ cliente, periodoInicio, periodoFim }: ReportHeaderProps) => {
+export const ReportHeader = ({ cliente, periodoInicio, periodoFim, isExporting = false }: ReportHeaderProps) => {
     return (
         <div className="p-10 pb-6 bg-gradient-to-b from-black/40 to-transparent">
             <div className="flex items-start justify-between mb-10">
@@ -30,8 +31,15 @@ export const ReportHeader = ({ cliente, periodoInicio, periodoFim }: ReportHeade
                             <span className="text-4xl font-bold text-black tracking-widest">{cliente?.nome?.charAt(0)}</span>
                         </div>
                     )}
-                    <div className="space-y-2">
-                        <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#ffb500] via-[#ffd700] to-[#cc9200] tracking-tight uppercase leading-none">
+                    <div className="space-y-2 py-1">
+                        <p
+                            className={cn(
+                                "text-4xl font-black tracking-tight uppercase leading-[1.12]",
+                                isExporting
+                                    ? "text-[#ffcc33]"
+                                    : "text-transparent bg-clip-text bg-gradient-to-r from-[#ffb500] via-[#ffd700] to-[#cc9200]"
+                            )}
+                        >
                             {cliente?.nome}
                         </p>
                         <p className="text-xs text-gray-400 font-bold tracking-[0.3em] uppercase opacity-70">
@@ -41,7 +49,14 @@ export const ReportHeader = ({ cliente, periodoInicio, periodoFim }: ReportHeade
                 </div>
                 <div className="text-right flex flex-col justify-center">
                     <h1 className="text-4xl font-light text-white mb-0 tracking-tighter leading-none opacity-40 italic">RESULTS</h1>
-                    <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-tr from-[#ffb500] to-[#ffd700] mb-3 tracking-tighter leading-none">
+                    <h1
+                        className={cn(
+                            "text-5xl font-black mb-3 tracking-tighter leading-none",
+                            isExporting
+                                ? "text-[#ffcc33]"
+                                : "text-transparent bg-clip-text bg-gradient-to-tr from-[#ffb500] to-[#ffd700]"
+                        )}
+                    >
                         INSIGHTS
                     </h1>
                     <div className="flex flex-col items-end gap-1">
@@ -57,9 +72,9 @@ export const ReportHeader = ({ cliente, periodoInicio, periodoFim }: ReportHeade
                     <div className="absolute -inset-1 bg-gradient-to-r from-[#ffb500]/20 to-[#cc9200]/20 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
                     <div className="relative px-8 py-3 rounded-full bg-black/40 border border-[#ffb500]/30 backdrop-blur-sm">
                         <p className="text-xs text-gray-200 tracking-[0.25em] font-black uppercase flex items-center gap-3">
-                            <span className="w-1 h-1 rounded-full bg-[#ffb500] animate-pulse"></span>
+                            <span className={cn("w-1 h-1 rounded-full bg-[#ffb500]", !isExporting && "animate-pulse")}></span>
                             Período: {format(periodoInicio, "dd/MM")} — {format(periodoFim, "dd/MM")}
-                            <span className="w-1 h-1 rounded-full bg-[#ffb500] animate-pulse"></span>
+                            <span className={cn("w-1 h-1 rounded-full bg-[#ffb500]", !isExporting && "animate-pulse")}></span>
                         </p>
                     </div>
                 </div>

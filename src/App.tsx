@@ -88,7 +88,14 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <ScrollToTop />
-            <Suspense fallback={<div className="flex h-screen w-full flex-col items-center justify-center gap-4"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div></div>}>
+            <Suspense
+              fallback={
+                <div className="flex h-screen w-full flex-col items-center justify-center gap-3 bg-background">
+                  <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
+                  <p className="text-sm font-medium text-muted-foreground">Carregando interface...</p>
+                </div>
+              }
+            >
               <Routes>
                 {/* Public pages */}
                 <Route path="/" element={<HomePage />} />

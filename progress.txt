@@ -1,0 +1,73 @@
+2026-02-22 - Phase 1 (Critical) started and implemented:
+
+1) Baseline documentation created at repo root:
+- DESIGN_SYSTEM.md
+- FRONTEND_GUIDELINES.md
+- APP_FLOW.md
+- PRD.md
+- TECH_STACK.md
+- progress.txt
+- LESSONS.md
+
+2) Hero (Home) hierarchy and token integrity:
+- Reduced visual aggression and improved scan order.
+- Replaced hardcoded visual colors/shadows with token-derived values.
+
+3) Mobile Navbar refinement:
+- Calmer drawer rhythm and reduced visual competition.
+- Improved panel readability for light/dark themes.
+
+4) Utilities Bento interaction:
+- Separated info action from primary card navigation.
+- `(i)` upgraded to 44x44 touch target with explicit semantic button.
+
+5) Responsiveness:
+- Introduced fluid text scale in Home/Utilities/Blog mastheads.
+
+6) Theme integrity:
+- Removed critical hardcoded color values in Hero/Parallax/MarketTicker paths.
+
+2026-02-22 - Phase 2 (Refinement) started and implemented:
+
+1) Home Hero rhythm and typography refinement:
+- Reduced headline scale and tightened line-height/tracking for cleaner hierarchy.
+- Rebalanced spacing between eyebrow, H1, description and CTAs.
+- Reduced visual weight of CTA buttons and container paddings.
+
+2) Mobile Navbar visual calm:
+- Improved glass panel contrast/border for light and dark readability.
+- Reduced visual noise in menu rows and tightened drawer internal rhythm.
+- Harmonized button states inside mobile drawer.
+
+3) Utilities page density and readability:
+- Reduced hero heading scale and body text size for better scan.
+- Tightened card paddings/gaps and improved text hierarchy inside tool cards.
+- Kept 44x44 info action touch area while improving visual placement.
+
+4) Features section polish:
+- Improved heading/body scale and section rhythm.
+- Reduced card density excess and aligned hover shadow to tokenized color.
+
+Validation:
+- npm run build: OK
+- react-doctor: 97/100 (no blocking issues)
+
+2026-02-22 - Phase 3 (Polish) started and implemented:
+
+1) Loading and error states (critical surface hardening):
+- RelatorioCliente now has explicit session-loading, data-loading and error-recovery states.
+- Added clear recovery actions: retry fetch and back-to-clients.
+- Removed hardcoded loading background color and aligned to theme tokens.
+
+2) Global route loading polish:
+- Upgraded App Suspense fallback with branded loading copy and tokenized surface.
+- Prevents blank/abrupt black transitions while lazy chunks load.
+
+3) Interaction polish and accessibility:
+- Added consistent `focus-visible` ring treatment to Navbar, Hero CTAs and Utilities cards/actions.
+- Added `focus-within` emphasis on utility cards for keyboard users.
+- Preserved touch hit-area standards while improving visual affordance.
+
+Validation:
+- npm run build: OK
+- react-doctor: 97/100 (no blocking issues)

@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { LazyMotion, domAnimation, m } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
     Calculator,
@@ -19,10 +19,12 @@ import {
     Type,
     Stethoscope,
     Gauge,
+    Info,
 } from "lucide-react";
 import PublicLayout from "@/components/home/PublicLayout";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { GoogleLogo, MetaLogo, LinkedInLogo } from "@/components/BrandLogos";
 
 interface ToolItem {
@@ -93,91 +95,113 @@ const UtilitiesPage = () => {
                 breadcrumbs={[{ name: "Utilidades", path: "/utilidades" }]}
             />
 
+            <LazyMotion features={domAnimation}>
             <div className="min-h-screen bg-background text-foreground">
                 {/* Hero */}
-                <section className="pt-24 sm:pt-28 pb-12">
+                <section className="pb-8 pt-20 sm:pt-24">
                     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                        <motion.div
+                        <m.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                         >
-                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6">
+                            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
                                 <Calculator className="w-4 h-4" />
                                 {totalTools} Ferramentas Gratuitas
                             </div>
-                            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-4">
+                            <h1 className="mb-3 text-[clamp(1.75rem,5.2vw,3.35rem)] font-extrabold tracking-tight">
                                 Ferramentas para{" "}
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-amber-400">
+                                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                                     Gestores de Tráfego
                                 </span>
                             </h1>
-                            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                            <p className="mx-auto max-w-2xl text-[clamp(0.95rem,1.55vw,1.05rem)] leading-relaxed text-muted-foreground">
                                 Calculadoras, simuladores, geradores e diagnósticos em um só lugar.
                                 Grátis, sem cadastro, resultados instantâneos.
                             </p>
-                        </motion.div>
+                        </m.div>
                     </div>
                 </section>
 
                 {/* Tool Sections */}
-                <section className="pb-20">
-                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                <section className="pb-14">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+                        <TooltipProvider delayDuration={120}>
                         {sections.map((section, si) => (
                             <div key={section.title}>
-                                <motion.h2
+                                <m.h2
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: si * 0.1 }}
-                                    className="text-xl font-bold mb-4 flex items-center gap-2"
+                                    className="mb-4 flex items-center gap-2 text-[1.08rem] font-bold sm:text-xl"
                                 >
                                     <span>{section.emoji}</span>
                                     {section.title}
-                                </motion.h2>
-                                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                </m.h2>
+                                <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-5">
                                     {section.tools.map((calc, i) => (
-                                        <motion.div
+                                        <m.div
                                             key={calc.slug}
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: si * 0.1 + i * 0.05 }}
                                             className="flex h-full"
                                         >
-                                            <Link
-                                                to={`/utilidades/${calc.slug}`}
-                                                className={`group relative flex flex-col w-full p-7 rounded-[2rem] bg-card border ${calc.border} hover:border-primary/40 transition-all hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1`}
-                                            >
-                                                {calc.popular && (
-                                                    <span className="absolute top-4 right-4 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary rounded-full backdrop-blur-sm border border-primary/20">
-                                                        Popular
-                                                    </span>
-                                                )}
+                                            <article className={`group relative flex w-full flex-col rounded-2xl border bg-card/80 p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-[0_0_26px_hsl(var(--primary)/0.10)] focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/25 ${calc.border}`}>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <button
+                                                            type="button"
+                                                            aria-label={`Explicacao da calculadora ${calc.title}`}
+                                                            className="absolute right-1.5 top-1.5 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-border/70 bg-card/95 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                                                        >
+                                                            <Info className="h-4 w-4" />
+                                                        </button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent side="top" className="max-w-[220px] border-border/80 bg-background/95 text-xs leading-relaxed text-foreground">
+                                                        {calc.description}
+                                                    </TooltipContent>
+                                                </Tooltip>
 
-                                                <div className="flex-1">
-                                                    <div className={`inline-flex items-center justify-center w-12 h-12 rounded-2xl ${calc.bg} mb-5`}>
-                                                        <calc.icon className={`w-6 h-6 ${calc.color}`} />
+                                                <Link
+                                                    to={`/utilidades/${calc.slug}`}
+                                                    className="flex h-full flex-col rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                                                >
+                                                    {calc.popular && (
+                                                        <span className="mb-1.5 inline-flex w-fit rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-primary">
+                                                            Popular
+                                                        </span>
+                                                    )}
+
+                                                    <div className="flex-1">
+                                                        <div className="mb-2.5 flex items-start justify-between gap-2 pr-10">
+                                                            <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 ${calc.bg}`}>
+                                                                <calc.icon className={`h-5 w-5 ${calc.color}`} />
+                                                            </div>
+                                                        </div>
+
+                                                        <h3 className="mb-0.5 text-[1rem] font-bold leading-tight transition-colors group-hover:text-primary sm:text-[1.08rem]">
+                                                            {calc.title}
+                                                        </h3>
+                                                        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/85">
+                                                            {calc.subtitle}
+                                                        </p>
+                                                        <p className="line-clamp-2 text-[11px] leading-snug text-muted-foreground sm:text-[12px]">
+                                                            {calc.description}
+                                                        </p>
                                                     </div>
 
-                                                    <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">
-                                                        {calc.title}
-                                                    </h3>
-                                                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-[0.2em] mb-3 opacity-70">
-                                                        {calc.subtitle}
-                                                    </p>
-                                                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
-                                                        {calc.description}
-                                                    </p>
-                                                </div>
-
-                                                <div className="flex items-center gap-2 mt-6 text-sm text-primary font-bold opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-                                                    <span>{calc.cta || "Calcular agora"}</span>
-                                                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                                </div>
-                                            </Link>
-                                        </motion.div>
+                                                    <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-bold text-primary opacity-85 transition-all group-hover:translate-x-0.5 sm:text-xs sm:opacity-0 sm:group-hover:opacity-100">
+                                                        <span>{calc.cta || "Calcular agora"}</span>
+                                                        <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                                                    </div>
+                                                </Link>
+                                            </article>
+                                        </m.div>
                                     ))}
                                 </div>
                             </div>
                         ))}
+                        </TooltipProvider>
                     </div>
                 </section>
 
@@ -194,7 +218,7 @@ const UtilitiesPage = () => {
                                 Conecte suas contas e tenha dashboards em tempo real.
                             </p>
                             <Link to="/signup">
-                                <Button className="h-12 px-8 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground vcd-button-glow transition-all hover:scale-105 group">
+                                <Button className="h-12 bg-primary px-8 text-base font-bold text-primary-foreground transition-all hover:scale-105 hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/70 group vcd-button-glow">
                                     Começar Grátis
                                     <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                 </Button>
@@ -203,6 +227,7 @@ const UtilitiesPage = () => {
                     </div>
                 </section>
             </div>
+            </LazyMotion>
         </PublicLayout>
     );
 };

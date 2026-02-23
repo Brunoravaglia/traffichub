@@ -235,20 +235,20 @@ const ControleDashboard = ({ gestorFilter }: ControleDashboardProps) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0 }}
         >
-          <Card className="bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border-emerald-500/20">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Investido Este Mês</p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
+          <Card className="h-full border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-teal-500/5">
+            <CardContent className="h-full p-4">
+              <div className="flex h-full items-start justify-between gap-4">
+                <div className="flex h-full flex-1 flex-col">
+                  <p className="min-h-[52px] text-sm leading-6 text-muted-foreground">Investido Este Mês</p>
+                  <p className="mt-1 text-2xl font-bold leading-none text-foreground">
                     {formatCurrency(monthlyInvestment?.total || 0)}
                   </p>
-                  <div className="flex items-center gap-2 mt-2 text-xs">
+                  <div className="mt-3 min-h-[44px] space-y-0.5 text-xs">
                     <span className="text-blue-500">G: {formatCurrency(monthlyInvestment?.google || 0)}</span>
-                    <span className="text-purple-500">M: {formatCurrency(monthlyInvestment?.meta || 0)}</span>
+                    <span className="ml-3 text-purple-500">M: {formatCurrency(monthlyInvestment?.meta || 0)}</span>
                   </div>
                 </div>
-                <div className="p-3 rounded-xl bg-emerald-500/10">
+                <div className="rounded-xl bg-emerald-500/10 p-3">
                   <Banknote className="w-6 h-6 text-emerald-500" />
                 </div>
               </div>
@@ -261,20 +261,20 @@ const ControleDashboard = ({ gestorFilter }: ControleDashboardProps) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
         >
-          <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border-blue-500/20">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Saldo Total</p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
+          <Card className="h-full border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-cyan-500/5">
+            <CardContent className="h-full p-4">
+              <div className="flex h-full items-start justify-between gap-4">
+                <div className="flex h-full flex-1 flex-col">
+                  <p className="min-h-[52px] text-sm leading-6 text-muted-foreground">Saldo Total</p>
+                  <p className="mt-1 text-2xl font-bold leading-none text-foreground">
                     {formatCurrency(totalSaldo)}
                   </p>
-                  <div className="flex items-center gap-2 mt-2 text-xs">
+                  <div className="mt-3 min-h-[44px] space-y-0.5 text-xs">
                     <span className="text-blue-500">G: {formatCurrency(totalGoogleSaldo)}</span>
-                    <span className="text-purple-500">M: {formatCurrency(totalMetaSaldo)}</span>
+                    <span className="ml-3 text-purple-500">M: {formatCurrency(totalMetaSaldo)}</span>
                   </div>
                 </div>
-                <div className="p-3 rounded-xl bg-blue-500/10">
+                <div className="rounded-xl bg-blue-500/10 p-3">
                   <Wallet className="w-6 h-6 text-blue-500" />
                 </div>
               </div>
@@ -287,13 +287,13 @@ const ControleDashboard = ({ gestorFilter }: ControleDashboardProps) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/5 border-green-500/20">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Clientes Monitorados</p>
-                  <p className="text-2xl font-bold text-foreground mt-1">{totalClientes}</p>
-                  <div className="flex items-center gap-1 mt-2">
+          <Card className="h-full border-green-500/20 bg-gradient-to-br from-green-500/10 to-emerald-500/5">
+            <CardContent className="h-full p-4">
+              <div className="flex h-full items-start justify-between gap-4">
+                <div className="flex h-full flex-1 flex-col">
+                  <p className="min-h-[52px] text-sm leading-6 text-muted-foreground">Clientes Monitorados</p>
+                  <p className="mt-1 text-2xl font-bold leading-none text-foreground">{totalClientes}</p>
+                  <div className="mt-3 flex min-h-[44px] items-start gap-1">
                     <Badge variant="secondary" className="bg-green-500/10 text-green-600 text-[10px]">
                       {clientesSaudaveis} OK
                     </Badge>
@@ -304,7 +304,7 @@ const ControleDashboard = ({ gestorFilter }: ControleDashboardProps) => {
                     )}
                   </div>
                 </div>
-                <div className="p-3 rounded-xl bg-green-500/10">
+                <div className="rounded-xl bg-green-500/10 p-3">
                   <Users className="w-6 h-6 text-green-500" />
                 </div>
               </div>
@@ -317,13 +317,13 @@ const ControleDashboard = ({ gestorFilter }: ControleDashboardProps) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Card className={`bg-gradient-to-br ${clientesCriticos > 0 ? 'from-red-500/10 to-orange-500/5 border-red-500/20' : 'from-green-500/10 to-emerald-500/5 border-green-500/20'}`}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Saldo Crítico</p>
-                  <p className="text-2xl font-bold text-foreground mt-1">{clientesCriticos}</p>
-                  <p className="text-xs text-muted-foreground mt-2">
+          <Card className={`h-full bg-gradient-to-br ${clientesCriticos > 0 ? 'from-red-500/10 to-orange-500/5 border-red-500/20' : 'from-green-500/10 to-emerald-500/5 border-green-500/20'}`}>
+            <CardContent className="h-full p-4">
+              <div className="flex h-full items-start justify-between gap-4">
+                <div className="flex h-full flex-1 flex-col">
+                  <p className="min-h-[52px] text-sm leading-6 text-muted-foreground">Saldo Crítico</p>
+                  <p className="mt-1 text-2xl font-bold leading-none text-foreground">{clientesCriticos}</p>
+                  <p className="mt-3 min-h-[44px] text-xs text-muted-foreground">
                     {clientesCriticos > 0 ? "Clientes com ≤3 dias" : "Nenhum cliente crítico"}
                   </p>
                 </div>
@@ -344,17 +344,17 @@ const ControleDashboard = ({ gestorFilter }: ControleDashboardProps) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/5 border-purple-500/20">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Gasto Diário Total</p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
+          <Card className="h-full border-purple-500/20 bg-gradient-to-br from-purple-500/10 to-pink-500/5">
+            <CardContent className="h-full p-4">
+              <div className="flex h-full items-start justify-between gap-4">
+                <div className="flex h-full flex-1 flex-col">
+                  <p className="min-h-[52px] text-sm leading-6 text-muted-foreground">Gasto Diário Total</p>
+                  <p className="mt-1 text-2xl font-bold leading-none text-foreground">
                     {formatCurrency(
                       filteredTrackingData.reduce((acc, t) => acc + (t.google_valor_diario || 0) + (t.meta_valor_diario || 0), 0)
                     )}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-2">
+                  <p className="mt-3 min-h-[44px] text-xs text-muted-foreground">
                     Média por cliente: {formatCurrency(
                       totalClientes > 0 
                         ? filteredTrackingData.reduce((acc, t) => acc + (t.google_valor_diario || 0) + (t.meta_valor_diario || 0), 0) / totalClientes

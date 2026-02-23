@@ -54,7 +54,7 @@ const MarketTicker = () => {
                     label: "Bitcoin (BTC)",
                     value: `R$ ${Math.round(price).toLocaleString("pt-BR")}`,
                     change: parseFloat(d.pctChange),
-                    icon: <FaBitcoin className="w-6 h-6" />,
+                    icon: <FaBitcoin className="h-4 w-4 sm:h-5 sm:w-5" />,
                     color: "text-orange-400",
                 });
             }
@@ -65,7 +65,7 @@ const MarketTicker = () => {
                     label: "Ethereum (ETH)",
                     value: `R$ ${Math.round(parseFloat(d.bid)).toLocaleString("pt-BR")}`,
                     change: parseFloat(d.pctChange),
-                    icon: <FaEthereum className="w-6 h-6" />,
+                    icon: <FaEthereum className="h-4 w-4 sm:h-5 sm:w-5" />,
                     color: "text-indigo-400",
                 });
             }
@@ -76,7 +76,7 @@ const MarketTicker = () => {
                     label: "Solana (SOL)",
                     value: formatCurrency(parseFloat(d.bid), 2),
                     change: parseFloat(d.pctChange),
-                    icon: <SiSolana className="w-6 h-6" />,
+                    icon: <SiSolana className="h-4 w-4 sm:h-5 sm:w-5" />,
                     color: "text-violet-400",
                 });
             }
@@ -88,7 +88,7 @@ const MarketTicker = () => {
                     label: "Tether (USDT)",
                     value: formatCurrency(usdtPrice, 2),
                     change: usdtChange,
-                    icon: <FaDollarSign className="w-6 h-6" />,
+                    icon: <FaDollarSign className="h-4 w-4 sm:h-5 sm:w-5" />,
                     color: "text-emerald-400",
                 });
             } else {
@@ -96,7 +96,7 @@ const MarketTicker = () => {
                     label: "Tether (USDT)",
                     value: "-",
                     change: 0,
-                    icon: <FaDollarSign className="w-6 h-6" />,
+                    icon: <FaDollarSign className="h-4 w-4 sm:h-5 sm:w-5" />,
                     color: "text-emerald-400",
                 });
             }
@@ -108,28 +108,28 @@ const MarketTicker = () => {
                         label: "Bitcoin (BTC)",
                         value: "-",
                         change: 0,
-                        icon: <FaBitcoin className="w-6 h-6" />,
+                        icon: <FaBitcoin className="h-4 w-4 sm:h-5 sm:w-5" />,
                         color: "text-orange-400",
                     },
                     {
                         label: "Ethereum (ETH)",
                         value: "-",
                         change: 0,
-                        icon: <FaEthereum className="w-6 h-6" />,
+                        icon: <FaEthereum className="h-4 w-4 sm:h-5 sm:w-5" />,
                         color: "text-indigo-400",
                     },
                     {
                         label: "Solana (SOL)",
                         value: "-",
                         change: 0,
-                        icon: <SiSolana className="w-6 h-6" />,
+                        icon: <SiSolana className="h-4 w-4 sm:h-5 sm:w-5" />,
                         color: "text-violet-400",
                     },
                     {
                         label: "Tether (USDT)",
                         value: "-",
                         change: 0,
-                        icon: <FaDollarSign className="w-6 h-6" />,
+                        icon: <FaDollarSign className="h-4 w-4 sm:h-5 sm:w-5" />,
                         color: "text-emerald-400",
                     }
                 );
@@ -186,7 +186,7 @@ const MarketTicker = () => {
             </div>
 
             {/* Ticker Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 xl:grid-cols-4">
                 {items.map((item, i) => (
                     <motion.a
                         key={item.label}
@@ -198,25 +198,25 @@ const MarketTicker = () => {
                         transition={{ delay: i * 0.06 }}
                         className="group relative block"
                     >
-                        <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-cyan-400/0 via-fuchsia-400/25 to-emerald-400/0 opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-60 group-active:opacity-60" />
-                        <div className="relative rounded-xl border border-border/50 bg-card/95 p-2.5 transition-all duration-300 h-[104px] group-hover:border-cyan-300/40 group-active:border-cyan-300/40 group-hover:shadow-[0_0_18px_rgba(34,211,238,0.16),0_0_34px_rgba(217,70,239,0.10)] group-active:shadow-[0_0_18px_rgba(34,211,238,0.16),0_0_34px_rgba(217,70,239,0.10)]">
-                            <div className="relative h-full flex items-center rounded-lg border border-white/10 bg-black/15 px-2.5 py-2.5">
-                                <div className="flex items-center gap-3 min-w-0 pr-24">
-                                    <div className={`p-2 rounded-lg bg-muted/50 ${item.color.replace('text-', 'bg-')}/10 ${item.color} shrink-0`}>
+                        <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-primary/0 via-primary/25 to-accent/0 opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-60 group-active:opacity-60" />
+                        <div className="relative h-[86px] rounded-xl border border-border/50 bg-card/95 p-2 transition-all duration-300 sm:h-[104px] sm:p-2.5 group-hover:border-primary/45 group-active:border-primary/45 group-hover:shadow-[0_0_18px_hsl(var(--primary)/0.2),0_0_34px_hsl(var(--accent)/0.12)] group-active:shadow-[0_0_18px_hsl(var(--primary)/0.2),0_0_34px_hsl(var(--accent)/0.12)]">
+                            <div className="relative flex h-full items-center rounded-lg border border-border/50 bg-background/35 px-2 py-2 sm:px-2.5 sm:py-2.5">
+                                <div className="flex min-w-0 items-center gap-2 pr-2 sm:gap-3 sm:pr-24">
+                                    <div className={`rounded-lg bg-muted/50 p-1.5 sm:p-2 ${item.color.replace('text-', 'bg-')}/10 ${item.color} shrink-0`}>
                                         {item.icon}
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5 truncate">
+                                        <p className="mb-0.5 truncate text-[9px] font-bold uppercase tracking-[0.08em] text-muted-foreground sm:text-[10px] sm:tracking-wider">
                                             {item.label}
                                         </p>
-                                        <p className="text-2xl font-black text-foreground tracking-tight tabular-nums leading-none whitespace-nowrap">
+                                        <p className="whitespace-nowrap text-base font-black leading-none tracking-tight text-foreground tabular-nums sm:text-2xl">
                                             {item.value}
                                         </p>
                                     </div>
                                 </div>
                                 {item.change !== 0 && (
-                                    <div className={`absolute top-2.5 right-2.5 flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black whitespace-nowrap ${item.change > 0 ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"}`}>
-                                        {item.change > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+                                    <div className={`absolute right-1.5 top-1.5 flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[10px] font-black whitespace-nowrap sm:right-2.5 sm:top-2.5 sm:gap-1 sm:rounded-lg sm:px-2.5 sm:py-1 sm:text-xs ${item.change > 0 ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"}`}>
+                                        {item.change > 0 ? <TrendingUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : <TrendingDown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
                                         {item.change > 0 ? "+" : ""}{item.change.toFixed(2)}%
                                     </div>
                                 )}

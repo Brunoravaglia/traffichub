@@ -12,6 +12,7 @@ import NotificationCenter from "./NotificationCenter";
 import SecurityLockScreen from "./SecurityLockScreen";
 import AchievementUnlockOverlay from "./AchievementUnlockOverlay";
 import CalendarReminders from "./CalendarReminders";
+import ErrorTracker from "./ErrorTracker";
 import { useGestor } from "@/contexts/GestorContext";
 import { useAchievements } from "@/hooks/useAchievements";
 import { useInactivityDetection } from "@/hooks/useInactivityDetection";
@@ -31,6 +32,9 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   });
   const [isLocked, setIsLocked] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [bootstrapDelayDone, setBootstrapDelayDone] = useState(false);
+  const hasStoredGestor = typeof window !== "undefined" && !!sessionStorage.getItem("vcd_gestor_id");
+  const isAuthBootstrapping = !isLoggedIn && hasStoredGestor && !bootstrapDelayDone;
 
   // Achievements hook
   const { newlyUnlocked, dismissNewlyUnlocked } = useAchievements();
@@ -70,10 +74,15 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   }, [logout, navigate, sessionId]);
 
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (!isLoggedIn && !isAuthBootstrapping) {
       navigate("/");
     }
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, isAuthBootstrapping, navigate]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setBootstrapDelayDone(true), 1800);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     // Show welcome modal only once per session, only for first access, and only if not dismissed
@@ -118,12 +127,30 @@ const AppLayout = ({ children }: AppLayoutProps) => {
     }
   };
 
+  if (isAuthBootstrapping) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="space-y-3 text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
+          <p className="text-sm font-medium text-muted-foreground">Restaurando sessão...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isLoggedIn) {
-    return null;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="space-y-3 text-center">
+          <p className="text-sm font-medium text-muted-foreground">Redirecionando para login...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <SidebarProvider defaultOpen={true}>
+      <ErrorTracker />
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <SidebarInset className="flex flex-col flex-1">

@@ -65,7 +65,6 @@ import { GoogleAdsMetricsView } from "@/components/report/GoogleAdsMetricsView";
 import { MetaAdsMetricsView } from "@/components/report/MetaAdsMetricsView";
 import { StrategicInsightsView } from "@/components/report/StrategicInsightsView";
 import { ReportFooter } from "@/components/report/ReportFooter";
-import { formatCurrency, formatNumber } from "@/lib/utils";
 
 interface Creative {
   id: string;
@@ -153,6 +152,30 @@ interface ReportData {
     custoPorAdicaoCarrinho: number;
     custoPorVenda: number;
   };
+  linkedin: {
+    impressoes: number;
+    cliques: number;
+    leads: number;
+    investido: number;
+    cpm: number;
+    cpc: number;
+    ctr: number;
+    cpl: number;
+    conversoes: number;
+    alcance: number;
+  };
+  tiktok: {
+    impressoes: number;
+    cliques: number;
+    leads: number;
+    investido: number;
+    cpm: number;
+    cpc: number;
+    ctr: number;
+    cpl: number;
+    conversoes: number;
+    visualizacoesVideo: number;
+  };
   resumo: string;
   criativos: Creative[];
   criativosRanking: RankingCreative[];
@@ -212,12 +235,30 @@ interface ReportData {
     showMetaCustoPorVisita: boolean;
     showMetaCustoPorAdicaoCarrinho: boolean;
     showMetaCustoPorVenda: boolean;
+    // LinkedIn metrics visibility
+    showLinkedinCpm: boolean;
+    showLinkedinCpc: boolean;
+    showLinkedinCtr: boolean;
+    showLinkedinCpl: boolean;
+    showLinkedinLeads: boolean;
+    showLinkedinConversoes: boolean;
+    showLinkedinAlcance: boolean;
+    // TikTok metrics visibility
+    showTiktokCpm: boolean;
+    showTiktokCpc: boolean;
+    showTiktokCtr: boolean;
+    showTiktokCpl: boolean;
+    showTiktokLeads: boolean;
+    showTiktokConversoes: boolean;
+    showTiktokViews: boolean;
   };
   autoFillSaldos: boolean;
   sectionsConfig: {
     showObjetivos: boolean;
     showGoogleAds: boolean;
     showMetaAds: boolean;
+    showLinkedinAds: boolean;
+    showTiktokAds: boolean;
     showCriativosGoogle: boolean;
     showCriativosMeta: boolean;
     showResumo: boolean;
@@ -253,6 +294,12 @@ const defaultReportData: ReportData = {
     curtidasPagina: 0, seguidores: 0, compartilhamentos: 0, salvos: 0, comentarios: 0,
     visualizacoesVideo: 0, retencaoVideo: 0, mensagensIniciadas: 0, respostasMensagem: 0, agendamentos: 0, checkins: 0,
     compras: 0, visitasProduto: 0, adicoesCarrinho: 0, vendas: 0, custoPorVisita: 0, custoPorAdicaoCarrinho: 0, custoPorVenda: 0
+  },
+  linkedin: {
+    impressoes: 0, cliques: 0, leads: 0, investido: 0, cpm: 0, cpc: 0, ctr: 0, cpl: 0, conversoes: 0, alcance: 0
+  },
+  tiktok: {
+    impressoes: 0, cliques: 0, leads: 0, investido: 0, cpm: 0, cpc: 0, ctr: 0, cpl: 0, conversoes: 0, visualizacoesVideo: 0
   },
   resumo: "",
   criativos: [],
@@ -313,12 +360,30 @@ const defaultReportData: ReportData = {
     showMetaCustoPorVisita: false,
     showMetaCustoPorAdicaoCarrinho: false,
     showMetaCustoPorVenda: false,
+    // LinkedIn - defaults
+    showLinkedinCpm: true,
+    showLinkedinCpc: true,
+    showLinkedinCtr: true,
+    showLinkedinCpl: true,
+    showLinkedinLeads: true,
+    showLinkedinConversoes: false,
+    showLinkedinAlcance: true,
+    // TikTok - defaults
+    showTiktokCpm: true,
+    showTiktokCpc: true,
+    showTiktokCtr: true,
+    showTiktokCpl: true,
+    showTiktokLeads: true,
+    showTiktokConversoes: false,
+    showTiktokViews: true,
   },
   autoFillSaldos: false,
   sectionsConfig: {
     showObjetivos: true,
     showGoogleAds: true,
     showMetaAds: true,
+    showLinkedinAds: false,
+    showTiktokAds: false,
     showCriativosGoogle: true,
     showCriativosMeta: true,
     showResumo: true,
@@ -340,6 +405,8 @@ const RelatorioCliente = () => {
   const queryClient = useQueryClient();
   const { gestor } = useGestor();
   const agencyId = gestor?.agencia_id ?? null;
+  const hasStoredSession = typeof window !== "undefined" && !!sessionStorage.getItem("vcd_gestor_id");
+  const isGestorBootstrapping = !gestor && hasStoredSession;
   const pdfRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const rankingInputRef = useRef<HTMLInputElement>(null);
@@ -407,6 +474,15 @@ const RelatorioCliente = () => {
   // Apply template to report data
   const applyTemplate = (template: any) => {
     if (!template) {
+      setSelectedTemplateId(undefined);
+      setReportData({
+        ...defaultReportData,
+        sectionsConfig: {
+          ...defaultReportData.sectionsConfig,
+          showLinkedinAds: false,
+          showTiktokAds: false,
+        },
+      });
       setStep("editor");
       return;
     }
@@ -421,6 +497,8 @@ const RelatorioCliente = () => {
           showObjetivos: template.sections.showObjetivos ?? true,
           showGoogleAds: template.sections.showGoogleAds ?? true,
           showMetaAds: template.sections.showMetaAds ?? true,
+          showLinkedinAds: template.sections.showLinkedinAds ?? false,
+          showTiktokAds: template.sections.showTiktokAds ?? false,
           showCriativosGoogle: template.sections.showCriativosGoogle ?? true,
           showCriativosMeta: template.sections.showCriativosMeta ?? true,
           showResumo: template.sections.showResumo ?? true,
@@ -457,6 +535,8 @@ const RelatorioCliente = () => {
         objetivos: data.objetivos || [],
         google: data.google || defaultReportData.google,
         meta: data.meta || defaultReportData.meta,
+        linkedin: data.linkedin || defaultReportData.linkedin,
+        tiktok: data.tiktok || defaultReportData.tiktok,
         resumo: data.resumo || "",
         criativos: data.criativos || [],
         criativosRanking: data.criativosRanking || [],
@@ -531,13 +611,27 @@ const RelatorioCliente = () => {
       else if (key === "meta_respostas_mensagem") config.showMetaRespostasMensagem = visible;
       else if (key === "meta_agendamentos") config.showMetaAgendamentos = visible;
       else if (key === "meta_checkins") config.showMetaCheckins = visible;
+      else if (key === "linkedin_cpm") config.showLinkedinCpm = visible;
+      else if (key === "linkedin_cpc") config.showLinkedinCpc = visible;
+      else if (key === "linkedin_ctr") config.showLinkedinCtr = visible;
+      else if (key === "linkedin_cpl") config.showLinkedinCpl = visible;
+      else if (key === "linkedin_leads") config.showLinkedinLeads = visible;
+      else if (key === "linkedin_conversoes") config.showLinkedinConversoes = visible;
+      else if (key === "linkedin_alcance") config.showLinkedinAlcance = visible;
+      else if (key === "tiktok_cpm") config.showTiktokCpm = visible;
+      else if (key === "tiktok_cpc") config.showTiktokCpc = visible;
+      else if (key === "tiktok_ctr") config.showTiktokCtr = visible;
+      else if (key === "tiktok_cpl") config.showTiktokCpl = visible;
+      else if (key === "tiktok_leads") config.showTiktokLeads = visible;
+      else if (key === "tiktok_conversoes") config.showTiktokConversoes = visible;
+      else if (key === "tiktok_views") config.showTiktokViews = visible;
     });
 
     return config;
   };
 
   // Fetch client data
-  const { data: cliente, isLoading: clienteLoading } = useQuery({
+  const { data: cliente, isLoading: clienteLoading, error: clienteError, refetch: refetchCliente } = useQuery({
     queryKey: ["cliente", clienteId, agencyId],
     queryFn: async () => {
       if (!agencyId) return null;
@@ -629,11 +723,49 @@ const RelatorioCliente = () => {
     const metaCPM = reportData.meta.impressoes > 0
       ? (reportData.meta.investido / reportData.meta.impressoes) * 1000
       : 0;
+    const linkedinCPM = reportData.linkedin.impressoes > 0
+      ? (reportData.linkedin.investido / reportData.linkedin.impressoes) * 1000
+      : 0;
+    const linkedinCPC = reportData.linkedin.cliques > 0
+      ? reportData.linkedin.investido / reportData.linkedin.cliques
+      : 0;
+    const linkedinCTR = reportData.linkedin.impressoes > 0
+      ? (reportData.linkedin.cliques / reportData.linkedin.impressoes) * 100
+      : 0;
+    const linkedinCPL = reportData.linkedin.leads > 0
+      ? reportData.linkedin.investido / reportData.linkedin.leads
+      : 0;
+    const tiktokCPM = reportData.tiktok.impressoes > 0
+      ? (reportData.tiktok.investido / reportData.tiktok.impressoes) * 1000
+      : 0;
+    const tiktokCPC = reportData.tiktok.cliques > 0
+      ? reportData.tiktok.investido / reportData.tiktok.cliques
+      : 0;
+    const tiktokCTR = reportData.tiktok.impressoes > 0
+      ? (reportData.tiktok.cliques / reportData.tiktok.impressoes) * 100
+      : 0;
+    const tiktokCPL = reportData.tiktok.leads > 0
+      ? reportData.tiktok.investido / reportData.tiktok.leads
+      : 0;
 
     setReportData(prev => ({
       ...prev,
       google: { ...prev.google, custoPorLead: googleCPL, cpm: googleCPM },
       meta: { ...prev.meta, custoPorLead: metaCPL, cpm: metaCPM },
+      linkedin: {
+        ...prev.linkedin,
+        cpm: linkedinCPM,
+        cpc: linkedinCPC,
+        ctr: linkedinCTR,
+        cpl: linkedinCPL,
+      },
+      tiktok: {
+        ...prev.tiktok,
+        cpm: tiktokCPM,
+        cpc: tiktokCPC,
+        ctr: tiktokCTR,
+        cpl: tiktokCPL,
+      },
     }));
   };
 
@@ -646,6 +778,8 @@ const RelatorioCliente = () => {
       const dataValues = JSON.parse(JSON.stringify({
         google: reportData.google,
         meta: reportData.meta,
+        linkedin: reportData.linkedin,
+        tiktok: reportData.tiktok,
         objetivos: reportData.objetivos.filter(Boolean),
         resumo: reportData.resumo,
         criativos: reportData.criativos,
@@ -814,26 +948,71 @@ const RelatorioCliente = () => {
     toast({ title: "Gerando PDF...", description: "Por favor aguarde" });
 
     let originalStyle = "";
+    let cleanupNode: HTMLDivElement | null = null;
 
     try {
       const element = pdfRef.current;
-      const captureWidth = 800;
+      const elementRect = element.getBoundingClientRect();
+      const captureWidth = Math.max(800, Math.round(elementRect.width));
 
       // Temporary style to ensure it's fully expanded for capture
       originalStyle = element.style.cssText;
       element.style.height = 'auto';
       element.style.overflow = 'visible';
+      element.style.transform = 'none';
+      element.style.animation = 'none';
 
-      // Get exact height including padding/content
-      const captureHeight = element.scrollHeight;
+      // Clone offscreen to avoid layout shifts/animations affecting the capture.
+      cleanupNode = document.createElement("div");
+      cleanupNode.style.position = "fixed";
+      cleanupNode.style.left = "-99999px";
+      cleanupNode.style.top = "0";
+      cleanupNode.style.width = `${captureWidth}px`;
+      cleanupNode.style.zIndex = "-1";
+      cleanupNode.style.pointerEvents = "none";
+      document.body.appendChild(cleanupNode);
 
-      const canvas = await html2canvas(element, {
+      const clone = element.cloneNode(true) as HTMLDivElement;
+      clone.style.width = `${captureWidth}px`;
+      clone.style.maxWidth = `${captureWidth}px`;
+      clone.style.minHeight = "auto";
+      clone.style.height = "auto";
+      clone.style.transform = "none";
+      clone.style.animation = "none";
+      cleanupNode.appendChild(clone);
+
+      // Wait assets in clone
+      const cloneImages = Array.from(clone.querySelectorAll("img"));
+      await Promise.all(
+        cloneImages.map((img) => {
+          if (img.complete) return Promise.resolve();
+          return new Promise<void>((resolve) => {
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+          });
+        })
+      );
+      if (document.fonts?.ready) {
+        await document.fonts.ready;
+      }
+
+      const canvas = await html2canvas(clone, {
         scale: 2, // 2 is usually enough and faster
         useCORS: true,
         logging: false,
         backgroundColor: "#0b1120",
         width: captureWidth,
-        windowWidth: 1024,
+        windowWidth: captureWidth,
+        scrollX: 0,
+        scrollY: 0,
+        onclone: (doc) => {
+          doc.querySelectorAll<HTMLElement>("*").forEach((el) => {
+            el.style.animation = "none";
+            el.style.transition = "none";
+            el.style.transform = "none";
+            el.style.filter = el.style.filter || "none";
+          });
+        },
       });
 
       const imgData = canvas.toDataURL("image/jpeg", 0.95);
@@ -862,6 +1041,9 @@ const RelatorioCliente = () => {
     } finally {
       if (pdfRef.current) {
         pdfRef.current.style.cssText = originalStyle;
+      }
+      if (cleanupNode?.parentNode) {
+        cleanupNode.parentNode.removeChild(cleanupNode);
       }
     }
   };
@@ -934,6 +1116,28 @@ const RelatorioCliente = () => {
         { key: "meta_alcance", label: "Alcance", icon: "users", platform: "meta", visible: reportData.metricsConfig.showMetaAlcance },
         { key: "meta_leads", label: "Leads", icon: "user-plus", platform: "meta", visible: reportData.metricsConfig.showMetaLeads },
         { key: "meta_roas", label: "ROAS", icon: "trending", platform: "meta", visible: reportData.metricsConfig.showMetaRoas },
+        // LinkedIn metrics
+        { key: "linkedin_impressoes", label: "Impressões", icon: "eye", platform: "linkedin", visible: true },
+        { key: "linkedin_cliques", label: "Cliques", icon: "click", platform: "linkedin", visible: true },
+        { key: "linkedin_leads", label: "Leads", icon: "user-plus", platform: "linkedin", visible: reportData.metricsConfig.showLinkedinLeads },
+        { key: "linkedin_investido", label: "Investido", icon: "dollar", platform: "linkedin", visible: true },
+        { key: "linkedin_cpm", label: "CPM", icon: "trending", platform: "linkedin", visible: reportData.metricsConfig.showLinkedinCpm },
+        { key: "linkedin_cpc", label: "CPC", icon: "dollar", platform: "linkedin", visible: reportData.metricsConfig.showLinkedinCpc },
+        { key: "linkedin_ctr", label: "CTR (%)", icon: "percent", platform: "linkedin", visible: reportData.metricsConfig.showLinkedinCtr },
+        { key: "linkedin_cpl", label: "CPL", icon: "target", platform: "linkedin", visible: reportData.metricsConfig.showLinkedinCpl },
+        { key: "linkedin_conversoes", label: "Conversões", icon: "check", platform: "linkedin", visible: reportData.metricsConfig.showLinkedinConversoes },
+        { key: "linkedin_alcance", label: "Alcance", icon: "users", platform: "linkedin", visible: reportData.metricsConfig.showLinkedinAlcance },
+        // TikTok metrics
+        { key: "tiktok_impressoes", label: "Impressões", icon: "eye", platform: "tiktok", visible: true },
+        { key: "tiktok_cliques", label: "Cliques", icon: "click", platform: "tiktok", visible: true },
+        { key: "tiktok_leads", label: "Leads", icon: "user-plus", platform: "tiktok", visible: reportData.metricsConfig.showTiktokLeads },
+        { key: "tiktok_investido", label: "Investido", icon: "dollar", platform: "tiktok", visible: true },
+        { key: "tiktok_cpm", label: "CPM", icon: "trending", platform: "tiktok", visible: reportData.metricsConfig.showTiktokCpm },
+        { key: "tiktok_cpc", label: "CPC", icon: "dollar", platform: "tiktok", visible: reportData.metricsConfig.showTiktokCpc },
+        { key: "tiktok_ctr", label: "CTR (%)", icon: "percent", platform: "tiktok", visible: reportData.metricsConfig.showTiktokCtr },
+        { key: "tiktok_cpl", label: "CPL", icon: "target", platform: "tiktok", visible: reportData.metricsConfig.showTiktokCpl },
+        { key: "tiktok_conversoes", label: "Conversões", icon: "check", platform: "tiktok", visible: reportData.metricsConfig.showTiktokConversoes },
+        { key: "tiktok_views", label: "Views de Vídeo", icon: "eye", platform: "tiktok", visible: reportData.metricsConfig.showTiktokViews },
       ];
 
       const layoutData = JSON.parse(JSON.stringify({
@@ -976,13 +1180,71 @@ const RelatorioCliente = () => {
   const formatNumber = (value: number) =>
     new Intl.NumberFormat("pt-BR").format(value);
 
-  if (clienteLoading || !cliente) {
+  const clientInitials = (cliente?.nome || "CL").slice(0, 2).toUpperCase();
+
+  if (isGestorBootstrapping) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0b1120]">
-        <div className="space-y-4 text-center">
-          <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
-          <p className="text-gray-400 font-medium">Carregando dados do cliente...</p>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="space-y-3 text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
+          <p className="font-medium text-muted-foreground">Restaurando dados da sessão...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!agencyId) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-6">
+        <Card className="w-full max-w-lg border-border/70 bg-card/70 backdrop-blur">
+          <CardHeader>
+            <CardTitle className="text-xl">Conta sem agência vinculada</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Para criar relatórios, sua conta precisa estar vinculada a uma agência.
+            </p>
+            <Button variant="outline" onClick={() => navigate("/clientes")} className="focus-visible:ring-2 focus-visible:ring-primary/70">
+              Voltar para clientes
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (clienteLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="space-y-4 text-center">
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
+          <p className="font-medium text-muted-foreground">Carregando dados do cliente...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (clienteError || !cliente) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-6">
+        <Card className="w-full max-w-lg border-border/70 bg-card/70 backdrop-blur">
+          <CardHeader>
+            <CardTitle className="text-xl">Não foi possível abrir este relatório</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Verifique se este cliente pertence à sua agência e tente novamente.
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button onClick={() => refetchCliente()} className="focus-visible:ring-2 focus-visible:ring-primary/70">
+                Tentar novamente
+              </Button>
+              <Button variant="outline" onClick={() => navigate("/clientes")} className="focus-visible:ring-2 focus-visible:ring-primary/70">
+                Voltar para clientes
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -1003,7 +1265,7 @@ const RelatorioCliente = () => {
               <Avatar className="w-8 h-8">
                 <AvatarImage src={cliente?.logo_url || undefined} />
                 <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                  {cliente?.nome?.substring(0, 2).toUpperCase()}
+                  {clientInitials}
                 </AvatarFallback>
               </Avatar>
               <span className="font-semibold text-foreground">{cliente?.nome}</span>
@@ -1049,32 +1311,34 @@ const RelatorioCliente = () => {
   return (
     <div className="min-h-full bg-background">
       {/* Toolbar */}
-      <div className="sticky top-0 z-50 bg-card/95 backdrop-blur border-b border-border p-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => setStep("template")}>
+      <div className="sticky top-0 z-50 border-b border-border bg-card/95 p-3 backdrop-blur sm:p-4">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-2.5 sm:gap-4">
+            <Button variant="ghost" onClick={() => setStep("template")} className="h-9 px-2.5 sm:h-10 sm:px-3">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Modelos
             </Button>
             <Separator orientation="vertical" className="h-6" />
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               <Avatar className="w-8 h-8">
                 <AvatarImage src={cliente?.logo_url || undefined} />
                 <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                  {cliente?.nome?.substring(0, 2).toUpperCase()}
+                  {clientInitials}
                 </AvatarFallback>
               </Avatar>
-              <span className="font-semibold text-foreground">{cliente?.nome}</span>
+              <span className="truncate text-sm font-semibold text-foreground sm:text-base">{cliente?.nome}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto sm:items-center">
             <Button
               variant="outline"
               onClick={() => setSaveTemplateDialogOpen(true)}
+              className="h-9 px-2 text-xs sm:h-10 sm:px-3 sm:text-sm"
             >
-              <FileText className="w-4 h-4 mr-2" />
-              Salvar Modelo
+              <FileText className="mr-1.5 h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Salvar Modelo</span>
+              <span className="sm:hidden">Modelo</span>
             </Button>
             <Button
               variant={isPreview ? "default" : "outline"}
@@ -1082,17 +1346,18 @@ const RelatorioCliente = () => {
                 calculateMetrics();
                 setIsPreview(!isPreview);
               }}
+              className="h-9 px-2 text-xs sm:h-10 sm:px-3 sm:text-sm"
             >
-              <Eye className="w-4 h-4 mr-2" />
+              <Eye className="w-4 h-4 mr-1.5 sm:mr-2" />
               Preview
             </Button>
             <Button
               onClick={handleExport}
-              className="bg-primary hover:bg-primary/90"
+              className="h-9 bg-primary px-2 text-xs hover:bg-primary/90 sm:h-10 sm:px-3 sm:text-sm"
               disabled={isExporting}
             >
-              <Download className="w-4 h-4 mr-2" />
-              {isExporting ? "Exportando..." : "Exportar"}
+              <Download className="w-4 h-4 mr-1.5 sm:mr-2" />
+              <span className="truncate">{isExporting ? "Exportando..." : "Exportar"}</span>
             </Button>
           </div>
 
@@ -1151,16 +1416,16 @@ const RelatorioCliente = () => {
         </div>
       </div>
 
-      <div className="max-w-[1400px] mx-auto p-6 md:p-8 lg:p-10">
+      <div className="mx-auto max-w-[1400px] p-3 sm:p-4 md:p-6 lg:p-8">
         {!isPreview ? (
           // Editor Mode
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="grid lg:grid-cols-12 gap-8 items-start"
+            className="grid items-start gap-4 sm:gap-6 lg:grid-cols-12 lg:gap-8"
           >
             {/* Left Column: Period & Objectives */}
-            <div className="lg:col-span-7 space-y-8">
+            <div className="space-y-5 sm:space-y-6 lg:col-span-7 lg:space-y-8">
               {/* Period Selection */}
               <Card className="border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
                 <CardHeader>
@@ -1170,7 +1435,7 @@ const RelatorioCliente = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                     <div className="space-y-2">
                       <Label>Data Início</Label>
                       <Popover>
@@ -1321,6 +1586,30 @@ const RelatorioCliente = () => {
                     />
                   </div>
                   <div className="flex items-center justify-between">
+                    <Label className="text-sm">Mostrar Tráfego LinkedIn</Label>
+                    <Switch
+                      checked={reportData.sectionsConfig.showLinkedinAds}
+                      onCheckedChange={(checked) =>
+                        setReportData({
+                          ...reportData,
+                          sectionsConfig: { ...reportData.sectionsConfig, showLinkedinAds: checked },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Mostrar Tráfego TikTok</Label>
+                    <Switch
+                      checked={reportData.sectionsConfig.showTiktokAds}
+                      onCheckedChange={(checked) =>
+                        setReportData({
+                          ...reportData,
+                          sectionsConfig: { ...reportData.sectionsConfig, showTiktokAds: checked },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
                     <Label className="text-sm">Mostrar Criativos Google</Label>
                     <Switch
                       checked={reportData.sectionsConfig.showCriativosGoogle}
@@ -1398,6 +1687,7 @@ const RelatorioCliente = () => {
             </div>
 
             {/* Google Ads Metrics */}
+            {reportData.sectionsConfig.showGoogleAds && (
             <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -1409,7 +1699,7 @@ const RelatorioCliente = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Core metrics - always visible */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2 text-xs">
                       <MousePointer className="w-4 h-4 text-muted-foreground" />
@@ -1474,7 +1764,7 @@ const RelatorioCliente = () => {
                 </div>
 
                 {/* Additional metrics */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
                   {reportData.metricsConfig.showGoogleConversoes && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">
@@ -1706,7 +1996,7 @@ const RelatorioCliente = () => {
                 {/* Google Metrics Config */}
                 <div className="pt-4 border-t border-border space-y-3">
                   <p className="text-sm text-muted-foreground font-medium">Métricas a exibir no relatório:</p>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
                     <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
                       <Label className="text-xs">CPL</Label>
                       <Switch
@@ -1933,8 +2223,10 @@ const RelatorioCliente = () => {
                 </div>
               </CardContent>
             </Card>
+            )}
 
             {/* Meta Ads Metrics */}
+            {reportData.sectionsConfig.showMetaAds && (
             <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -1946,7 +2238,7 @@ const RelatorioCliente = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Core metrics - always visible */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2 text-xs">
                       <Eye className="w-4 h-4 text-muted-foreground" />
@@ -2011,7 +2303,7 @@ const RelatorioCliente = () => {
                 </div>
 
                 {/* Additional metrics based on config */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
                   {reportData.metricsConfig.showMetaCliques && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">
@@ -2344,7 +2636,7 @@ const RelatorioCliente = () => {
                 {/* Meta Metrics Config */}
                 <div className="pt-4 border-t border-border space-y-3">
                   <p className="text-sm text-muted-foreground font-medium">Métricas a exibir no relatório:</p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
                     <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
                       <Label className="text-xs">CPL</Label>
                       <Switch
@@ -2667,6 +2959,215 @@ const RelatorioCliente = () => {
                 </div>
               </CardContent>
             </Card>
+            )}
+
+            {/* LinkedIn Ads Metrics */}
+            {reportData.sectionsConfig.showLinkedinAds && (
+              <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <div className="w-6 h-6 bg-[#0A66C2]/20 rounded flex items-center justify-center">
+                      <span className="text-[#0A66C2] text-xs font-bold">in</span>
+                    </div>
+                    Tráfego LinkedIn Ads
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs"><Eye className="w-4 h-4 text-muted-foreground" />Impressões</Label>
+                      <NumericInput value={reportData.linkedin.impressoes} onChange={(value) => setReportData({ ...reportData, linkedin: { ...reportData.linkedin, impressoes: value } })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs"><MousePointer className="w-4 h-4 text-muted-foreground" />Cliques</Label>
+                      <NumericInput value={reportData.linkedin.cliques} onChange={(value) => setReportData({ ...reportData, linkedin: { ...reportData.linkedin, cliques: value } })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs"><Target className="w-4 h-4 text-muted-foreground" />Leads</Label>
+                      <NumericInput value={reportData.linkedin.leads} onChange={(value) => setReportData({ ...reportData, linkedin: { ...reportData.linkedin, leads: value } })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs"><DollarSign className="w-4 h-4 text-muted-foreground" />Investido (R$)</Label>
+                      <NumericInput value={reportData.linkedin.investido} onChange={(value) => setReportData({ ...reportData, linkedin: { ...reportData.linkedin, investido: value } })} isDecimal />
+                    </div>
+                    {reportData.metricsConfig.showLinkedinConversoes && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">Conversões</Label>
+                        <NumericInput value={reportData.linkedin.conversoes} onChange={(value) => setReportData({ ...reportData, linkedin: { ...reportData.linkedin, conversoes: value } })} />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showLinkedinAlcance && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">Alcance</Label>
+                        <NumericInput value={reportData.linkedin.alcance} onChange={(value) => setReportData({ ...reportData, linkedin: { ...reportData.linkedin, alcance: value } })} />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showLinkedinCpm && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">CPM (R$)</Label>
+                        <NumericInput value={reportData.linkedin.cpm} onChange={(value) => setReportData({ ...reportData, linkedin: { ...reportData.linkedin, cpm: value } })} isDecimal />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showLinkedinCpc && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">CPC (R$)</Label>
+                        <NumericInput value={reportData.linkedin.cpc} onChange={(value) => setReportData({ ...reportData, linkedin: { ...reportData.linkedin, cpc: value } })} isDecimal />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showLinkedinCtr && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">CTR (%)</Label>
+                        <NumericInput value={reportData.linkedin.ctr} onChange={(value) => setReportData({ ...reportData, linkedin: { ...reportData.linkedin, ctr: value } })} isDecimal />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showLinkedinCpl && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">CPL (R$)</Label>
+                        <NumericInput value={reportData.linkedin.cpl} onChange={(value) => setReportData({ ...reportData, linkedin: { ...reportData.linkedin, cpl: value } })} isDecimal />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-4 border-t border-border space-y-3">
+                    <p className="text-sm text-muted-foreground font-medium">Métricas a exibir no relatório:</p>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CPM</Label>
+                        <Switch checked={reportData.metricsConfig.showLinkedinCpm} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showLinkedinCpm: checked } })} />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CPC</Label>
+                        <Switch checked={reportData.metricsConfig.showLinkedinCpc} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showLinkedinCpc: checked } })} />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CTR</Label>
+                        <Switch checked={reportData.metricsConfig.showLinkedinCtr} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showLinkedinCtr: checked } })} />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CPL</Label>
+                        <Switch checked={reportData.metricsConfig.showLinkedinCpl} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showLinkedinCpl: checked } })} />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Leads</Label>
+                        <Switch checked={reportData.metricsConfig.showLinkedinLeads} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showLinkedinLeads: checked } })} />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Conversões</Label>
+                        <Switch checked={reportData.metricsConfig.showLinkedinConversoes} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showLinkedinConversoes: checked } })} />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Alcance</Label>
+                        <Switch checked={reportData.metricsConfig.showLinkedinAlcance} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showLinkedinAlcance: checked } })} />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* TikTok Ads Metrics */}
+            {reportData.sectionsConfig.showTiktokAds && (
+              <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <div className="w-6 h-6 bg-black/50 rounded flex items-center justify-center border border-white/20">
+                      <span className="text-white text-xs font-bold">TT</span>
+                    </div>
+                    Tráfego TikTok Ads
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs"><Eye className="w-4 h-4 text-muted-foreground" />Impressões</Label>
+                      <NumericInput value={reportData.tiktok.impressoes} onChange={(value) => setReportData({ ...reportData, tiktok: { ...reportData.tiktok, impressoes: value } })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs"><MousePointer className="w-4 h-4 text-muted-foreground" />Cliques</Label>
+                      <NumericInput value={reportData.tiktok.cliques} onChange={(value) => setReportData({ ...reportData, tiktok: { ...reportData.tiktok, cliques: value } })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs"><Target className="w-4 h-4 text-muted-foreground" />Leads</Label>
+                      <NumericInput value={reportData.tiktok.leads} onChange={(value) => setReportData({ ...reportData, tiktok: { ...reportData.tiktok, leads: value } })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs"><DollarSign className="w-4 h-4 text-muted-foreground" />Investido (R$)</Label>
+                      <NumericInput value={reportData.tiktok.investido} onChange={(value) => setReportData({ ...reportData, tiktok: { ...reportData.tiktok, investido: value } })} isDecimal />
+                    </div>
+                    {reportData.metricsConfig.showTiktokConversoes && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">Conversões</Label>
+                        <NumericInput value={reportData.tiktok.conversoes} onChange={(value) => setReportData({ ...reportData, tiktok: { ...reportData.tiktok, conversoes: value } })} />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showTiktokViews && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">Views de Vídeo</Label>
+                        <NumericInput value={reportData.tiktok.visualizacoesVideo} onChange={(value) => setReportData({ ...reportData, tiktok: { ...reportData.tiktok, visualizacoesVideo: value } })} />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showTiktokCpm && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">CPM (R$)</Label>
+                        <NumericInput value={reportData.tiktok.cpm} onChange={(value) => setReportData({ ...reportData, tiktok: { ...reportData.tiktok, cpm: value } })} isDecimal />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showTiktokCpc && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">CPC (R$)</Label>
+                        <NumericInput value={reportData.tiktok.cpc} onChange={(value) => setReportData({ ...reportData, tiktok: { ...reportData.tiktok, cpc: value } })} isDecimal />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showTiktokCtr && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">CTR (%)</Label>
+                        <NumericInput value={reportData.tiktok.ctr} onChange={(value) => setReportData({ ...reportData, tiktok: { ...reportData.tiktok, ctr: value } })} isDecimal />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showTiktokCpl && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">CPL (R$)</Label>
+                        <NumericInput value={reportData.tiktok.cpl} onChange={(value) => setReportData({ ...reportData, tiktok: { ...reportData.tiktok, cpl: value } })} isDecimal />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-4 border-t border-border space-y-3">
+                    <p className="text-sm text-muted-foreground font-medium">Métricas a exibir no relatório:</p>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CPM</Label>
+                        <Switch checked={reportData.metricsConfig.showTiktokCpm} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showTiktokCpm: checked } })} />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CPC</Label>
+                        <Switch checked={reportData.metricsConfig.showTiktokCpc} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showTiktokCpc: checked } })} />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CTR</Label>
+                        <Switch checked={reportData.metricsConfig.showTiktokCtr} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showTiktokCtr: checked } })} />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CPL</Label>
+                        <Switch checked={reportData.metricsConfig.showTiktokCpl} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showTiktokCpl: checked } })} />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Leads</Label>
+                        <Switch checked={reportData.metricsConfig.showTiktokLeads} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showTiktokLeads: checked } })} />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Conversões</Label>
+                        <Switch checked={reportData.metricsConfig.showTiktokConversoes} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showTiktokConversoes: checked } })} />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Views</Label>
+                        <Switch checked={reportData.metricsConfig.showTiktokViews} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showTiktokViews: checked } })} />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Saldos / Recarga */}
             <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
@@ -2689,7 +3190,7 @@ const RelatorioCliente = () => {
                     }
                   />
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2 text-xs">
                       <DollarSign className="w-4 h-4 text-muted-foreground" />
@@ -3021,6 +3522,7 @@ const RelatorioCliente = () => {
                 cliente={cliente}
                 periodoInicio={periodoInicio}
                 periodoFim={periodoFim}
+                isExporting={Boolean(reportData.isGeneratingPDF)}
               />
 
               <div className="p-8 pt-0">
@@ -3053,6 +3555,54 @@ const RelatorioCliente = () => {
                     meta={reportData.meta}
                     metricsConfig={reportData.metricsConfig}
                   />
+                )}
+
+                {reportData.sectionsConfig.showLinkedinAds && (
+                  <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6 shadow-inner">
+                    <h3 className="mb-4 text-lg font-bold tracking-widest uppercase text-[#78c2ff]">LINKEDIN ADS</h3>
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                      <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+                        <p className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">Impressões</p>
+                        <p className="text-xl font-bold text-white">{formatNumber(reportData.linkedin.impressoes)}</p>
+                      </div>
+                      <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+                        <p className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">Cliques</p>
+                        <p className="text-xl font-bold text-white">{formatNumber(reportData.linkedin.cliques)}</p>
+                      </div>
+                      <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+                        <p className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">Leads</p>
+                        <p className="text-xl font-bold text-white">{formatNumber(reportData.linkedin.leads)}</p>
+                      </div>
+                      <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+                        <p className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">Investido</p>
+                        <p className="text-xl font-bold text-white">{formatCurrency(reportData.linkedin.investido)}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {reportData.sectionsConfig.showTiktokAds && (
+                  <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6 shadow-inner">
+                    <h3 className="mb-4 text-lg font-bold tracking-widest uppercase text-[#f8d85a]">TIKTOK ADS</h3>
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                      <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+                        <p className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">Impressões</p>
+                        <p className="text-xl font-bold text-white">{formatNumber(reportData.tiktok.impressoes)}</p>
+                      </div>
+                      <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+                        <p className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">Cliques</p>
+                        <p className="text-xl font-bold text-white">{formatNumber(reportData.tiktok.cliques)}</p>
+                      </div>
+                      <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+                        <p className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">Leads</p>
+                        <p className="text-xl font-bold text-white">{formatNumber(reportData.tiktok.leads)}</p>
+                      </div>
+                      <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+                        <p className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">Investido</p>
+                        <p className="text-xl font-bold text-white">{formatCurrency(reportData.tiktok.investido)}</p>
+                      </div>
+                    </div>
+                  </div>
                 )}
 
                 {/* Google Creatives */}

@@ -7,7 +7,6 @@ import TestimonialsSection from "@/components/home/TestimonialsSection";
 import FAQSection from "@/components/home/FAQSection";
 import FooterSection from "@/components/home/FooterSection";
 import SEOHead from "@/components/SEOHead";
-import ParallaxTextScroll from "@/components/home/ParallaxText";
 
 const HomePage = () => {
     const homeJsonLd = {
@@ -41,7 +40,6 @@ const HomePage = () => {
             />
             <HomeNavbar />
             <HeroSection />
-            <ParallaxTextScroll />
             <FeaturesSection />
             <ShowcaseSection />
             <PricingSection />

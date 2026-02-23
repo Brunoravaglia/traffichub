@@ -104,16 +104,16 @@ const FeaturesSection = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-100px" }}
                     transition={{ duration: 0.6 }}
-                    className="mb-10 text-center sm:mb-16 lg:mb-20"
+                    className="mb-9 text-center sm:mb-14 lg:mb-16"
                 >
                     <span className="text-primary text-sm font-semibold uppercase tracking-widest">
                         Funcionalidades
                     </span>
-                    <h2 className="mt-3 text-2xl font-bold text-foreground sm:mt-4 sm:text-4xl md:text-5xl">
+                    <h2 className="mt-3 text-[clamp(1.6rem,4.4vw,2.95rem)] font-bold tracking-[-0.015em] text-foreground sm:mt-4">
                         Tudo que você precisa,{" "}
                         <span className="vcd-gradient-text">num só lugar</span>
                     </h2>
-                    <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:mt-4 sm:text-lg">
+                    <p className="mx-auto mt-3 max-w-xl text-[0.95rem] leading-relaxed text-muted-foreground sm:mt-4 sm:text-[1.05rem]">
                         Ferramentas poderosas projetadas especificamente para
                         gestores de tráfego pago.
                     </p>
@@ -125,14 +125,14 @@ const FeaturesSection = () => {
                     initial="hidden"
                     whileInView="show"
                     viewport={{ once: true, margin: "-50px" }}
-                    className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4"
+                    className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4"
                 >
                     {features.map((feature) => (
                         <motion.div
                             key={feature.title}
                             variants={item}
                             whileHover={{ y: -6, transition: { duration: 0.2 } }}
-                            className="group relative cursor-default rounded-xl border border-border/50 bg-card/50 p-4 backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:shadow-[0_0_30px_rgba(255,181,0,0.08)] sm:rounded-2xl sm:p-6"
+                            className="group relative cursor-default rounded-xl border border-border/50 bg-card/50 p-4 backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:shadow-[0_0_30px_hsl(var(--primary)/0.08)] sm:rounded-2xl sm:p-5"
                         >
                             {/* Gradient background on hover */}
                             <div

@@ -141,26 +141,26 @@ const BlogPage = () => {
             />
 
             {/* ═══════ NEWSROOM HERO ═══════ */}
-            <section className="pt-8 sm:pt-14 pb-6">
+            <section className="pb-6 pt-8 sm:pt-12 lg:pt-14">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Masthead */}
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4 }}
-                        className="text-center mb-8"
+                        className="mb-8 text-center"
                     >
-                        <div className="flex items-center justify-center gap-3 mb-3">
+                        <div className="mb-3 flex items-center justify-center gap-3">
                             <div className="h-px flex-1 max-w-[100px] bg-border" />
-                            <span className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+                            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground sm:text-xs sm:tracking-[0.25em]">
                                 Edição {new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
                             </span>
                             <div className="h-px flex-1 max-w-[100px] bg-border" />
                         </div>
-                        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-foreground tracking-tight font-serif" style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}>
+                        <h1 className="font-serif text-[clamp(2.3rem,6.7vw,4.4rem)] font-black tracking-tight text-foreground" style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}>
                             Jornal do Gestor
                         </h1>
-                        <p className="text-sm text-muted-foreground mt-2 uppercase tracking-widest flex items-center justify-center gap-4">
+                        <p className="mt-2 flex items-center justify-center gap-3 text-[11px] uppercase tracking-[0.18em] text-muted-foreground sm:gap-4 sm:text-sm sm:tracking-widest">
                             <span>Tráfego Pago</span>
                             <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
                             <span>Marketing Digital</span>

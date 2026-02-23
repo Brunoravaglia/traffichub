@@ -80,6 +80,73 @@ export type Database = {
         }
         Relationships: []
       }
+      app_errors: {
+        Row: {
+          agencia_id: string
+          cliente_id: string | null
+          created_at: string
+          error_type: string
+          gestor_id: string
+          id: string
+          message: string
+          metadata: Json
+          route: string | null
+          source: string
+          stack: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          agencia_id: string
+          cliente_id?: string | null
+          created_at?: string
+          error_type?: string
+          gestor_id: string
+          id?: string
+          message: string
+          metadata?: Json
+          route?: string | null
+          source?: string
+          stack?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          agencia_id?: string
+          cliente_id?: string | null
+          created_at?: string
+          error_type?: string
+          gestor_id?: string
+          id?: string
+          message?: string
+          metadata?: Json
+          route?: string | null
+          source?: string
+          stack?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_errors_agencia_id_fkey"
+            columns: ["agencia_id"]
+            isOneToOne: false
+            referencedRelation: "agencias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "app_errors_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "app_errors_gestor_id_fkey"
+            columns: ["gestor_id"]
+            isOneToOne: false
+            referencedRelation: "gestores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_notes: {
         Row: {
           cliente_id: string | null
