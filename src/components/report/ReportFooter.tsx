@@ -45,7 +45,7 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
                         {reportData.validationId && (
                             <div className="space-y-1">
                                 <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">VALIDATION ID</p>
-                                <code className="text-[11px] text-[#ffb500] font-mono font-black tracking-widest bg-[#ffb500]/5 px-2 py-0.5 rounded border border-[#ffb500]/20">
+                                <code className="inline-flex items-center text-[10px] leading-[1.25] text-[#ffb500] font-mono font-black tracking-[0.08em] bg-[#ffb500]/5 px-2.5 py-1 rounded border border-[#ffb500]/20 whitespace-nowrap">
                                     {reportData.validationId}
                                 </code>
                             </div>
@@ -53,7 +53,7 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
                         {reportData.validationPassword && (
                             <div className="space-y-1">
                                 <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">ACCESS KEY</p>
-                                <code className="text-[11px] text-[#ffb500] font-mono font-black tracking-widest bg-[#ffb500]/5 px-2 py-0.5 rounded border border-[#ffb500]/20">
+                                <code className="inline-flex items-center text-[10px] leading-[1.25] text-[#ffb500] font-mono font-black tracking-[0.08em] bg-[#ffb500]/5 px-2.5 py-1 rounded border border-[#ffb500]/20 whitespace-nowrap">
                                     {reportData.validationPassword}
                                 </code>
                             </div>
