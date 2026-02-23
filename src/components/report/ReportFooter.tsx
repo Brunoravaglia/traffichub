@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Copy } from "lucide-react";
 
 interface ReportFooterProps {
     reportData: any;
@@ -7,6 +8,17 @@ interface ReportFooterProps {
 }
 
 export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
+    const isExporting = Boolean(reportData?.isGeneratingPDF);
+
+    const handleCopy = async (value?: string) => {
+        if (!value) return;
+        try {
+            await navigator.clipboard.writeText(value);
+        } catch {
+            // no-op: keep silent to avoid breaking PDF/preview flows
+        }
+    };
+
     return (
         <div className="mt-12 pt-10 border-t border-white/10">
             <div className="flex items-center justify-between mb-8 opacity-80">
@@ -45,17 +57,43 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
                         {reportData.validationId && (
                             <div className="space-y-1">
                                 <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">VALIDATION ID</p>
-                                <code className="inline-flex items-center text-[10px] leading-[1.25] text-[#ffb500] font-mono font-black tracking-[0.08em] bg-[#ffb500]/5 px-2.5 py-1 rounded border border-[#ffb500]/20 whitespace-nowrap">
-                                    {reportData.validationId}
-                                </code>
+                                <div className="flex items-center gap-1.5">
+                                    <code className="inline-flex items-center text-[10px] leading-[1.25] text-[#ffb500] font-mono font-black tracking-[0.08em] bg-[#ffb500]/5 px-2.5 py-1 rounded border border-[#ffb500]/20 whitespace-nowrap select-text">
+                                        {reportData.validationId}
+                                    </code>
+                                    {!isExporting && (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleCopy(reportData.validationId)}
+                                            className="inline-flex h-7 w-7 items-center justify-center rounded border border-[#ffb500]/20 bg-[#ffb500]/5 text-[#ffb500] hover:bg-[#ffb500]/10 transition-colors"
+                                            aria-label="Copiar Validation ID"
+                                            title="Copiar Validation ID"
+                                        >
+                                            <Copy className="h-3.5 w-3.5" />
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         )}
                         {reportData.validationPassword && (
                             <div className="space-y-1">
                                 <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">ACCESS KEY</p>
-                                <code className="inline-flex items-center text-[10px] leading-[1.25] text-[#ffb500] font-mono font-black tracking-[0.08em] bg-[#ffb500]/5 px-2.5 py-1 rounded border border-[#ffb500]/20 whitespace-nowrap">
-                                    {reportData.validationPassword}
-                                </code>
+                                <div className="flex items-center gap-1.5">
+                                    <code className="inline-flex items-center text-[10px] leading-[1.25] text-[#ffb500] font-mono font-black tracking-[0.08em] bg-[#ffb500]/5 px-2.5 py-1 rounded border border-[#ffb500]/20 whitespace-nowrap select-text">
+                                        {reportData.validationPassword}
+                                    </code>
+                                    {!isExporting && (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleCopy(reportData.validationPassword)}
+                                            className="inline-flex h-7 w-7 items-center justify-center rounded border border-[#ffb500]/20 bg-[#ffb500]/5 text-[#ffb500] hover:bg-[#ffb500]/10 transition-colors"
+                                            aria-label="Copiar Access Key"
+                                            title="Copiar Access Key"
+                                        >
+                                            <Copy className="h-3.5 w-3.5" />
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -66,10 +104,21 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
                             href={`https://vurp.vercel.app/validar-relatorio?id=${reportData.validationId}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[10px] text-gray-400 font-bold hover:text-[#ffb500] transition-colors border-b border-white/10 pb-0.5"
+                            className="text-[10px] text-gray-400 font-bold hover:text-[#ffb500] transition-colors border-b border-white/10 pb-0.5 select-text"
                         >
                             vurp.vercel.app/validar-relatorio
                         </a>
+                        {!isExporting && (
+                            <button
+                                type="button"
+                                onClick={() => handleCopy("https://vurp.vercel.app/validar-relatorio")}
+                                className="inline-flex h-7 w-7 items-center justify-center rounded border border-[#ffb500]/20 bg-[#ffb500]/5 text-[#ffb500] hover:bg-[#ffb500]/10 transition-colors"
+                                aria-label="Copiar link de verificação"
+                                title="Copiar link de verificação"
+                            >
+                                <Copy className="h-3.5 w-3.5" />
+                            </button>
+                        )}
                     </div>
                 </div>
             )}
