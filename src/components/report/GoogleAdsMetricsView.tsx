@@ -8,7 +8,8 @@ interface GoogleAdsMetricsViewProps {
 
 export const GoogleAdsMetricsView = ({ google, metricsConfig }: GoogleAdsMetricsViewProps) => {
     const additionalMetrics = [];
-    if (metricsConfig.showGoogleCustoLead) additionalMetrics.push({ label: "Custo por Lead", value: formatCurrency(google.custoPorLead), color: "text-green-400" });
+    const showGoogleCpl = metricsConfig.showGoogleCustoPorLead ?? metricsConfig.showGoogleCustoLead;
+    if (showGoogleCpl) additionalMetrics.push({ label: "Custo por Lead", value: formatCurrency(google.custoPorLead), color: "text-green-400" });
     if (metricsConfig.showGoogleCpm) additionalMetrics.push({ label: "CPM", value: formatCurrency(google.cpm), color: "text-yellow-400" });
     if (metricsConfig.showGoogleCtr) additionalMetrics.push({ label: "CTR (%)", value: `${google.ctr.toFixed(2)}%`, color: "text-blue-400" });
     if (metricsConfig.showGoogleCpc) additionalMetrics.push({ label: "CPC", value: formatCurrency(google.cpc), color: "text-orange-400" });

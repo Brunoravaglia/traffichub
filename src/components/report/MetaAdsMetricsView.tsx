@@ -8,7 +8,8 @@ interface MetaAdsMetricsViewProps {
 
 export const MetaAdsMetricsView = ({ meta, metricsConfig }: MetaAdsMetricsViewProps) => {
     const additionalMetrics = [];
-    if (metricsConfig.showMetaCustoLead) additionalMetrics.push({ label: "Custo por Lead", value: formatCurrency(meta.custoPorLead), color: "text-green-400" });
+    const showMetaCpl = metricsConfig.showMetaCustoPorLead ?? metricsConfig.showMetaCustoLead;
+    if (showMetaCpl) additionalMetrics.push({ label: "Custo por Lead", value: formatCurrency(meta.custoPorLead), color: "text-green-400" });
     if (metricsConfig.showMetaCpm) additionalMetrics.push({ label: "CPM", value: formatCurrency(meta.cpm), color: "text-yellow-400" });
     if (metricsConfig.showMetaCustoPorSeguidor) additionalMetrics.push({ label: "Custo/Seguidor", value: formatCurrency(meta.custoPorSeguidor), color: "text-pink-400" });
     if (metricsConfig.showMetaCliques) additionalMetrics.push({ label: "Cliques Link", value: formatNumber(meta.cliques), color: "text-blue-400" });

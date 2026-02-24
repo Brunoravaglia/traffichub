@@ -711,60 +711,37 @@ const RelatorioCliente = () => {
 
   // Auto-calculate CPL and CPM
   const calculateMetrics = () => {
-    const googleCPL = reportData.google.contatos > 0
-      ? reportData.google.investido / reportData.google.contatos
-      : 0;
-    const googleCPM = reportData.google.impressoes > 0
-      ? (reportData.google.investido / reportData.google.impressoes) * 1000
-      : 0;
-    const metaCPL = reportData.meta.conversas > 0
-      ? reportData.meta.investido / reportData.meta.conversas
-      : 0;
-    const metaCPM = reportData.meta.impressoes > 0
-      ? (reportData.meta.investido / reportData.meta.impressoes) * 1000
-      : 0;
-    const linkedinCPM = reportData.linkedin.impressoes > 0
-      ? (reportData.linkedin.investido / reportData.linkedin.impressoes) * 1000
-      : 0;
-    const linkedinCPC = reportData.linkedin.cliques > 0
-      ? reportData.linkedin.investido / reportData.linkedin.cliques
-      : 0;
-    const linkedinCTR = reportData.linkedin.impressoes > 0
-      ? (reportData.linkedin.cliques / reportData.linkedin.impressoes) * 100
-      : 0;
-    const linkedinCPL = reportData.linkedin.leads > 0
-      ? reportData.linkedin.investido / reportData.linkedin.leads
-      : 0;
-    const tiktokCPM = reportData.tiktok.impressoes > 0
-      ? (reportData.tiktok.investido / reportData.tiktok.impressoes) * 1000
-      : 0;
-    const tiktokCPC = reportData.tiktok.cliques > 0
-      ? reportData.tiktok.investido / reportData.tiktok.cliques
-      : 0;
-    const tiktokCTR = reportData.tiktok.impressoes > 0
-      ? (reportData.tiktok.cliques / reportData.tiktok.impressoes) * 100
-      : 0;
-    const tiktokCPL = reportData.tiktok.leads > 0
-      ? reportData.tiktok.investido / reportData.tiktok.leads
-      : 0;
-
     setReportData(prev => ({
       ...prev,
-      google: { ...prev.google, custoPorLead: googleCPL, cpm: googleCPM },
-      meta: { ...prev.meta, custoPorLead: metaCPL, cpm: metaCPM },
+      google: {
+        ...prev.google,
+        custoPorLead: (prev.google.contatos > 0 ? prev.google.investido / prev.google.contatos : prev.google.conversoes > 0 ? prev.google.investido / prev.google.conversoes : prev.google.custoPorLead),
+        cpm: prev.google.impressoes > 0 ? (prev.google.investido / prev.google.impressoes) * 1000 : prev.google.cpm,
+        custoPorVisita: prev.google.visitasProduto > 0 ? prev.google.investido / prev.google.visitasProduto : prev.google.custoPorVisita,
+        custoPorAdicaoCarrinho: prev.google.adicoesCarrinho > 0 ? prev.google.investido / prev.google.adicoesCarrinho : prev.google.custoPorAdicaoCarrinho,
+        custoPorVenda: prev.google.vendas > 0 ? prev.google.investido / prev.google.vendas : prev.google.custoPorVenda,
+      },
+      meta: {
+        ...prev.meta,
+        custoPorLead: (prev.meta.conversas > 0 ? prev.meta.investido / prev.meta.conversas : prev.meta.leads > 0 ? prev.meta.investido / prev.meta.leads : prev.meta.custoPorLead),
+        cpm: prev.meta.impressoes > 0 ? (prev.meta.investido / prev.meta.impressoes) * 1000 : prev.meta.cpm,
+        custoPorVisita: prev.meta.visitasProduto > 0 ? prev.meta.investido / prev.meta.visitasProduto : prev.meta.custoPorVisita,
+        custoPorAdicaoCarrinho: prev.meta.adicoesCarrinho > 0 ? prev.meta.investido / prev.meta.adicoesCarrinho : prev.meta.custoPorAdicaoCarrinho,
+        custoPorVenda: prev.meta.vendas > 0 ? prev.meta.investido / prev.meta.vendas : prev.meta.custoPorVenda,
+      },
       linkedin: {
         ...prev.linkedin,
-        cpm: linkedinCPM,
-        cpc: linkedinCPC,
-        ctr: linkedinCTR,
-        cpl: linkedinCPL,
+        cpm: prev.linkedin.impressoes > 0 ? (prev.linkedin.investido / prev.linkedin.impressoes) * 1000 : prev.linkedin.cpm,
+        cpc: prev.linkedin.cliques > 0 ? prev.linkedin.investido / prev.linkedin.cliques : prev.linkedin.cpc,
+        ctr: prev.linkedin.impressoes > 0 ? (prev.linkedin.cliques / prev.linkedin.impressoes) * 100 : prev.linkedin.ctr,
+        cpl: prev.linkedin.leads > 0 ? prev.linkedin.investido / prev.linkedin.leads : prev.linkedin.cpl,
       },
       tiktok: {
         ...prev.tiktok,
-        cpm: tiktokCPM,
-        cpc: tiktokCPC,
-        ctr: tiktokCTR,
-        cpl: tiktokCPL,
+        cpm: prev.tiktok.impressoes > 0 ? (prev.tiktok.investido / prev.tiktok.impressoes) * 1000 : prev.tiktok.cpm,
+        cpc: prev.tiktok.cliques > 0 ? prev.tiktok.investido / prev.tiktok.cliques : prev.tiktok.cpc,
+        ctr: prev.tiktok.impressoes > 0 ? (prev.tiktok.cliques / prev.tiktok.impressoes) * 100 : prev.tiktok.ctr,
+        cpl: prev.tiktok.leads > 0 ? prev.tiktok.investido / prev.tiktok.leads : prev.tiktok.cpl,
       },
     }));
   };
