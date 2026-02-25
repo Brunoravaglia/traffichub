@@ -3577,7 +3577,7 @@ Mostrando método, não só resultado pontual. Quem prova consistência de proce
 Se você quer acelerar a implantação sem cair no improviso, use o Score de Maturidade Digital para guiar decisões e padronizar execução: /utilidades/score-digital. O objetivo é simples: sair do modo reativo, reduzir o efeito de prospecção sem filtro e operação sem onboarding padrão e construir um crescimento que você consiga repetir mês após mês.
 
 Quando sua operação deixa de depender de memória e começa a funcionar por sistema, você ganha duas coisas que todo gestor busca: previsibilidade de resultado e tranquilidade para escalar.`,
-    },,
+    },
     {
         slug: "funil-whatsapp-para-negocios-locais",
         title: "Funil de WhatsApp para negócios locais: modelo para converter sem equipe grande",

@@ -25,10 +25,11 @@ const parsePostDate = (dateStr: string) =>
     new Date(dateStr.includes("T") ? dateStr : `${dateStr}T12:00:00`);
 const BLOG_FALLBACK_COVER = "/blog/cover-1.png";
 const BASE_URL = import.meta.env.VITE_SITE_URL || "https://vurp.vercel.app";
+const validBlogPosts = blogPosts.filter((p): p is (typeof blogPosts)[number] => Boolean(p && typeof p.slug === "string"));
 
 const BlogPostPage = () => {
     const { slug } = useParams<{ slug: string }>();
-    const post = blogPosts.find((p) => p.slug === slug);
+    const post = validBlogPosts.find((p) => p.slug === slug);
     const { theme } = useTheme();
 
     // Track view + like
@@ -59,7 +60,7 @@ const BlogPostPage = () => {
         return <Navigate to="/blog" replace />;
     }
 
-    const relatedPosts = blogPosts
+    const relatedPosts = validBlogPosts
         .filter((p) => {
             if (p.slug === slug) return false;
             const ts = parsePostDate(p.date).getTime();

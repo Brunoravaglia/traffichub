@@ -13,6 +13,7 @@ import { useBlogMetrics } from "@/hooks/useBlogMetrics";
 const parsePostDate = (dateStr: string) =>
     new Date(dateStr.includes("T") ? dateStr : `${dateStr}T12:00:00`);
 const BLOG_FALLBACK_COVER = "/blog/cover-1.png";
+const validBlogPosts = blogPosts.filter((p): p is (typeof blogPosts)[number] => Boolean(p && typeof p.slug === "string"));
 
 const BlogPage = () => {
     const [activeCategory, setActiveCategory] = useState("Todos");
@@ -27,7 +28,7 @@ const BlogPage = () => {
 
     // ─── Derived: sort posts by views for featured/trending ───
     const now = new Date();
-    const postsWithMetrics = blogPosts.map((post) => ({
+    const postsWithMetrics = validBlogPosts.map((post) => ({
         ...post,
         ...getMetric(post.slug),
     }));
@@ -169,7 +170,7 @@ const BlogPage = () => {
                         </p>
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 mt-6 group hover:bg-primary/10 transition-colors">
                             <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Artigos Publicados:</span>
-                            <span className="text-sm font-black text-primary px-2 py-0.5 rounded-md bg-primary/10">{blogPosts.length}</span>
+                            <span className="text-sm font-black text-primary px-2 py-0.5 rounded-md bg-primary/10">{validBlogPosts.length}</span>
                         </div>
                         <div className="h-px bg-gradient-to-r from-transparent via-amber-500/60 to-transparent w-full mt-4" />
                     </motion.div>
