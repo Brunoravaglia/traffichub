@@ -51,6 +51,7 @@ const BlogPage = () => {
 
     // ─── Hero auto-rotation ───
     useEffect(() => {
+        if (heroPosts.length === 0) return;
         const interval = setInterval(() => {
             setHeroIndex((prev) => (prev + 1) % heroPosts.length);
         }, 6000);
@@ -59,6 +60,7 @@ const BlogPage = () => {
 
     // ─── Ticker auto-rotation ───
     useEffect(() => {
+        if (tickerPosts.length === 0) return;
         const interval = setInterval(() => {
             setTickerIndex((prev) => (prev + 1) % tickerPosts.length);
         }, 4000);
