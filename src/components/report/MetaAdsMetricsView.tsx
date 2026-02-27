@@ -66,7 +66,7 @@ export const MetaAdsMetricsView = ({ meta, metricsConfig }: MetaAdsMetricsViewPr
                     { label: "Investido", value: formatCurrency(meta.investido), icon: "💰" }
                 ].map((m) => (
                     <div key={m.label} className="min-w-0 p-6 rounded-3xl bg-white/[0.02] border border-white/[0.05] hover:border-[#ffb500]/30 transition-all duration-500 group/item">
-                        <p className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[clamp(1.6rem,2.8vw,2.2rem)] leading-tight font-black text-white mb-2 tracking-tight group-hover:text-[#ffb500] transition-colors">{m.value}</p>
+                        <p className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[clamp(1.05rem,2.35vw,2.2rem)] leading-tight font-black text-white mb-2 tracking-tight group-hover:text-[#ffb500] transition-colors">{m.value}</p>
                         <div className="flex items-center gap-2">
                             <span className="text-[10px] opacity-50">{m.icon}</span>
                             <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">{m.label}</p>
@@ -79,7 +79,7 @@ export const MetaAdsMetricsView = ({ meta, metricsConfig }: MetaAdsMetricsViewPr
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 relative">
                     {additionalMetrics.map((metric) => (
                         <div key={metric.label} className="min-w-0 p-5 rounded-2xl bg-white/[0.01] border border-white/[0.03] hover:bg-white/[0.04] transition-all duration-300">
-                            <p className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[clamp(1rem,1.6vw,1.15rem)] font-bold text-[#ffb500] mb-1 tracking-tight">{metric.value}</p>
+                            <p className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[clamp(0.95rem,1.45vw,1.15rem)] font-bold text-[#ffb500] mb-1 tracking-tight">{metric.value}</p>
                             <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.15em]">{metric.label}</p>
                         </div>
                     ))}
