@@ -1030,7 +1030,6 @@ const RelatorioCliente = () => {
     setIsExporting(true);
     // Force preview mode immediately
     setIsPreview(true);
-    calculateMetrics();
 
     try {
       // 1. Mutate and get the EXACT credentials saved to DB
@@ -1307,7 +1306,7 @@ const RelatorioCliente = () => {
             </div>
           </div>
 
-          <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto sm:items-center">
+          <div className="grid w-full grid-cols-4 gap-2 sm:flex sm:w-auto sm:items-center">
             <Button
               variant="outline"
               onClick={() => setSaveTemplateDialogOpen(true)}
@@ -1320,13 +1319,21 @@ const RelatorioCliente = () => {
             <Button
               variant={isPreview ? "default" : "outline"}
               onClick={() => {
-                calculateMetrics();
                 setIsPreview(!isPreview);
               }}
               className="h-9 px-2 text-xs sm:h-10 sm:px-3 sm:text-sm"
             >
               <Eye className="w-4 h-4 mr-1.5 sm:mr-2" />
               Preview
+            </Button>
+            <Button
+              variant="outline"
+              onClick={calculateMetrics}
+              className="h-9 px-2 text-xs sm:h-10 sm:px-3 sm:text-sm"
+            >
+              <BarChart3 className="w-4 h-4 mr-1.5 sm:mr-2" />
+              <span className="hidden sm:inline">Calcular métricas</span>
+              <span className="sm:hidden">Calcular</span>
             </Button>
             <Button
               onClick={handleExport}
@@ -1742,6 +1749,36 @@ const RelatorioCliente = () => {
 
                 {/* Additional metrics */}
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
+                  {reportData.metricsConfig.showGoogleCustoPorLead && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">CPL (R$)</Label>
+                      <NumericInput
+                        value={reportData.google.custoPorLead}
+                        onChange={(value) =>
+                          setReportData({
+                            ...reportData,
+                            google: { ...reportData.google, custoPorLead: value },
+                          })
+                        }
+                        isDecimal
+                      />
+                    </div>
+                  )}
+                  {reportData.metricsConfig.showGoogleCpm && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">CPM (R$)</Label>
+                      <NumericInput
+                        value={reportData.google.cpm}
+                        onChange={(value) =>
+                          setReportData({
+                            ...reportData,
+                            google: { ...reportData.google, cpm: value },
+                          })
+                        }
+                        isDecimal
+                      />
+                    </div>
+                  )}
                   {reportData.metricsConfig.showGoogleConversoes && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">
@@ -2281,6 +2318,36 @@ const RelatorioCliente = () => {
 
                 {/* Additional metrics based on config */}
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
+                  {reportData.metricsConfig.showMetaCustoPorLead && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">CPL (R$)</Label>
+                      <NumericInput
+                        value={reportData.meta.custoPorLead}
+                        onChange={(value) =>
+                          setReportData({
+                            ...reportData,
+                            meta: { ...reportData.meta, custoPorLead: value },
+                          })
+                        }
+                        isDecimal
+                      />
+                    </div>
+                  )}
+                  {reportData.metricsConfig.showMetaCpm && (
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">CPM (R$)</Label>
+                      <NumericInput
+                        value={reportData.meta.cpm}
+                        onChange={(value) =>
+                          setReportData({
+                            ...reportData,
+                            meta: { ...reportData.meta, cpm: value },
+                          })
+                        }
+                        isDecimal
+                      />
+                    </div>
+                  )}
                   {reportData.metricsConfig.showMetaCliques && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">
