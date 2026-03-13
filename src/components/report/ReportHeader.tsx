@@ -33,10 +33,10 @@ export const ReportHeader = ({ cliente, periodoInicio, periodoFim, isExporting =
                             <span className="text-3xl sm:text-4xl font-bold text-black tracking-widest">{cliente?.nome?.charAt(0)}</span>
                         </div>
                     )}
-                    <div className="space-y-1 py-0 sm:py-1">
+                    <div className="py-0 sm:py-1">
                         <p
                             className={cn(
-                                "text-2xl sm:text-3xl md:text-4xl font-black tracking-tight uppercase leading-[1.12] break-words max-w-full",
+                                "text-2xl sm:text-3xl md:text-4xl font-black tracking-tight uppercase leading-[1.12] break-words max-w-full mb-2",
                                 isExporting
                                     ? "text-[#ffcc33]"
                                     : "text-transparent bg-clip-text bg-gradient-to-r from-[#ffb500] via-[#ffd700] to-[#cc9200]"
@@ -71,12 +71,12 @@ export const ReportHeader = ({ cliente, periodoInicio, periodoFim, isExporting =
             <div className="flex justify-center mb-8">
                 <div className="relative">
                     <div className="absolute -inset-1 bg-gradient-to-r from-[#ffb500]/15 to-[#cc9200]/15 rounded-full blur opacity-30"></div>
-                    <div className="relative px-5 sm:px-8 py-2 rounded-full bg-black/40 border border-[#ffb500]/20 backdrop-blur-sm flex items-center justify-center">
-                        <span className={cn("w-1.5 h-1.5 rounded-full bg-[#ffb500] flex-shrink-0", !isExporting && "animate-pulse")}></span>
-                        <p className="text-[10px] sm:text-xs text-gray-300 tracking-[0.15em] sm:tracking-[0.2em] font-bold uppercase mx-3">
+                    <div className="relative h-8 sm:h-9 px-5 sm:px-8 rounded-full bg-black/40 border border-[#ffb500]/20 backdrop-blur-sm inline-flex items-center gap-3">
+                        <span className={cn("w-1.5 h-1.5 rounded-full bg-[#ffb500] flex-shrink-0", !isExporting && "animate-pulse")} />
+                        <span className="text-[10px] sm:text-xs text-gray-300 tracking-[0.15em] sm:tracking-[0.2em] font-bold uppercase">
                             {format(periodoInicio, "dd/MM")} — {format(periodoFim, "dd/MM/yyyy")}
-                        </p>
-                        <span className={cn("w-1.5 h-1.5 rounded-full bg-[#ffb500] flex-shrink-0", !isExporting && "animate-pulse")}></span>
+                        </span>
+                        <span className={cn("w-1.5 h-1.5 rounded-full bg-[#ffb500] flex-shrink-0", !isExporting && "animate-pulse")} />
                     </div>
                 </div>
             </div>
