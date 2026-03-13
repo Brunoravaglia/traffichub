@@ -237,19 +237,19 @@ const NovoRelatorio = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border/50 glassmorphism sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4 flex items-center gap-4">
+      <header className="sticky top-0 z-50 border-b border-border/50 glassmorphism">
+        <div className="container mx-auto flex items-center gap-3 px-4 py-3 sm:px-6 sm:py-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate(`/cliente/${id}`)}
-            className="hover:bg-secondary"
+            className="h-11 w-11 shrink-0 rounded-2xl hover:bg-secondary"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <VCDLogo size="sm" />
           {isEditing && (
-            <Badge variant="outline" className="ml-4 border-orange-500/50 text-orange-500 flex items-center gap-1">
+            <Badge variant="outline" className="ml-auto border-orange-500/50 text-orange-500 flex items-center gap-1 text-[11px] sm:ml-4">
               <Edit3 className="w-3 h-3" />
               Modo Edição
             </Badge>
@@ -257,14 +257,14 @@ const NovoRelatorio = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-12">
+      <main className="container mx-auto px-4 py-6 sm:px-6 sm:py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="max-w-4xl mx-auto"
         >
-          <div className="text-center mb-10">
-            <h1 className="text-3xl font-bold text-foreground mb-2">
+          <div className="mb-8 text-center sm:mb-10">
+            <h1 className="mb-2 text-2xl font-bold leading-tight text-foreground sm:text-3xl">
               {isEditing ? "Editar Relatório de Métricas" : "Novo Relatório de Métricas"}
             </h1>
             <p className="text-muted-foreground">

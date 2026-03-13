@@ -2,6 +2,12 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "";
 
+type CreateCheckoutSessionOptions = {
+  successPath?: string;
+  cancelPath?: string;
+  returnPath?: string;
+};
+
 export interface PlanInfo {
   id: string;
   name: string;
@@ -87,6 +93,7 @@ export async function redirectToCheckout(priceId: string): Promise<void> {
 
   const { data, error } = await supabase.functions.invoke("stripe-checkout", {
     body: {
+      action: "create",
       priceId,
       successPath: "/account/billing",
       cancelPath: "/pricing",
@@ -102,6 +109,62 @@ export async function redirectToCheckout(priceId: string): Promise<void> {
   }
 
   window.location.href = data.url;
+}
+
+export async function createEmbeddedCheckoutSession(
+  priceId: string,
+  options: CreateCheckoutSessionOptions = {},
+): Promise<{ clientSecret: string; sessionId: string }> {
+  if (!priceId) {
+    throw new Error("Stripe priceId ausente. Configure os IDs no .env.");
+  }
+
+  const { data, error } = await supabase.functions.invoke("stripe-checkout", {
+    body: {
+      action: "create_embedded",
+      priceId,
+      returnPath: options.returnPath || "/account/checkout",
+      successPath: options.successPath,
+      cancelPath: options.cancelPath,
+    },
+  });
+
+  if (error) {
+    throw new Error(`Falha ao iniciar checkout embutido: ${error.message}`);
+  }
+
+  if (!data?.clientSecret || !data?.sessionId) {
+    throw new Error("Checkout embutido inválido: clientSecret/sessionId não retornados.");
+  }
+
+  return { clientSecret: data.clientSecret as string, sessionId: data.sessionId as string };
+}
+
+export async function getCheckoutSessionStatus(checkoutSessionId: string): Promise<{
+  status: string | null;
+  paymentStatus: string | null;
+  subscriptionStatus: string | null;
+}> {
+  if (!checkoutSessionId) {
+    throw new Error("checkoutSessionId é obrigatório.");
+  }
+
+  const { data, error } = await supabase.functions.invoke("stripe-checkout", {
+    body: {
+      action: "session_status",
+      checkoutSessionId,
+    },
+  });
+
+  if (error) {
+    throw new Error(`Falha ao consultar status da sessão Stripe: ${error.message}`);
+  }
+
+  return {
+    status: data?.status ?? null,
+    paymentStatus: data?.paymentStatus ?? null,
+    subscriptionStatus: data?.subscriptionStatus ?? null,
+  };
 }
 
 export async function redirectToCustomerPortal(): Promise<void> {

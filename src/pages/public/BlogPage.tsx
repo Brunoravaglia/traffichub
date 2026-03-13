@@ -14,6 +14,21 @@ const parsePostDate = (dateStr: string) =>
     new Date(dateStr.includes("T") ? dateStr : `${dateStr}T12:00:00`);
 const BLOG_FALLBACK_COVER = "/blog/cover-1.png";
 const validBlogPosts = blogPosts.filter((p): p is (typeof blogPosts)[number] => Boolean(p && typeof p.slug === "string"));
+const createSeedFromDate = (date: Date) =>
+    Number(`${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}`);
+
+const shuffleWithSeed = <T,>(items: T[], seed: number): T[] => {
+    const arr = [...items];
+    let randomSeed = seed || 1;
+
+    for (let i = arr.length - 1; i > 0; i -= 1) {
+        randomSeed = (randomSeed * 9301 + 49297) % 233280;
+        const j = Math.floor((randomSeed / 233280) * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+
+    return arr;
+};
 
 const BlogPage = () => {
     const [activeCategory, setActiveCategory] = useState("Todos");
@@ -24,9 +39,9 @@ const BlogPage = () => {
     const [heroIndex, setHeroIndex] = useState(0);
     const searchRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
-    const { metrics, getMetric, loading: metricsLoading } = useBlogMetrics();
+    const { getMetric } = useBlogMetrics();
 
-    // ─── Derived: sort posts by views for featured/trending ───
+    // ─── Derived ───
     const now = new Date();
     const postsWithMetrics = validBlogPosts.map((post) => ({
         ...post,
@@ -37,17 +52,25 @@ const BlogPage = () => {
     );
 
     const postsByViews = [...publishedPostsWithMetrics].sort((a, b) => b.views - a.views);
-    const postsByLikes = [...publishedPostsWithMetrics].sort((a, b) => b.likes - a.likes);
+    const postsByDate = [...publishedPostsWithMetrics].sort(
+        (a, b) => parsePostDate(b.date).getTime() - parsePostDate(a.date).getTime()
+    );
 
-    // Hero: top 5 by views (or first 5 if no data yet)
-    const heroPosts = postsByViews.slice(0, 5);
-    // Ticker: top 8 by views
-    const tickerPosts = postsByViews.slice(0, 8);
-    // Mais Lidos: top 4 by views (excluding hero[0])
+    // Prioriza conteúdos novos na home e muda a seleção a cada dia.
+    const dailySeed = createSeedFromDate(now);
+    const freshPool = postsByDate.slice(0, Math.min(Math.max(12, postsByDate.length), 24));
+    const rotatedFreshPool = shuffleWithSeed(freshPool, dailySeed);
+    const remainingRecentPosts = postsByDate.filter((post) => !freshPool.some((freshPost) => freshPost.slug === post.slug));
+    const homepageRotation = [...rotatedFreshPool, ...remainingRecentPosts];
+
+    // Hero e ticker seguem rotação recente; "Mais Lidos" continua por views.
+    const heroPosts = homepageRotation.slice(0, 5);
+    const tickerPosts = homepageRotation.slice(0, 8);
     const trendingPosts = postsByViews.slice(0, 6);
-    // Secondary posts for sidebar: next 3 after hero
+
+    // Secondary posts para sidebar: recentes que não estão no hero atual.
     const heroPost = heroPosts[heroIndex] || heroPosts[0];
-    const secondaryPosts = postsByViews.filter((p) => p.slug !== heroPost?.slug).slice(0, 3);
+    const secondaryPosts = postsByDate.filter((p) => p.slug !== heroPost?.slug).slice(0, 3);
 
     // ─── Hero auto-rotation ───
     useEffect(() => {

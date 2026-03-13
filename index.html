@@ -26,7 +26,7 @@
   <meta name="application-name" content="Vurp" />
   <meta name="apple-mobile-web-app-title" content="Vurp" />
   <meta name="theme-color" content="#058C42" />
-  <link rel="canonical" href="https://vurp.vercel.app/" />
+  <link rel="canonical" href="https://vurp.space/" />
   <link rel="manifest" href="/site.webmanifest?v=20260222a" />
 
   <!-- Favicon -->
@@ -36,11 +36,11 @@
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://vurp.vercel.app/" />
+  <meta property="og:url" content="https://vurp.space/" />
   <meta property="og:title" content="Vurp — Plataforma para Gestores de Tráfego Pago" />
   <meta property="og:description"
     content="Importe Google Ads e Meta Ads, transforme em dashboard profissional e envie relatórios prontos em PDF e link." />
-  <meta property="og:image" content="https://vurp.vercel.app/og-image.png" />
+  <meta property="og:image" content="https://vurp.space/og-image.png" />
   <meta property="og:locale" content="pt_BR" />
   <meta property="og:site_name" content="Vurp" />
 
@@ -49,11 +49,11 @@
   <meta name="twitter:title" content="Vurp — Plataforma para Gestores de Tráfego Pago" />
   <meta name="twitter:description"
     content="Importe Google Ads e Meta Ads, transforme em dashboard profissional e envie relatórios prontos em PDF e link." />
-  <meta name="twitter:image" content="https://vurp.vercel.app/og-image.png" />
+  <meta name="twitter:image" content="https://vurp.space/og-image.png" />
 
   <!-- Language -->
-  <link rel="alternate" hreflang="pt-BR" href="https://vurp.vercel.app/" />
-  <link rel="alternate" hreflang="x-default" href="https://vurp.vercel.app/" />
+  <link rel="alternate" hreflang="pt-BR" href="https://vurp.space/" />
+  <link rel="alternate" hreflang="x-default" href="https://vurp.space/" />
 
   <!-- Performance -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -74,11 +74,11 @@
       "@graph": [
         {
           "@type": "Organization",
-          "@id": "https://vurp.vercel.app/#organization",
+          "@id": "https://vurp.space/#organization",
           "name": "Vurp",
           "alternateName": "Vurp Plataforma",
-          "url": "https://vurp.vercel.app",
-          "logo": "https://vurp.vercel.app/favicon.png?v=20260222a",
+          "url": "https://vurp.space",
+          "logo": "https://vurp.space/favicon.png?v=20260222a",
           "description": "Plataforma completa para gestores de tráfego pago organizarem, reportarem e escalarem seus negócios.",
           "sameAs": []
         },
@@ -88,7 +88,7 @@
           "applicationCategory": "BusinessApplication",
           "operatingSystem": "Web",
           "description": "Sistema de gestão para gestores de tráfego pago com checklists, relatórios profissionais, controle financeiro e gamificação.",
-          "url": "https://vurp.vercel.app",
+          "url": "https://vurp.space",
           "offers": [
             {
               "@type": "Offer",
@@ -136,29 +136,29 @@
         },
         {
           "@type": "WebSite",
-          "@id": "https://vurp.vercel.app/#website",
+          "@id": "https://vurp.space/#website",
           "name": "Vurp",
           "alternateName": "Vurp - Plataforma para Gestores de Tráfego Pago",
-          "url": "https://vurp.vercel.app",
+          "url": "https://vurp.space",
           "publisher": {
-            "@id": "https://vurp.vercel.app/#organization"
+            "@id": "https://vurp.space/#organization"
           },
           "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://vurp.vercel.app/faq?q={search_term_string}",
+            "target": "https://vurp.space/faq?q={search_term_string}",
             "query-input": "required name=search_term_string"
           }
         },
         {
           "@type": "WebPage",
-          "@id": "https://vurp.vercel.app/#webpage",
-          "url": "https://vurp.vercel.app/",
+          "@id": "https://vurp.space/#webpage",
+          "url": "https://vurp.space/",
           "name": "Vurp — Plataforma para Gestores de Tráfego Pago",
           "isPartOf": {
-            "@id": "https://vurp.vercel.app/#website"
+            "@id": "https://vurp.space/#website"
           },
           "about": {
-            "@id": "https://vurp.vercel.app/#organization"
+            "@id": "https://vurp.space/#organization"
           }
         }
       ]
@@ -168,9 +168,9 @@
     (function () {
       try {
         var theme = localStorage.getItem('vurp-theme');
-        var supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
-        if (!theme && supportDarkMode) theme = 'dark';
-        if (!theme) theme = 'dark'; // Default to dark
+        if (!theme) {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
         document.documentElement.classList.add(theme);
       } catch (e) { }
     })();
@@ -201,14 +201,14 @@
         <li><strong>Agência Pro</strong> — R$197,00/mês (clientes ilimitados)</li>
       </ul>
       <p>7 dias grátis para testar. Cancele quando quiser.</p>
-      <p><a href="https://vurp.vercel.app/signup">Começar grátis</a> | <a href="https://vurp.vercel.app/blog">Blog</a> |
-        <a href="https://vurp.vercel.app/pricing">Preços</a> | <a
-          href="https://vurp.vercel.app/features">Funcionalidades</a>
+      <p><a href="https://vurp.space/signup">Começar grátis</a> | <a href="https://vurp.space/blog">Blog</a> |
+        <a href="https://vurp.space/pricing">Preços</a> | <a
+          href="https://vurp.space/features">Funcionalidades</a>
       </p>
       <hr />
-      <p><small>Vurp © 2026 — <a href="https://vurp.vercel.app/lgpd">LGPD & Segurança</a> | <a
-            href="https://vurp.vercel.app/privacy">Privacidade</a> | <a
-            href="https://vurp.vercel.app/terms">Termos</a></small>
+      <p><small>Vurp © 2026 — <a href="https://vurp.space/lgpd">LGPD & Segurança</a> | <a
+            href="https://vurp.space/privacy">Privacidade</a> | <a
+            href="https://vurp.space/terms">Termos</a></small>
       </p>
     </div>
   </noscript>

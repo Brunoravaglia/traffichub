@@ -24,13 +24,13 @@ export interface Creative {
   id: string;
   url: string;
   name: string;
-  platform: "google" | "meta";
+  platform: "google" | "meta" | "linkedin" | "tiktok" | "shopee";
   width?: number;
   height?: number;
 }
 
 interface CreativeGridProps {
-  platform: "google" | "meta";
+  platform: "google" | "meta" | "linkedin" | "tiktok" | "shopee";
   creatives: Creative[];
   onChange: (creatives: Creative[]) => void;
   clienteId: string;
@@ -157,13 +157,37 @@ export function CreativeGrid({
     onChange(creatives.map((c) => (c.id === id ? { ...c, width, height } : c)));
   };
 
-  const borderColor = platform === "google" ? "border-blue-500/50" : "border-purple-500/50";
+  const borderColorByPlatform = {
+    google: "border-blue-500/50",
+    meta: "border-purple-500/50",
+    linkedin: "border-sky-500/50",
+    tiktok: "border-pink-500/50",
+    shopee: "border-orange-500/50",
+  } as const;
+
+  const hoverColorByPlatform = {
+    google: "hover:border-blue-500 hover:text-blue-500",
+    meta: "hover:border-purple-500 hover:text-purple-500",
+    linkedin: "hover:border-sky-500 hover:text-sky-500",
+    tiktok: "hover:border-pink-500 hover:text-pink-500",
+    shopee: "hover:border-orange-500 hover:text-orange-500",
+  } as const;
+
+  const ringColorByPlatform = {
+    google: "ring-blue-500/50",
+    meta: "ring-purple-500/50",
+    linkedin: "ring-sky-500/50",
+    tiktok: "ring-pink-500/50",
+    shopee: "ring-orange-500/50",
+  } as const;
+
+  const borderColor = borderColorByPlatform[platform];
 
   return (
     <div
       className={cn(
         "flex flex-wrap gap-4 p-3 rounded-lg transition-colors",
-        isDragOver && `bg-muted/50 ring-2 ${platform === "google" ? "ring-blue-500/50" : "ring-purple-500/50"}`
+        isDragOver && `bg-muted/50 ring-2 ${ringColorByPlatform[platform]}`
       )}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
@@ -191,7 +215,7 @@ export function CreativeGrid({
           className={cn(
             "w-[200px] h-[150px] rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-2 text-muted-foreground transition-colors cursor-pointer",
             borderColor,
-            platform === "google" ? "hover:border-blue-500 hover:text-blue-500" : "hover:border-purple-500 hover:text-purple-500",
+            hoverColorByPlatform[platform],
             isDragOver && `${borderColor} bg-muted/30`
           )}
         >

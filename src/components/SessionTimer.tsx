@@ -18,9 +18,10 @@ const SessionTimer = () => {
   if (!isLoggedIn) return null;
 
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full text-primary text-sm font-medium">
+    <div className="flex items-center gap-2 rounded-full bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary sm:px-3 sm:text-sm">
       <Clock className="h-4 w-4" />
-      <span>{formatDuration(sessionDuration)}</span>
+      <span className="hidden sm:inline">{formatDuration(sessionDuration)}</span>
+      <span className="sm:hidden">{formatDuration(sessionDuration).replace(/^0/, "")}</span>
     </div>
   );
 };

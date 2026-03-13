@@ -1,24 +1,61 @@
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Users, BarChart3, Briefcase, TrendingUp, CheckCircle2, AlertCircle, FileText, DollarSign, Gauge } from "lucide-react";
+import { Plus, Users, BarChart3, Briefcase, TrendingUp, AlertCircle, FileText, DollarSign, Gauge, Target, ClipboardCheck, ShieldCheck, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { format, startOfMonth, endOfMonth } from "date-fns";
+import { endOfWeek, format, startOfMonth, endOfMonth, startOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { useGestor } from "@/contexts/GestorContext";
+import { blogPosts } from "@/data/blogPosts";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { gestor } = useGestor();
+  const { gestor, agencia } = useGestor();
+  const [isNewsOpen, setIsNewsOpen] = useState(false);
   const agencyId = gestor?.agencia_id ?? null;
   const currentDate = new Date();
   const monthStart = format(startOfMonth(currentDate), "yyyy-MM-dd");
   const monthEnd = format(endOfMonth(currentDate), "yyyy-MM-dd");
+  const weekStart = format(startOfWeek(currentDate, { weekStartsOn: 1 }), "yyyy-MM-dd");
+  const weekEnd = format(endOfWeek(currentDate, { weekStartsOn: 1 }), "yyyy-MM-dd");
+  const mondayOfWeek = weekStart;
+  const isMonday = currentDate.getDay() === 1;
+  const newsVersion = "2026-03-02-internal-feed-v1";
+
+  useEffect(() => {
+    const seenVersion = localStorage.getItem("vurp_seen_news_version");
+    if (seenVersion !== newsVersion) {
+      setIsNewsOpen(true);
+    }
+  }, []);
+
+  const markNewsAsSeen = () => {
+    localStorage.setItem("vurp_seen_news_version", newsVersion);
+    setIsNewsOpen(false);
+  };
+
+  const suggestedReads = useMemo(() => {
+    const now = Date.now();
+    return [...blogPosts]
+      .filter((post) => {
+        const ts = new Date(post.date.includes("T") ? post.date : `${post.date}T12:00:00`).getTime();
+        return Number.isFinite(ts) && ts <= now;
+      })
+      .sort((a, b) => {
+        const ta = new Date(a.date.includes("T") ? a.date : `${a.date}T12:00:00`).getTime();
+        const tb = new Date(b.date.includes("T") ? b.date : `${b.date}T12:00:00`).getTime();
+        return tb - ta;
+      })
+      .slice(0, 5);
+  }, []);
 
   // Fetch stats
-  const { data: stats, refetch } = useQuery({
-    queryKey: ["dashboard-stats", agencyId, monthStart, monthEnd],
+  const { data: stats } = useQuery({
+    queryKey: ["dashboard-stats", agencyId, monthStart, monthEnd, weekStart, weekEnd, mondayOfWeek, agencia?.slug],
     staleTime: 0,
     queryFn: async () => {
       if (!agencyId) {
@@ -31,6 +68,21 @@ const Dashboard = () => {
           hasRecentActivity: false,
           totalRelatorios: 0,
           totalInvestido: 0,
+          weeklyMeta: {
+            tasksCompleted: 0,
+            taskGoal: 0,
+            clientsOnTrack: 0,
+            totalClients: 0,
+            checklistCoverage: 0,
+            slaRate: 0,
+            reportRate: 0,
+          },
+          healthScore: {
+            total: 0,
+            checklist: 0,
+            delivery: 0,
+            performance: 0,
+          },
           chartData: [],
           pieData: [
             { name: "Completos", value: 0, color: "hsl(var(--primary))" },
@@ -66,6 +118,7 @@ const Dashboard = () => {
       if (relatoriosRes.error) throw relatoriosRes.error;
 
       const checklists = checklistsRes.data || [];
+      const weeklyChecklists = checklists.filter((c) => c.data >= weekStart && c.data <= weekEnd);
       const pendentes = checklists.length > 0 ? checklists.filter(c =>
         c.pendencias && c.pendencias.trim() !== ""
       ).length : 2; // Simulate a small number if empty
@@ -137,6 +190,58 @@ const Dashboard = () => {
         return acc + gInvest + mInvest;
       }, 0);
 
+      const totalClients = (clientesRes.data || []).length;
+      const weeklyChecklistByClient = new Set(weeklyChecklists.map((c) => c.cliente_id));
+      const clientsOnTrack = weeklyChecklistByClient.size;
+      const checklistCoverage = totalClients > 0 ? Math.round((clientsOnTrack / totalClients) * 100) : 0;
+
+      const weeklyCompletedTasks = weeklyChecklists.reduce((acc, c) => {
+        const fields = [
+          c.pagamento_ok, c.conta_sem_bloqueios, c.saldo_suficiente,
+          c.pixel_tag_instalados, c.conversoes_configuradas, c.integracao_crm,
+          c.criativos_atualizados, c.cta_claro, c.teste_ab_ativo,
+        ];
+        return acc + fields.filter(Boolean).length;
+      }, 0);
+      const weeklyTaskGoal = totalClients * 9;
+
+      const weeklyReportsByClient = new Set(
+        weeklyChecklists
+          .filter((c) => c.relatorio_semanal_enviado)
+          .map((c) => c.cliente_id),
+      );
+      const reportRate = totalClients > 0 ? Math.round((weeklyReportsByClient.size / totalClients) * 100) : 0;
+
+      const mondayReportsByClient = new Set(
+        weeklyChecklists
+          .filter((c) => c.data === mondayOfWeek && c.relatorio_semanal_enviado)
+          .map((c) => c.cliente_id),
+      );
+
+      const isVcd = (agencia?.slug || "").toLowerCase() === "vcd";
+      const slaRate = totalClients > 0
+        ? Math.round(((isVcd ? mondayReportsByClient.size : weeklyReportsByClient.size) / totalClients) * 100)
+        : 0;
+
+      const checklistScore = weeklyTaskGoal > 0 ? Math.round((weeklyCompletedTasks / weeklyTaskGoal) * 100) : 0;
+      const deliveryScore = Math.round((checklistCoverage * 0.45) + (slaRate * 0.55));
+
+      const roasValues = relatorios.flatMap((r: any) => {
+        const dataValues = r.data_values || {};
+        const candidates = [Number(dataValues.google?.roas || 0), Number(dataValues.meta?.roas || 0)];
+        return candidates.filter((n) => Number.isFinite(n) && n > 0);
+      });
+      const avgRoas = roasValues.length > 0
+        ? roasValues.reduce((sum, val) => sum + val, 0) / roasValues.length
+        : 0;
+      const performanceScore = roasValues.length > 0
+        ? Math.min(100, Math.round((avgRoas / 4) * 100))
+        : 60;
+
+      const totalHealthScore = Math.round(
+        (checklistScore * 0.4) + (deliveryScore * 0.35) + (performanceScore * 0.25),
+      );
+
       return {
         clientes: clientesRes.data || [],
         gestores: gestoresRes.data || [],
@@ -146,6 +251,21 @@ const Dashboard = () => {
         hasRecentActivity,
         totalRelatorios: totalRelatoriosSet,
         totalInvestido,
+        weeklyMeta: {
+          tasksCompleted: weeklyCompletedTasks,
+          taskGoal: weeklyTaskGoal,
+          clientsOnTrack,
+          totalClients,
+          checklistCoverage,
+          slaRate,
+          reportRate,
+        },
+        healthScore: {
+          total: totalHealthScore,
+          checklist: checklistScore,
+          delivery: deliveryScore,
+          performance: performanceScore,
+        },
         chartData,
         pieData,
         progressColor,
@@ -173,6 +293,65 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-full bg-background overflow-hidden p-6">
+      <Dialog open={isNewsOpen} onOpenChange={setIsNewsOpen}>
+        <DialogContent className="max-w-2xl bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-primary" />
+              Feed de Novidades Interno
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="rounded-xl border border-border bg-secondary/30 p-4">
+              <p className="text-sm text-muted-foreground mb-3">
+                Novidades liberadas para o time:
+              </p>
+              <ul className="space-y-2 text-sm text-foreground">
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
+                  Mini changelog interno no dashboard.
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
+                  Meta semanal por gestor com foco em SLA e checklist completo.
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
+                  Score de saúde da conta (0-100) baseado em checklist, entrega e performance.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-foreground mb-2">Sugestões de leitura</p>
+              <div className="grid gap-2">
+                {suggestedReads.slice(0, 3).map((post) => (
+                  <button
+                    key={post.slug}
+                    onClick={() => {
+                      markNewsAsSeen();
+                      navigate(`/blog/${post.slug}`);
+                    }}
+                    className="text-left rounded-lg border border-border px-3 py-2 hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                  >
+                    <p className="text-sm font-medium text-foreground line-clamp-1">{post.title}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">{post.excerpt}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <Button variant="outline" onClick={() => navigate("/changelog")}>
+                Ver changelog completo
+              </Button>
+              <Button onClick={markNewsAsSeen}>Entendi</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse" />
@@ -205,6 +384,105 @@ const Dashboard = () => {
             Gerencie suas contas de mídia paga com eficiência
           </motion.p>
         </motion.div>
+
+        <div className="grid lg:grid-cols-2 gap-4">
+          <motion.div variants={itemVariants} className="vcd-card bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <Target className="w-5 h-5 text-primary" />
+                  Meta da Semana
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {agencia?.slug === "vcd"
+                    ? "SLA VCD: enviar todos os relatórios na segunda, checklist completo e cadastro contínuo de clientes."
+                    : "Checklist completo, clientes em dia e entrega semanal consistente."}
+                </p>
+              </div>
+              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${isMonday ? "bg-primary/15 text-primary border-primary/30" : "bg-secondary text-muted-foreground border-border"}`}>
+                {isMonday ? "Dia de SLA" : "Semana em andamento"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="rounded-lg border border-border bg-background/70 p-3">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Tarefas</p>
+                <p className="text-lg font-bold text-foreground">
+                  {stats?.weeklyMeta.tasksCompleted || 0}
+                  <span className="text-xs text-muted-foreground">/{stats?.weeklyMeta.taskGoal || 0}</span>
+                </p>
+              </div>
+              <div className="rounded-lg border border-border bg-background/70 p-3">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Clientes em dia</p>
+                <p className="text-lg font-bold text-foreground">{stats?.weeklyMeta.checklistCoverage || 0}%</p>
+              </div>
+              <div className="rounded-lg border border-border bg-background/70 p-3">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">SLA</p>
+                <p className="text-lg font-bold text-foreground">{stats?.weeklyMeta.slaRate || 0}%</p>
+              </div>
+            </div>
+
+            <div className="space-y-2 mb-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground flex items-center gap-2"><ClipboardCheck className="w-4 h-4" />Checklist de todos os clientes</span>
+                <span className="font-semibold text-foreground">{stats?.weeklyMeta.clientsOnTrack || 0}/{stats?.weeklyMeta.totalClients || 0}</span>
+              </div>
+              <div className="h-2 rounded-full bg-secondary overflow-hidden">
+                <div className="h-full bg-primary transition-all duration-500" style={{ width: `${stats?.weeklyMeta.checklistCoverage || 0}%` }} />
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" onClick={() => navigate("/controle")}>Abrir checklist semanal</Button>
+              <Button size="sm" variant="outline" onClick={() => navigate("/novo-cliente")}>
+                Adicionar mais clientes
+              </Button>
+            </div>
+          </motion.div>
+
+          <motion.div variants={itemVariants} className="vcd-card bg-gradient-to-br from-emerald-500/10 to-transparent border-emerald-500/20">
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                  Score de Saúde da Conta
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">Nota 0-100 baseada em checklist (40%), entrega (35%) e performance (25%).</p>
+              </div>
+              <span className="text-2xl font-black text-emerald-400">{stats?.healthScore.total || 0}</span>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-muted-foreground">Checklist</span>
+                  <span className="font-semibold text-foreground">{stats?.healthScore.checklist || 0}</span>
+                </div>
+                <div className="h-2 rounded-full bg-secondary overflow-hidden">
+                  <div className="h-full bg-primary transition-all duration-500" style={{ width: `${stats?.healthScore.checklist || 0}%` }} />
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-muted-foreground">Entrega/SLA</span>
+                  <span className="font-semibold text-foreground">{stats?.healthScore.delivery || 0}</span>
+                </div>
+                <div className="h-2 rounded-full bg-secondary overflow-hidden">
+                  <div className="h-full bg-amber-400 transition-all duration-500" style={{ width: `${stats?.healthScore.delivery || 0}%` }} />
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-muted-foreground">Performance</span>
+                  <span className="font-semibold text-foreground">{stats?.healthScore.performance || 0}</span>
+                </div>
+                <div className="h-2 rounded-full bg-secondary overflow-hidden">
+                  <div className="h-full bg-emerald-400 transition-all duration-500" style={{ width: `${stats?.healthScore.performance || 0}%` }} />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">

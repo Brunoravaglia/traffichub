@@ -14,7 +14,7 @@ const testimonials = [
         name: "Camila Rodrigues",
         role: "Dona de Agência",
         avatar: "CR",
-        platforms: ["Meta Ads", "TikTok Ads", "Google Ads"],
+        platforms: ["Meta Ads", "TikTok Ads", "Google Ads", "Shopee Ads"],
         text: "Gerenciar 3 gestores e 30+ clientes era um caos. Com o Vurp, tenho total controle do que cada um está fazendo. O dashboard gerencial é sensacional.",
         stars: 5,
     },

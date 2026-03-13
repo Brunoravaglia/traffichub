@@ -26,7 +26,7 @@ const faqs = [
     {
         question: "Quais plataformas de anúncios são suportadas?",
         answer:
-            "Atualmente suportamos Google Ads, Meta Ads (Facebook/Instagram), TikTok Ads e LinkedIn Ads. Nossos relatórios permitem inserir métricas de todas essas plataformas e gerar análises comparativas.",
+            "Atualmente suportamos Google Ads, Meta Ads (Facebook/Instagram), TikTok Ads, LinkedIn Ads e Shopee Ads. Nossos relatórios permitem inserir métricas de todas essas plataformas e gerar análises comparativas.",
     },
     {
         question: "Posso personalizar os relatórios com minha marca?",

@@ -1,0 +1,74 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#03131A"/>
+      <stop offset="0.48" stop-color="#04252B"/>
+      <stop offset="1" stop-color="#08110E"/>
+    </linearGradient>
+    <radialGradient id="glowLeft" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(540 410) rotate(92) scale(540 740)">
+      <stop stop-color="#0B5B2B" stop-opacity="0.28"/>
+      <stop offset="0.46" stop-color="#06473A" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#06473A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowRight" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1440 130) rotate(132) scale(440 760)">
+      <stop stop-color="#D8E58A" stop-opacity="0.35"/>
+      <stop offset="0.35" stop-color="#A2D16F" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#A2D16F" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="beam" x1="1020" y1="0" x2="720" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF6C6" stop-opacity="0"/>
+      <stop offset="0.12" stop-color="#FFF6C6" stop-opacity="0.14"/>
+      <stop offset="0.44" stop-color="#C7E588" stop-opacity="0.46"/>
+      <stop offset="0.62" stop-color="#D7ED9B" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#D7ED9B" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="26"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.08"/>
+      </feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <rect width="1600" height="900" fill="url(#glowLeft)"/>
+  <rect width="1600" height="900" fill="url(#glowRight)"/>
+  <rect x="940" y="-40" width="210" height="980" transform="rotate(33 940 -40)" fill="url(#beam)" filter="url(#soft)"/>
+  <rect width="1600" height="900" fill="#FFFFFF" opacity="0.035" filter="url(#grain)"/>
+
+  <g opacity="0.96">
+    <rect x="106" y="96" width="58" height="58" rx="14" fill="#A7E48A"/>
+    <image href="/favicon.png" x="117" y="107" width="36" height="36" preserveAspectRatio="xMidYMid meet"/>
+    <text x="190" y="141" fill="#EFEAD8" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700">Vurp.space</text>
+  </g>
+
+  <text x="108" y="286" fill="#C9CF9A" font-family="Georgia, 'Times New Roman', serif" font-size="34" font-weight="400">
+    Edição especial • Dia da Mulher
+  </text>
+
+  <text x="108" y="448" fill="#F2ECDD" font-family="Georgia, 'Times New Roman', serif" font-size="84" font-weight="400" letter-spacing="-0.03em">
+    5 GESTORAS DE TRÁFEGO QUE
+  </text>
+  <text x="108" y="586" fill="#F2ECDD" font-family="Georgia, 'Times New Roman', serif" font-size="84" font-weight="400" letter-spacing="-0.03em">
+    VIRARAM REFERÊNCIA NA
+  </text>
+  <text x="108" y="724" fill="#F2ECDD" font-family="Georgia, 'Times New Roman', serif" font-size="84" font-weight="400" letter-spacing="-0.03em">
+    INTERNET
+  </text>
+
+  <text x="108" y="818" fill="#D3D7C9" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="400">
+    Conheça as líderes que estão redefinindo as estratégias digitais
+  </text>
+  <text x="108" y="854" fill="#D3D7C9" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="400">
+    no mercado de tráfego pago.
+  </text>
+
+  <g opacity="0.9">
+    <path d="M1512 784C1512 772.954 1520.95 764 1532 764C1543.05 764 1552 772.954 1552 784C1552 795.046 1543.05 804 1532 804C1520.95 804 1512 795.046 1512 784Z" fill="#EDE8D6"/>
+    <path d="M1532 735L1538.48 765.52L1569 772L1538.48 778.48L1532 809L1525.52 778.48L1495 772L1525.52 765.52L1532 735Z" fill="#EDE8D6"/>
+  </g>
+</svg>

@@ -1,8 +1,10 @@
 # Vurp — robots.txt
-# https://vurp.com.br
+# https://vurp.space
 
 User-agent: *
 Allow: /
+
+# Auth/protected app areas
 Disallow: /dashboard
 Disallow: /clientes
 Disallow: /cliente/
@@ -20,42 +22,7 @@ Disallow: /account
 Disallow: /novo-cliente
 Disallow: /novo-gestor
 Disallow: /relatorio-cliente
+Disallow: /agencia/
+Disallow: /ferramentas
 
-# Google
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 1
-
-# Bing
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 2
-
-# Social Media
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
-# AI Crawlers
-User-agent: GPTBot
-Allow: /
-
-User-agent: ChatGPT-User
-Allow: /
-
-User-agent: ClaudeBot
-Allow: /
-
-User-agent: PerplexityBot
-Allow: /
-
-User-agent: Bytespider
-Allow: /
-
-User-agent: Google-Extended
-Allow: /
-
-# Sitemap
-Sitemap: https://vurp.com.br/sitemap.xml
+Sitemap: https://vurp.space/sitemap.xml

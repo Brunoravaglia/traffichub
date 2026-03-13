@@ -102,18 +102,18 @@ const RelatorioView = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border/50 glassmorphism sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4 flex items-center gap-4">
+      <header className="sticky top-0 z-50 border-b border-border/50 glassmorphism">
+        <div className="container mx-auto flex items-center gap-3 px-4 py-3 sm:px-6 sm:py-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate(`/cliente/${id}/historico`)}
-            className="hover:bg-secondary"
+            className="h-11 w-11 shrink-0 rounded-2xl hover:bg-secondary"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <VCDLogo size="sm" />
-          <div className="ml-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary text-muted-foreground text-sm">
+          <div className="ml-auto flex items-center gap-2 rounded-full bg-secondary px-3 py-1.5 text-xs text-muted-foreground sm:text-sm">
             <Lock className="w-4 h-4" />
             Somente Leitura
           </div>
@@ -121,7 +121,7 @@ const RelatorioView = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-4 py-6 sm:px-6 sm:py-8">
         <div className="max-w-4xl mx-auto">
           {/* Client Header */}
           <motion.div
@@ -132,12 +132,12 @@ const RelatorioView = () => {
             <div className="flex flex-col md:flex-row md:items-center gap-6">
               {/* Client Info */}
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <User className="w-5 h-5 text-primary" />
-                  <h1 className="text-2xl font-bold text-foreground">{cliente.nome}</h1>
+                <div className="mb-2 flex items-start gap-3">
+                  <User className="mt-1 h-5 w-5 shrink-0 text-primary" />
+                  <h1 className="text-2xl font-bold leading-tight text-foreground break-words sm:text-3xl">{cliente.nome}</h1>
                 </div>
-                <div className="flex flex-wrap items-center gap-4">
-                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary border border-primary/20">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
                     {cliente.gestores?.nome}
                   </span>
                   <span className="flex items-center gap-2 text-muted-foreground">

@@ -15,6 +15,52 @@ interface ReleaseItem {
 
 const releases: ReleaseItem[] = [
     {
+        id: "v1.6.0",
+        version: "v1.6.0",
+        date: "Março 08, 2026",
+        title: "Billing interno + Observabilidade + Base para escala comercial",
+        description: "Nova etapa de maturidade da plataforma com checkout interno da Stripe, instrumentação da Vercel e ajustes para operação comercial mais estável.",
+        type: "feature",
+        items: [
+            "Checkout interno com Stripe Embedded Checkout para contratação e upgrade de planos sem sair da plataforma.",
+            "Nova rota dedicada de cobrança para assinatura com melhor continuidade entre pricing, conta e pagamento.",
+            "Integração de Vercel Analytics para leitura real de tráfego e comportamento nas páginas públicas e no app.",
+            "Integração de Vercel Speed Insights para acompanhar performance real em produção e reduzir gargalos de carregamento.",
+            "Atualização do changelog, páginas públicas e pricing para refletir a oferta atual da plataforma."
+        ]
+    },
+    {
+        id: "v1.5.0",
+        version: "v1.5.0",
+        date: "Março 06, 2026",
+        title: "Criativos ampliados + novos canais + fluxo de relatório mais flexível",
+        description: "Expansão do motor de relatórios com mais canais, novos blocos de criativo e maior controle sobre modelos e métricas.",
+        type: "improvement",
+        items: [
+            "Adição de LinkedIn Ads, TikTok Ads e Shopee Ads ao construtor de relatórios com métricas específicas por canal.",
+            "Seções de criativos expandidas para múltiplas plataformas, permitindo relatórios mais completos para apresentação ao cliente.",
+            "Refinamento do fluxo 'criar do zero' e dos modelos de relatório para reduzir atrito operacional.",
+            "Ajustes na exportação visual para deixar preview e PDF mais próximos entre si em layouts A4.",
+            "Padronização visual dos cards de plataforma para manter Google, Meta, LinkedIn, TikTok e Shopee na mesma linguagem."
+        ]
+    },
+    {
+        id: "v1.4.0",
+        version: "v1.4.0",
+        date: "Março 04, 2026",
+        title: "Expansão Multi-Plataforma + Exportação PDF Estável",
+        description: "Atualização completa com Shopee Ads, novos blocos visuais padronizados, criativos para todas as redes e melhorias críticas na experiência de geração/exportação de relatórios.",
+        type: "feature",
+        items: [
+            "Shopee Ads integrado ao fluxo de relatórios com métricas de Impressões, Cliques, Pedidos e Investido.",
+            "LinkedIn Ads, TikTok Ads e Shopee Ads agora seguem o mesmo padrão visual premium de Google/Meta no relatório final.",
+            "Criativos liberados para todas as plataformas: Google, Meta, LinkedIn, TikTok e Shopee.",
+            "Melhoria de estabilidade na exportação PDF para reduzir cortes de texto, números truncados e divergência entre preview e arquivo exportado.",
+            "Ajustes de UX no fluxo de criação de relatório e modelos para reduzir fricção operacional e acelerar entrega.",
+            "Atualização da Home e SEO com as novas funcionalidades e plataformas oficialmente suportadas."
+        ]
+    },
+    {
         id: "v1.3.0",
         version: "v1.3.0",
         date: "Fevereiro 21, 2026",

@@ -1,0 +1,315 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=e3]:
+    - navigation [ref=e4]:
+      - link "Akvile DeFazio logo Akvile DeFazio" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img "Akvile DeFazio logo" [ref=e8]
+        - generic [ref=e9]: Akvile DeFazio
+      - generic [ref=e10]:
+        - link "Social Ad AKademy" [ref=e12] [cursor=pointer]:
+          - /url: /social-ad-akademy/
+          - text: Social Ad AKademy
+        - link "Contact" [ref=e13] [cursor=pointer]:
+          - /url: "#contact"
+  - generic [ref=e16]:
+    - generic [ref=e17]:
+      - heading "Cookie Preferences" [level=3] [ref=e18]
+      - paragraph [ref=e19]:
+        - text: We use cookies to improve your experience and analyze site traffic. By clicking "Accept All", you consent to our use of cookies.
+        - link "Learn more" [ref=e20] [cursor=pointer]:
+          - /url: /privacy-policy
+    - generic [ref=e21]:
+      - button "Reject All" [ref=e22] [cursor=pointer]
+      - button "Accept All" [ref=e23] [cursor=pointer]
+  - main [ref=e24]:
+    - generic [ref=e26]:
+      - generic [ref=e27]:
+        - generic [ref=e28]:
+          - img [ref=e29]
+          - text: Agency Growth Expert
+        - heading "Your Partner in Smarter, Profitable Advertising Growth" [level=1] [ref=e31]:
+          - text: Your Partner in Smarter,
+          - generic [ref=e32]: Profitable Advertising
+          - text: Growth
+        - generic [ref=e34]: Expert guidance for growing your agency, business, and advertising results.
+        - link "Book a Consultation" [ref=e36] [cursor=pointer]:
+          - /url: "#contact"
+      - img "Professional business coaching session" [ref=e40]
+    - generic [ref=e42]:
+      - heading "Brands I've Partnered With" [level=3] [ref=e43]
+      - generic [ref=e45]:
+        - img "Care Bears" [ref=e47]
+        - img "Tonka" [ref=e49]
+        - img "Rothy's" [ref=e51]
+        - img "Thermos" [ref=e53]
+        - img "Postmates" [ref=e55]
+        - img "RVshare" [ref=e57]
+        - img "Salt & Straw" [ref=e59]
+        - img "Johnson & Johnson" [ref=e61]
+        - img "Google" [ref=e63]
+        - img "Chipotle" [ref=e65]
+        - img "Care Bears" [ref=e67]
+        - img "Tonka" [ref=e69]
+        - img "Rothy's" [ref=e71]
+        - img "Thermos" [ref=e73]
+        - img "Postmates" [ref=e75]
+        - img "RVshare" [ref=e77]
+        - img "Salt & Straw" [ref=e79]
+        - img "Johnson & Johnson" [ref=e81]
+        - img "Google" [ref=e83]
+        - img "Chipotle" [ref=e85]
+    - generic [ref=e87]:
+      - img "Akvile DeFazio" [ref=e90]
+      - generic [ref=e91]:
+        - generic [ref=e92]: Meet your coach
+        - heading "Hi, I'm Akvile DeFazio — but most call me Ak." [level=2] [ref=e93]
+        - paragraph [ref=e94]: As someone who lives for connecting people, from pairing consumers with brands to introducing friends who've gone on to get married (four couples and counting!), it's what I do best.
+        - paragraph [ref=e95]:
+          - text: That same passion drives my work as the President of AKvertise, an award-winning social media advertising agency. As a four-time founder with nearly 20 years of experience scaling brands both in-house and through my agency, I also share my expertise as an international speaker and author, helping brands, freelancers, and agency owners grow smarter. You can check out my full career journey on
+          - link "LinkedIn" [ref=e96] [cursor=pointer]:
+            - /url: https://www.linkedin.com/in/akdefazio/
+          - text: .
+    - generic [ref=e98]:
+      - generic [ref=e99]:
+        - generic [ref=e100]: What I Do
+        - heading "I partner with you in the way you need most" [level=2] [ref=e101]
+        - paragraph [ref=e102]: Whether you're a brand, agency owner, or marketer, we'll choose the right level of support—hands-on execution, coaching, or training—to get you profitable results faster.
+      - generic [ref=e103]:
+        - generic [ref=e104]:
+          - img "Growth check icon" [ref=e106]
+          - heading "Agency owners" [level=3] [ref=e109]
+          - paragraph [ref=e110]: Streamline delivery, retain clients longer, and scale paid social profitably without burning out your team.
+        - generic [ref=e111]:
+          - img "Star icon" [ref=e113]
+          - heading "Advertisers & marketers" [level=3] [ref=e115]
+          - paragraph [ref=e116]: Level up your skills with coaching and playbooks that simplify targeting, creative, and measurement.
+        - generic [ref=e117]:
+          - img "Bullseye icon" [ref=e119]
+          - heading "Brands & founders" [level=3] [ref=e123]
+          - paragraph [ref=e124]: Build campaigns that drive bookings and revenue, with strategies sized to your goals and budget.
+      - generic [ref=e125]:
+        - generic [ref=e126]:
+          - paragraph [ref=e127]: Ready to align?
+          - heading "Pick your path and let's get moving" [level=3] [ref=e128]
+          - paragraph [ref=e129]: We’ll choose the right mix of strategy, execution, and coaching to hit your targets.
+        - link "Explore services" [ref=e130] [cursor=pointer]:
+          - /url: "#services"
+    - generic [ref=e132]:
+      - generic [ref=e133]:
+        - generic [ref=e134]: How I Can Help
+        - heading "Ways to work together" [level=2] [ref=e135]
+        - paragraph [ref=e136]: Choose the engagement that matches your pace—done-with-you coaching, done-for-you campaign execution, or deep-dive workshops for your team.
+      - generic [ref=e137]:
+        - generic [ref=e138]:
+          - heading "Done-for-you ads" [level=3] [ref=e139]
+          - paragraph [ref=e140]: Full campaign build, creative guidance, and weekly optimization to hit ROAS and booking targets.
+          - list [ref=e141]:
+            - listitem [ref=e142]:
+              - generic [ref=e143]: •
+              - text: Strategy, build, and launch
+            - listitem [ref=e144]:
+              - generic [ref=e145]: •
+              - text: Creative and copy direction
+            - listitem [ref=e146]:
+              - generic [ref=e147]: •
+              - text: Reporting you can act on
+        - generic [ref=e148]:
+          - heading "Coaching & advisory" [level=3] [ref=e149]
+          - paragraph [ref=e150]: Hands-on guidance for you or your team to sharpen targeting, creative testing, and measurement.
+          - list [ref=e151]:
+            - listitem [ref=e152]:
+              - generic [ref=e153]: •
+              - text: Live working sessions
+            - listitem [ref=e154]:
+              - generic [ref=e155]: •
+              - text: Playbooks and checklists
+            - listitem [ref=e156]:
+              - generic [ref=e157]: •
+              - text: Email support between calls
+        - generic [ref=e158]:
+          - heading "Team workshops" [level=3] [ref=e159]
+          - paragraph [ref=e160]: Interactive sessions to upskill your team on creative, targeting, and analytics across Meta.
+          - list [ref=e161]:
+            - listitem [ref=e162]:
+              - generic [ref=e163]: •
+              - text: Custom agendas by role
+            - listitem [ref=e164]:
+              - generic [ref=e165]: •
+              - text: Live build/critique with your assets
+            - listitem [ref=e166]:
+              - generic [ref=e167]: •
+              - text: Follow-up Q&A to lock in learnings
+      - generic [ref=e168]:
+        - generic [ref=e169]:
+          - paragraph [ref=e170]: Next step
+          - heading "Tell me your goal, I'll map the path" [level=3] [ref=e171]
+          - paragraph [ref=e172]: Share a few details and I'll recommend the fastest way to work together.
+        - link "Book a call" [ref=e173] [cursor=pointer]:
+          - /url: "#contact"
+    - generic [ref=e177]:
+      - generic [ref=e178]:
+        - generic [ref=e179]: What I Do
+        - heading "Where You'll Find Me" [level=2] [ref=e180]
+        - paragraph [ref=e181]: Podcasts, conferences, press mentions, and articles where I share practical advertising strategies and real-world lessons.
+      - generic [ref=e182]:
+        - generic [ref=e183]:
+          - generic [ref=e184]:
+            - generic [ref=e185]: Podcasts
+            - generic [ref=e186]: Conferences
+            - generic [ref=e187]: Press & Articles
+          - heading "Bring a practitioner to your audience." [level=3] [ref=e188]
+          - paragraph [ref=e189]: I speak on paid social, creative testing, and building resilient agency systems. Expect actionable takeaways, live examples, and frameworks teams can use the same day.
+          - generic [ref=e190]:
+            - generic [ref=e191]:
+              - paragraph [ref=e192]: 60+
+              - paragraph [ref=e193]: Talks & trainings
+            - generic [ref=e194]:
+              - paragraph [ref=e195]: 15k+
+              - paragraph [ref=e196]: Attendees reached
+            - generic [ref=e197]:
+              - paragraph [ref=e198]: Global
+              - paragraph [ref=e199]: Virtual & in-person
+          - link "Book Ak for speaking or writing Arrow down" [ref=e200] [cursor=pointer]:
+            - /url: "#contact"
+            - text: Book Ak for speaking or writing
+            - img "Arrow down" [ref=e201]
+        - generic [ref=e203]:
+          - generic [ref=e204]:
+            - generic [ref=e206]:
+              - img "Spotify" [ref=e208]
+              - generic [ref=e210]:
+                - paragraph [ref=e211]: Podcasts
+                - heading "Curated playlist of guest interviews" [level=4] [ref=e212]
+            - paragraph [ref=e213]: Listen to conversations on creative testing, profitable scaling, and running a modern agency.
+            - link "Play icon Play on Spotify" [ref=e214] [cursor=pointer]:
+              - /url: https://open.spotify.com/playlist/3pJx13sqWd0StmiUqJsj5p?si=277b95e5ffad4e82
+              - img "Play icon" [ref=e215]
+              - text: Play on Spotify
+          - generic [ref=e217]:
+            - generic [ref=e218]:
+              - img "Menu icon" [ref=e220]
+              - generic [ref=e222]:
+                - paragraph [ref=e223]: Featured Articles
+                - heading "Recent bylines & interviews" [level=4] [ref=e224]
+            - list [ref=e225]:
+              - listitem [ref=e226]:
+                - img "Publication icon" [ref=e228]
+                - generic [ref=e229]:
+                  - link "Meta Ads eCommerce Tactics to Increase Sales →" [ref=e230] [cursor=pointer]:
+                    - /url: https://www.wix.com/seo/learn/resource/meta-ads-ecommerce-tactics-to-increase-sales
+                  - paragraph [ref=e231]: Wix
+              - listitem [ref=e232]:
+                - img "Publication icon" [ref=e234]
+                - generic [ref=e235]:
+                  - 'link "Cross-Platform Ad Creative: Meta, TikTok, Pinterest →" [ref=e236] [cursor=pointer]':
+                    - /url: https://searchengineland.com/cross-platform-ad-creative-meta-tiktok-pinterest-461721
+                  - paragraph [ref=e237]: Search Engine Land
+              - listitem [ref=e238]:
+                - img "Publication icon" [ref=e240]
+                - generic [ref=e241]:
+                  - link "Meta Ads Targeting Strategies →" [ref=e242] [cursor=pointer]:
+                    - /url: https://www.optmyzr.com/blog/meta-ads-targeting-strategies/
+                  - paragraph [ref=e243]: Optmyzr
+    - generic [ref=e245]:
+      - generic [ref=e246]:
+        - generic [ref=e247]: Client Success
+        - heading "What Clients Say About My Work" [level=2] [ref=e248]
+        - paragraph [ref=e249]: Hear from teams and leaders who've used these strategies to scale profitably.
+      - generic [ref=e250]:
+        - generic [ref=e251]:
+          - paragraph [ref=e252]: "\"We hired Akvile for her thought leadership and impressive knowledge of various systems. It's been great to both entrust her with fully handling our campaigns and to work collaboratively on challenging, high energy projects. Both have provided strong results and a clear ROI.\""
+          - generic [ref=e253]:
+            - paragraph [ref=e254]: Kristina Damschen
+            - paragraph [ref=e255]: Director of Marketing, Indow Windows
+        - generic [ref=e256]:
+          - paragraph [ref=e257]: "\"Akvile did a great job helping audit our social media advertising efforts at Postmates, then rolled up her sleeves and helped re-set and manage our retargeting programs on an interim basis. She is super skilled at research and targeting strategies. I'd work with her again any day.\""
+          - generic [ref=e258]:
+            - paragraph [ref=e259]: George Revutsky
+            - paragraph [ref=e260]: VP of Growth, Postmates
+        - generic [ref=e261]:
+          - paragraph [ref=e262]: "\"Akvile has been a valuable asset to our company's continued growth in paid media. She's a pleasure to work with and her insights have helped shape our strategies. The results speak to her expertise!\""
+          - generic [ref=e263]:
+            - paragraph [ref=e264]: Hannah Moyer
+            - paragraph [ref=e265]: Head of Paid Media, Blue Light Media
+    - generic [ref=e267]:
+      - generic [ref=e268]:
+        - paragraph [ref=e269]: Get in touch
+        - heading "Let's Talk About Growing Your Business" [level=2] [ref=e270]
+        - paragraph [ref=e271]: Ready to take your advertising, agency, or business to the next level? Fill out the form below, and I'll personally get back to you soon. I look forward to connecting.
+      - generic [ref=e272]:
+        - generic [ref=e273]:
+          - generic [ref=e274]: Full Name *
+          - textbox "Full Name required" [ref=e275]:
+            - /placeholder: Enter Name
+        - generic [ref=e276]:
+          - generic [ref=e277]: Email Address *
+          - textbox "Email Address required" [ref=e278]:
+            - /placeholder: name@example.com
+          - paragraph [ref=e279]: I'll respond to you at this address
+        - generic [ref=e280]:
+          - generic [ref=e281]: Website *
+          - textbox "Website required" [ref=e282]:
+            - /placeholder: https://example.com
+          - paragraph [ref=e283]: Include https:// in your URL
+        - generic [ref=e284]:
+          - generic [ref=e285]: Tell Me About Your Challenges/Goals *
+          - textbox "Tell Me About Your Challenges/Goals required" [ref=e286]
+          - generic [ref=e287]:
+            - paragraph [ref=e288]: Share what you're looking to achieve
+            - paragraph [ref=e289]: 0/1000
+        - generic [ref=e290]:
+          - generic [ref=e291]: How Did You Hear About Me? *
+          - combobox "How Did You Hear About Me? required" [ref=e292]:
+            - option "Select an option" [selected]
+            - option "Search Engine"
+            - option "Meta (FB/IG)"
+            - option "LinkedIn"
+            - option "Threads"
+            - option "X"
+            - option "From a publication"
+            - option "From an event"
+            - option "Other"
+        - button "Submit" [ref=e293] [cursor=pointer]
+  - contentinfo [ref=e294]:
+    - generic [ref=e295]:
+      - generic [ref=e296]:
+        - generic [ref=e297]:
+          - img "Akvile DeFazio logo" [ref=e299]
+          - generic [ref=e300]:
+            - paragraph [ref=e301]: Akvile DeFazio
+            - paragraph [ref=e302]: Paid social strategist & founder of AKvertise, Inc.
+        - paragraph [ref=e303]: Helping brands and agencies drive profitable growth with hands-on Meta Ads strategy, workshops, and coaching.
+        - generic [ref=e304]:
+          - link "LinkedIn" [ref=e305] [cursor=pointer]:
+            - /url: https://www.linkedin.com/in/akdefazio/
+            - img "LinkedIn" [ref=e306]
+          - link "Instagram" [ref=e308] [cursor=pointer]:
+            - /url: https://www.instagram.com/akvile.defazio
+            - img "Instagram" [ref=e309]
+          - link "Threads" [ref=e311] [cursor=pointer]:
+            - /url: https://www.threads.com/@akviledefazio
+            - img "Threads" [ref=e312]
+          - link "X" [ref=e314] [cursor=pointer]:
+            - /url: https://x.com/AkvileDeFazio
+            - img "X" [ref=e315]
+      - generic [ref=e317]:
+        - generic [ref=e318]:
+          - paragraph [ref=e319]: Navigate
+          - generic [ref=e320]:
+            - link "Home" [ref=e321] [cursor=pointer]:
+              - /url: /
+            - link "Contact" [ref=e322] [cursor=pointer]:
+              - /url: /#contact
+        - generic [ref=e323]:
+          - paragraph [ref=e324]: Community
+          - link "Social Ad AKademy" [ref=e326] [cursor=pointer]:
+            - /url: /social-ad-akademy/
+    - generic [ref=e327]:
+      - paragraph [ref=e328]: © 2026 AKvertise, Inc. All rights reserved.
+      - generic [ref=e329]:
+        - link "Privacy Policy" [ref=e330] [cursor=pointer]:
+          - /url: /privacy-policy/
+        - link "Terms of Service" [ref=e331] [cursor=pointer]:
+          - /url: /terms-of-service/

@@ -1,0 +1,145 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e2]: Press Option+1 for screen-reader mode, Option+0 to cancel
+  - button "Use Website In a Screen-Reader Mode" [ref=e3]
+  - link "Accessibility Screen-Reader Guide, Feedback, and Issue Reporting | New window" [ref=e4] [cursor=pointer]:
+    - /url: https://accessibe.com/blog/knowledgebase/screen-reader-guide
+  - generic:
+    - generic:
+      - region "Skip Links":
+        - generic:
+          - link "Skip to Content":
+            - /url: "#acsbContent"
+            - text: Skip to Content
+            - generic:
+              - generic: ↵
+              - text: ENTER
+        - generic:
+          - link "Skip to Menu":
+            - /url: "#acsbMenu"
+            - text: Skip to Menu
+            - generic:
+              - generic: ↵
+              - text: ENTER
+        - generic:
+          - link "Skip to Footer":
+            - /url: "#acsbFooter"
+            - text: Skip to Footer
+            - generic:
+              - generic: ↵
+              - text: ENTER
+  - dialog [ref=e5]:
+    - generic [ref=e6]:
+      - img [ref=e7]
+      - text: Simplify Text
+    - button [ref=e9] [cursor=pointer]:
+      - img [ref=e10]
+  - 'button "Open accessiBe: accessibility options, statement and help" [ref=e13] [cursor=pointer]':
+    - generic:
+      - img [ref=e14]
+      - img
+      - img
+  - navigation [ref=e18]:
+    - list [ref=e24]:
+      - listitem [ref=e25]:
+        - link "X" [ref=e26] [cursor=pointer]:
+          - /url: https://twitter.com/social_savannah
+          - img "X" [ref=e28]
+      - listitem [ref=e29]:
+        - link "" [ref=e30] [cursor=pointer]:
+          - /url: https://www.linkedin.com/in/savannahsanchez
+          - generic [ref=e31]: 
+      - listitem [ref=e32]:
+        - link "" [ref=e33] [cursor=pointer]:
+          - /url: https://www.instagram.com/thesocialsavannah/
+          - generic [ref=e34]: 
+    - generic [ref=e35]:
+      - link "savannah Sanchez Logo" [ref=e37] [cursor=pointer]:
+        - /url: https://thesocialsavannah.com/
+        - img "savannah Sanchez Logo" [ref=e38]
+      - list [ref=e40]:
+        - listitem [ref=e41]:
+          - link "AD EXAMPLES" [ref=e42] [cursor=pointer]:
+            - /url: https://thesocialsavannah.com/ad-examples
+        - listitem [ref=e43]:
+          - link "CASE STUDIES" [ref=e44] [cursor=pointer]:
+            - /url: https://thesocialsavannah.com/case-studies
+        - listitem [ref=e45]:
+          - link "CLIENTS" [ref=e46] [cursor=pointer]:
+            - /url: https://thesocialsavannah.com/clients
+      - list [ref=e48]:
+        - listitem [ref=e49]:
+          - link "VIDEOS" [ref=e50] [cursor=pointer]:
+            - /url: https://thesocialsavannah.com/videos
+        - listitem [ref=e51]:
+          - link "PRESS" [ref=e52] [cursor=pointer]:
+            - /url: https://thesocialsavannah.com/press
+        - listitem [ref=e53]:
+          - link "Contact" [ref=e54] [cursor=pointer]:
+            - /url: https://thesocialsavannah.com/contact
+        - text:   
+    - text: 
+  - generic [ref=e55]:
+    - heading "Contact" [level=1] [ref=e60]
+    - generic [ref=e63]:
+      - generic [ref=e65]:
+        - img "Savannah Sanchez" [ref=e68]
+        - generic [ref=e69]: Savannah Sanchez
+        - generic [ref=e70]: Ad Creative Expert
+        - list [ref=e72]:
+          - listitem [ref=e73]:
+            - link "X" [ref=e74] [cursor=pointer]:
+              - /url: https://twitter.com/social_savannah
+              - img "X" [ref=e76]
+          - listitem [ref=e77]:
+            - link "" [ref=e78] [cursor=pointer]:
+              - /url: https://www.linkedin.com/in/savannahsanchez
+              - generic [ref=e79]: 
+          - listitem [ref=e80]:
+            - link "" [ref=e81] [cursor=pointer]:
+              - /url: https://www.instagram.com/thesocialsavannah/
+              - generic [ref=e82]: 
+      - generic [ref=e84]:
+        - textbox "name" [ref=e85]:
+          - /placeholder: Name*
+        - textbox "email" [ref=e86]:
+          - /placeholder: Email*
+        - textbox "Website" [ref=e87]:
+          - /placeholder: Website *
+        - textbox "message" [ref=e88]:
+          - /placeholder: Message *
+        - button "Submit" [disabled] [ref=e89]
+  - contentinfo [ref=e90]:
+    - generic [ref=e92]:
+      - link "social networking consultants" [ref=e94] [cursor=pointer]:
+        - /url: https://thesocialsavannah.com/
+        - img "social networking consultants" [ref=e95]
+      - generic [ref=e96]:
+        - list [ref=e98]:
+          - listitem [ref=e99]:
+            - link "Videos" [ref=e100] [cursor=pointer]:
+              - /url: https://thesocialsavannah.com/videos
+          - listitem [ref=e101]:
+            - link "Contact" [ref=e102] [cursor=pointer]:
+              - /url: https://thesocialsavannah.com/contact
+          - listitem [ref=e103]:
+            - link "Accessibility Statement" [ref=e104] [cursor=pointer]:
+              - /url: https://thesocialsavannah.com/accessibility-statement
+        - generic [ref=e105]:
+          - text: 2026 ©
+          - link "The Social Savannah" [ref=e106] [cursor=pointer]:
+            - /url: https://thesocialsavannah.com/
+      - generic [ref=e107]:
+        - heading "Newsletter signup" [level=3] [ref=e109]
+        - list [ref=e110]:
+          - listitem [ref=e111]:
+            - link "X" [ref=e112] [cursor=pointer]:
+              - /url: https://twitter.com/social_savannah
+              - img "X" [ref=e114]
+          - listitem [ref=e115]:
+            - link "" [ref=e116] [cursor=pointer]:
+              - /url: https://www.linkedin.com/in/savannahsanchez
+              - generic [ref=e117]: 
+          - listitem [ref=e118]:
+            - link "" [ref=e119] [cursor=pointer]:
+              - /url: https://www.instagram.com/thesocialsavannah/
+              - generic [ref=e120]: 

@@ -15,22 +15,66 @@ import { Button } from "@/components/ui/button";
 import PublicLayout from "@/components/home/PublicLayout";
 import SEOHead from "@/components/SEOHead";
 import BlogCTA from "@/components/blog/BlogCTA";
+import ButtonShowcaseSection from "@/components/blog/ButtonShowcaseSection";
 import { blogPosts } from "@/data/blogPosts";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useTheme } from "@/components/ThemeProvider";
 import { useTrackView, useLike } from "@/hooks/useBlogMetrics";
 
 const parsePostDate = (dateStr: string) =>
     new Date(dateStr.includes("T") ? dateStr : `${dateStr}T12:00:00`);
 const BLOG_FALLBACK_COVER = "/blog/cover-1.png";
-const BASE_URL = import.meta.env.VITE_SITE_URL || "https://vurp.vercel.app";
+const BASE_URL = import.meta.env.VITE_SITE_URL || "https://vurp.space";
 const validBlogPosts = blogPosts.filter((p): p is (typeof blogPosts)[number] => Boolean(p && typeof p.slug === "string"));
+const BUTTONS_ARTICLE_SLUG = "botoes-css-react-efeitos-e-importancia";
+
+const splitMarkdownForCta = (content: string, preferredHeading?: string) => {
+    const trimmed = content.trim();
+    if (!trimmed) return { firstHalf: "", secondHalf: "" };
+
+    if (preferredHeading) {
+        const preferredIndex = trimmed.indexOf(preferredHeading);
+        if (preferredIndex > 0) {
+            return {
+                firstHalf: trimmed.slice(0, preferredIndex).trim(),
+                secondHalf: trimmed.slice(preferredIndex).trim(),
+            };
+        }
+    }
+
+    const headingRegex = /\n##\s+/g;
+    const headingIndexes: number[] = [];
+    let match = headingRegex.exec(trimmed);
+    while (match) {
+        headingIndexes.push(match.index + 1);
+        match = headingRegex.exec(trimmed);
+    }
+
+    if (headingIndexes.length > 0) {
+        const target = Math.floor(trimmed.length / 2);
+        const splitIndex = headingIndexes.reduce((best, current) =>
+            Math.abs(current - target) < Math.abs(best - target) ? current : best
+        , headingIndexes[0]);
+
+        if (splitIndex > 0 && splitIndex < trimmed.length - 1) {
+            return {
+                firstHalf: trimmed.slice(0, splitIndex).trim(),
+                secondHalf: trimmed.slice(splitIndex).trim(),
+            };
+        }
+    }
+
+    const paragraphs = trimmed.split("\n\n");
+    const midpoint = Math.floor(paragraphs.length / 2);
+    return {
+        firstHalf: paragraphs.slice(0, midpoint).join("\n\n").trim(),
+        secondHalf: paragraphs.slice(midpoint).join("\n\n").trim(),
+    };
+};
 
 const BlogPostPage = () => {
     const { slug } = useParams<{ slug: string }>();
     const post = validBlogPosts.find((p) => p.slug === slug);
-    const { theme } = useTheme();
 
     // Track view + like
     useTrackView(slug);
@@ -67,6 +111,7 @@ const BlogPostPage = () => {
             return Number.isFinite(ts) && ts <= Date.now();
         })
         .slice(0, 3);
+    const isButtonsArticle = post.slug === BUTTONS_ARTICLE_SLUG;
 
     const formatDate = (dateStr: string) => {
         const date = parsePostDate(dateStr);
@@ -94,13 +139,13 @@ const BlogPostPage = () => {
     const safeCoverImage = typeof post.coverImage === "string" && post.coverImage.length > 0 ? post.coverImage : BLOG_FALLBACK_COVER;
     const absoluteCover = safeCoverImage.startsWith("http") ? safeCoverImage : `${BASE_URL}${safeCoverImage}`;
 
-    // Split content in half for mid-article CTA insertion
-    const paragraphs = safeContent.split("\n\n");
-    const midPoint = Math.floor(paragraphs.length / 2);
-    const firstHalf = paragraphs.slice(0, midPoint).join("\n\n");
-    const secondHalf = paragraphs.slice(midPoint).join("\n\n");
+    const normalizedContent = safeContent.replace(/\r\n/g, "\n");
+    const { firstHalf, secondHalf } = splitMarkdownForCta(
+        normalizedContent,
+        isButtonsArticle ? "## Quando usar CSS puro vs React" : undefined
+    );
 
-    const proseClasses = `prose ${theme === "dark" ? "prose-invert" : ""} prose-lg max-w-none
+    const proseClasses = `prose prose-neutral dark:prose-invert prose-lg max-w-none
         prose-headings:text-foreground prose-headings:font-bold
         prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4
         prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
@@ -181,7 +226,7 @@ const BlogPostPage = () => {
 
             <article className="pt-4 sm:pt-8 pb-12 sm:pb-20">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="lg:grid lg:grid-cols-[1fr_340px] lg:gap-12">
+                    <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_340px] lg:gap-12">
                         {/* Main Content */}
                         <div className="max-w-none">
                             {/* Breadcrumbs */}
@@ -305,6 +350,8 @@ const BlogPostPage = () => {
                                 imageSrc={safeCoverImage}
                             />
 
+                            {isButtonsArticle && <ButtonShowcaseSection />}
+
                             {/* Article Body - Second Half */}
                             <div className={proseClasses}>
                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -323,7 +370,7 @@ const BlogPostPage = () => {
                         </div>
 
                         {/* Sidebar */}
-                        <aside className="hidden lg:block mt-24">
+                        <aside className="mt-6 lg:mt-24">
                             <div className="sticky top-28 space-y-8">
                                 {/* Author Card */}
                                 <div className="rounded-2xl bg-card border border-border p-6 space-y-4">

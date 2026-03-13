@@ -16,10 +16,13 @@ const HomePage = () => {
         applicationCategory: "BusinessApplication",
         operatingSystem: "Web",
         description:
-            "Plataforma para gestores de tráfego pago importarem dados do Google Ads e Meta Ads, transformarem em dashboard personalizado e exportarem relatórios profissionais em PDF e link.",
+            "Plataforma para gestores de tráfego pago organizarem Google Ads, Meta Ads, TikTok Ads, LinkedIn Ads e Shopee Ads, transformarem em dashboard personalizado e exportarem relatórios profissionais em PDF e link.",
         featureList: [
             "Importação de dados Google Ads",
             "Importação de dados Meta Ads",
+            "Importação de dados TikTok Ads",
+            "Importação de dados LinkedIn Ads",
+            "Importação de dados Shopee Ads",
             "Transformação automática de dashboard",
             "Relatórios profissionais em PDF e link",
             "Resumo com IA para envio ao cliente",
@@ -33,8 +36,8 @@ const HomePage = () => {
         <main className="min-h-screen bg-background text-foreground overflow-x-hidden">
             <SEOHead
                 title="Vurp - Plataforma para Gestores de Tráfego Pago"
-                description="Importe Google Ads e Meta Ads, transforme em dashboard profissional e envie relatórios prontos em PDF e link. Plataforma completa para gestores de tráfego pago."
-                keywords="google ads dashboard, meta ads dashboard, relatório tráfego pago, dashboard para agência, gestor de tráfego, relatório pdf marketing, automação de relatório, vurp"
+                description="Organize Google Ads, Meta Ads, TikTok Ads, LinkedIn Ads e Shopee Ads, transforme em dashboard profissional e envie relatórios prontos em PDF e link. Plataforma completa para gestores de tráfego pago."
+                keywords="google ads dashboard, meta ads dashboard, tiktok ads dashboard, linkedin ads dashboard, shopee ads dashboard, relatório tráfego pago, dashboard para agência, gestor de tráfego, relatório pdf marketing, automação de relatório, vurp"
                 path="/"
                 jsonLd={homeJsonLd}
             />

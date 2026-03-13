@@ -1,399 +1,399 @@
-import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { animate, stagger } from "animejs";
 import { Button } from "@/components/ui/button";
 import {
-    CheckSquare,
-    FileBarChart,
-    Trophy,
-    CalendarDays,
-    Wallet,
-    BarChart3,
-    Users,
-    LayoutTemplate,
-    ArrowRight,
-    Shield,
-    Zap,
-    Globe,
-    CheckCircle2,
-    Star,
+  ArrowRight,
+  BarChart3,
+  CalendarDays,
+  CheckCircle2,
+  CheckSquare,
+  FileBarChart,
+  Layers3,
+  LayoutTemplate,
+  Shield,
+  Sparkles,
+  Trophy,
+  Users,
+  Wallet,
 } from "lucide-react";
-import { FaGoogle, FaMeta, FaTiktok, FaLinkedin } from "react-icons/fa6";
 import PublicLayout from "@/components/home/PublicLayout";
 import SEOHead from "@/components/SEOHead";
-import { GoogleLogo, MetaLogo, TikTokLogo, LinkedInLogo } from "@/components/BrandLogos";
+import { GoogleLogo, LinkedInLogo, MetaLogo, ShopeeLogo, TikTokLogo } from "@/components/BrandLogos";
 
-const features = [
-    {
-        icon: CheckSquare,
-        title: "Checklist Inteligente",
-        description:
-            "Crie checklists personalizáveis para cada cliente. Defina tarefas recorrentes, acompanhe progresso em tempo real e nunca mais esqueça uma etapa.",
-        highlights: ["Tarefas recorrentes", "Progresso em tempo real", "Templates reutilizáveis"],
-        color: "from-emerald-500/20 to-emerald-500/5",
-        iconColor: "text-emerald-400",
-        iconBg: "bg-emerald-500/10",
-        border: "border-emerald-500/20",
-        gradient: "from-emerald-400 to-green-500",
-        progress: 92,
-    },
-    {
-        icon: FileBarChart,
-        title: "Relatórios Profissionais",
-        description:
-            "Relatórios completos com métricas de Google Ads, Meta Ads, TikTok Ads e LinkedIn Ads. Exporte em PDF com a marca da sua agência.",
-        highlights: ["Multi-plataforma", "Exportação em PDF", "Marca personalizada"],
-        color: "from-blue-500/20 to-blue-500/5",
-        iconColor: "text-blue-400",
-        iconBg: "bg-blue-500/10",
-        border: "border-blue-500/20",
-        gradient: "from-blue-400 to-cyan-500",
-        progress: 65,
-    },
-    {
-        icon: Trophy,
-        title: "Gamificação & Conquistas",
-        description:
-            "Sistema de gamificação que mantém você e sua equipe motivados. Desbloqueie conquistas conforme completa tarefas e atinge metas.",
-        highlights: ["Conquistas desbloqueáveis", "Rankings da equipe", "Metas personalizadas"],
-        color: "from-amber-500/20 to-amber-500/5",
-        iconColor: "text-amber-400",
-        iconBg: "bg-amber-500/10",
-        border: "border-amber-500/20",
-        gradient: "from-amber-400 to-yellow-500",
-        progress: 84,
-    },
-    {
-        icon: CalendarDays,
-        title: "Calendário de Entregas",
-        description:
-            "Organize datas de recargas, entregas de relatórios e reuniões em um calendário visual. Receba lembretes e nunca perca um prazo.",
-        highlights: ["Lembretes automáticos", "Visualização mensal", "Integração com tarefas"],
-        color: "from-purple-500/20 to-purple-500/5",
-        iconColor: "text-purple-400",
-        iconBg: "bg-purple-500/10",
-        border: "border-purple-500/20",
-        gradient: "from-purple-400 to-violet-500",
-        progress: 47,
-    },
-    {
-        icon: Wallet,
-        title: "Controle Financeiro",
-        description:
-            "Acompanhe investimentos por cliente, previsão de saldo e controle de verba. Visibilidade total sobre a saúde financeira de cada conta.",
-        highlights: ["Previsão de saldo", "Controle por cliente", "Histórico de investimentos"],
-        color: "from-green-500/20 to-green-500/5",
-        iconColor: "text-green-400",
-        iconBg: "bg-green-500/10",
-        border: "border-green-500/20",
-        gradient: "from-green-400 to-emerald-500",
-        progress: 73,
-    },
-    {
-        icon: BarChart3,
-        title: "Dashboard Gerencial",
-        description:
-            "Visão panorâmica de todos os clientes, métricas de produtividade e performance da equipe. Tudo num painel único e intuitivo.",
-        highlights: ["Visão 360°", "KPIs em tempo real", "Filtros avançados"],
-        color: "from-cyan-500/20 to-cyan-500/5",
-        iconColor: "text-cyan-400",
-        iconBg: "bg-cyan-500/10",
-        border: "border-cyan-500/20",
-        gradient: "from-cyan-400 to-blue-500",
-        progress: 58,
-    },
-    {
-        icon: Users,
-        title: "Gestão Multi-Gestor",
-        description:
-            "Gerencie equipes com múltiplos gestores de tráfego. Atribua clientes, controle acessos e monitore o desempenho de cada membro.",
-        highlights: ["Controle de acessos", "Atribuição de clientes", "Monitoramento"],
-        color: "from-rose-500/20 to-rose-500/5",
-        iconColor: "text-rose-400",
-        iconBg: "bg-rose-500/10",
-        border: "border-rose-500/20",
-        gradient: "from-rose-400 to-pink-500",
-        progress: 89,
-    },
-    {
-        icon: LayoutTemplate,
-        title: "Modelos Customizáveis",
-        description:
-            "Crie e reutilize templates de relatórios. Padronize a comunicação com seus clientes e economize tempo na geração de reports.",
-        highlights: ["Templates salvos", "Personalização total", "Economia de tempo"],
-        color: "from-indigo-500/20 to-indigo-500/5",
-        iconColor: "text-indigo-400",
-        iconBg: "bg-indigo-500/10",
-        border: "border-indigo-500/20",
-        gradient: "from-indigo-400 to-violet-500",
-        progress: 35,
-    },
+const heroStats = [
+  { value: "5", label: "plataformas no mesmo relatório" },
+  { value: "PDF + link", label: "entrega profissional pronta" },
+  { value: "1 fluxo", label: "do briefing à exportação" },
 ];
 
-const platforms = [
-    { name: "Google Ads", icon: GoogleLogo },
-    { name: "Meta Ads", icon: MetaLogo },
-    { name: "TikTok Ads", icon: TikTokLogo },
-    { name: "LinkedIn Ads", icon: LinkedInLogo },
+const showcaseCards = [
+  {
+    title: "Dashboard gerencial real",
+    copy: "Cliente, verba, produtividade, relatórios e operação em uma visão única.",
+    image: "/hero-dashboard-vurp.png",
+    tone: "from-emerald-500/20 via-emerald-500/5 to-transparent",
+  },
+  {
+    title: "Relatórios com aparência premium",
+    copy: "Google, Meta, LinkedIn, TikTok e Shopee Ads no mesmo padrão visual.",
+    image: "/showcase/reports.png",
+    tone: "from-cyan-500/20 via-cyan-500/5 to-transparent",
+  },
+  {
+    title: "Checklist e rotina operacional",
+    copy: "A entrega deixa de depender de memória e vira processo reproduzível.",
+    image: "/showcase/checklist.png",
+    tone: "from-amber-500/20 via-amber-500/5 to-transparent",
+  },
 ];
 
-const stats = [
-    { value: "500+", label: "Gestores ativos" },
-    { value: "10k+", label: "Relatórios gerados" },
-    { value: "99.9%", label: "Uptime garantido" },
-    { value: "4.9", label: "Nota média", extra: "★" },
+const featureRows = [
+  {
+    eyebrow: "Organização operacional",
+    title: "Checklists, calendário e rotina no mesmo ritmo da agência.",
+    description:
+      "O Vurp não tenta parecer um painel bonito apenas no marketing. Ele organiza o trabalho real: tarefas recorrentes, datas de entrega, recargas, reuniões, cobranças e responsáveis.",
+    bullets: [
+      "Checklist por cliente e por gestor",
+      "Calendário de entregas e alertas operacionais",
+      "Visão clara do que está atrasado, concluído ou em risco",
+    ],
+    image: "/showcase/calendar.png",
+    icon: CalendarDays,
+  },
+  {
+    eyebrow: "Relatórios e templates",
+    title: "Criar relatório deixou de ser um gargalo manual.",
+    description:
+      "Você pode gerar do zero ou partir de modelos salvos. A estrutura do relatório fica consistente, a equipe ganha velocidade e o cliente recebe algo com padrão profissional, não improvisado.",
+    bullets: [
+      "Templates reutilizáveis por operação ou cliente",
+      "Seleção de métricas por plataforma",
+      "Exportação pronta para PDF sem retrabalho visual",
+    ],
+    image: "/showcase/reports.png",
+    icon: FileBarChart,
+  },
+  {
+    eyebrow: "Gestão de agência",
+    title: "Financeiro, produtividade e carteira sob controle.",
+    description:
+      "A plataforma também resolve a camada gerencial: quanto entrou, quanto foi investido, quais clientes exigem atenção, quem está produzindo e onde a operação está travando.",
+    bullets: [
+      "Controle por cliente e por gestor",
+      "Indicadores de saúde da carteira",
+      "Leitura rápida para tomada de decisão diária",
+    ],
+    image: "/showcase/dashboard.png",
+    icon: BarChart3,
+  },
+];
+
+const platformCards = [
+  {
+    name: "Google Ads",
+    icon: GoogleLogo,
+    metrics: ["Cliques", "Impressões", "Conversões", "Investido", "CPL", "CPA"],
+  },
+  {
+    name: "Meta Ads",
+    icon: MetaLogo,
+    metrics: ["Impressões", "Engajamento", "Conversas", "Investido", "Cliques link", "Leads"],
+  },
+  {
+    name: "LinkedIn Ads",
+    icon: LinkedInLogo,
+    metrics: ["Impressões", "Cliques", "Leads", "CTR", "CPC", "Investido"],
+  },
+  {
+    name: "TikTok Ads",
+    icon: TikTokLogo,
+    metrics: ["Impressões", "Cliques", "Leads", "CTR", "CPC", "Investido"],
+  },
+  {
+    name: "Shopee Ads",
+    icon: ShopeeLogo,
+    metrics: ["Impressões", "Cliques", "Pedidos", "ROAS", "Custo", "Investido"],
+  },
+];
+
+const utilityCards = [
+  {
+    icon: CheckSquare,
+    title: "Checklist inteligente",
+    text: "Processo operacional padronizado para não perder entrega.",
+  },
+  {
+    icon: LayoutTemplate,
+    title: "Modelos reaproveitáveis",
+    text: "Monte uma vez e use em escala com a equipe toda.",
+  },
+  {
+    icon: Users,
+    title: "Multi-gestor",
+    text: "Acompanhe quem está operando, entregando e travando.",
+  },
+  {
+    icon: Wallet,
+    title: "Financeiro e saldo",
+    text: "Leia rapidamente investimento, carteira e risco operacional.",
+  },
+  {
+    icon: Trophy,
+    title: "Conquistas e engajamento",
+    text: "Gamificação para manter ritmo e disciplina de execução.",
+  },
+  {
+    icon: Shield,
+    title: "Entrega com validação",
+    text: "Relatório exportado com rastreabilidade e aparência premium.",
+  },
 ];
 
 const FeaturesPage = () => {
-    return (
-        <PublicLayout>
-            <SEOHead
-                title="Funcionalidades"
-                description="Checklist inteligente, relatórios multi-plataforma, gamificação, calendário de entregas, controle financeiro e mais. Conheça tudo que o Vurp oferece."
-                path="/features"
-                breadcrumbs={[
-                    { name: "Funcionalidades", path: "/features" },
-                ]}
-            />
+  const heroRef = useRef<HTMLDivElement | null>(null);
+  const collageRef = useRef<HTMLDivElement | null>(null);
+  const utilitiesRef = useRef<HTMLDivElement | null>(null);
 
-            {/* ═══════ HERO ═══════ */}
-            <section className="pt-20 sm:pt-28 pb-12">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                        className="text-center mb-12"
-                    >
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-                            <Zap className="w-4 h-4" />
-                            8 módulos integrados
-                        </div>
-                        <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-foreground leading-tight">
-                            Tudo que você precisa.
-                            <br />
-                            <span className="vcd-gradient-text">
-                                Num só lugar.
-                            </span>
-                        </h1>
-                        <p className="text-muted-foreground mt-6 max-w-2xl mx-auto text-lg">
-                            O Vurp reúne organização, relatórios, financeiro e gamificação
-                            para gestores de tráfego que querem escalar com profissionalismo.
-                        </p>
-                    </motion.div>
+  useEffect(() => {
+    if (heroRef.current) {
+      animate(heroRef.current.querySelectorAll("[data-hero-copy]"), {
+        translateY: [28, 0],
+        opacity: [0, 1],
+        easing: "easeOutExpo",
+        delay: stagger(90),
+        duration: 900,
+      });
+    }
 
-                    {/* Platforms */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="flex flex-wrap items-center justify-center gap-3 mb-8"
-                    >
-                        <span className="text-sm text-muted-foreground mr-2">Plataformas:</span>
-                        {platforms.map((p) => (
-                            <div key={p.name} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-border text-sm font-medium text-foreground">
-                                <p.icon className="w-4 h-4 text-primary" />
-                                {p.name}
-                            </div>
-                        ))}
-                    </motion.div>
+    if (collageRef.current) {
+      animate(collageRef.current.querySelectorAll("[data-collage-card]"), {
+        translateY: [40, 0],
+        translateX: (_el, i) => [i === 1 ? 36 : i === 2 ? -28 : 0, 0],
+        rotate: (_el, i) => [i === 1 ? 3 : i === 2 ? -3 : 0, 0],
+        opacity: [0, 1],
+        easing: "easeOutExpo",
+        delay: stagger(140),
+        duration: 1200,
+      });
+    }
 
-                    {/* Stats Bar */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }}
-                        className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto mt-12"
-                    >
-                        {stats.map((stat) => (
-                            <div key={stat.label} className="text-center p-4 rounded-xl bg-card/50 border border-border/50">
-                                <p className="text-2xl sm:text-3xl font-black text-foreground">
-                                    {stat.value}
-                                    {stat.extra && <span className="text-primary ml-1 text-lg">{stat.extra}</span>}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
-                            </div>
-                        ))}
-                    </motion.div>
+    if (utilitiesRef.current) {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (!entry.isIntersecting) return;
+          animate(utilitiesRef.current?.querySelectorAll("[data-utility-card]") ?? [], {
+            translateY: [24, 0],
+            opacity: [0, 1],
+            scale: [0.98, 1],
+            easing: "easeOutQuad",
+            delay: stagger(70),
+            duration: 700,
+          });
+          observer.disconnect();
+        },
+        { threshold: 0.2 }
+      );
+      observer.observe(utilitiesRef.current);
+      return () => observer.disconnect();
+    }
+  }, []);
+
+  return (
+    <PublicLayout>
+      <SEOHead
+        title="Funcionalidades"
+        description="Veja o Vurp em funcionamento: relatórios premium, templates, dashboard gerencial, checklist, calendário e operação integrada para gestores de tráfego e agências."
+        path="/features"
+        breadcrumbs={[{ name: "Funcionalidades", path: "/features" }]}
+      />
+
+      <section className="relative overflow-hidden pt-20 sm:pt-28 pb-12 sm:pb-16">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(160,255,97,0.13),_transparent_32%),radial-gradient(circle_at_20%_30%,_rgba(255,184,0,0.08),_transparent_28%)]" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid items-center gap-12 xl:grid-cols-[0.9fr_1.1fr]">
+            <div ref={heroRef} className="max-w-2xl">
+              <div data-hero-copy className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/8 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-300/90">
+                <Sparkles className="h-3.5 w-3.5" />
+                Produto real, não mockup genérico
+              </div>
+              <h1 data-hero-copy className="max-w-4xl text-4xl font-black leading-[0.92] tracking-[-0.04em] text-foreground sm:text-5xl lg:text-6xl xl:text-[5.2rem]">
+                Funcionalidades pensadas para operar uma agência inteira.
+              </h1>
+              <p data-hero-copy className="mt-6 max-w-xl text-base leading-8 text-muted-foreground sm:text-lg">
+                O Vurp junta rotina, templates, relatórios, financeiro e gestão de carteira numa única interface. Em vez de vender promessa abstrata, esta página mostra o produto em uso.
+              </p>
+              <div data-hero-copy className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link to="/signup">
+                  <Button size="lg" className="h-14 rounded-2xl px-8 text-base font-bold">
+                    Começar grátis
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link to="/pricing">
+                  <Button size="lg" variant="outline" className="h-14 rounded-2xl border-white/10 bg-white/[0.03] px-8 text-base font-semibold text-foreground hover:bg-white/[0.06]">
+                    Ver planos
+                  </Button>
+                </Link>
+              </div>
+              <div data-hero-copy className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                {heroStats.map((stat) => (
+                  <div key={stat.label} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                    <div className="text-xl font-black text-foreground">{stat.value}</div>
+                    <div className="mt-1 text-sm leading-6 text-muted-foreground">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div ref={collageRef} className="relative min-h-[480px] sm:min-h-[620px]">
+              {showcaseCards.map((card, index) => (
+                <div
+                  key={card.title}
+                  data-collage-card
+                  className={[
+                    "absolute overflow-hidden rounded-[28px] border border-white/10 bg-zinc-950/85 shadow-[0_20px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl",
+                    index === 0 ? "left-0 top-0 w-[92%] sm:w-[88%]" : "right-0 top-[18%] w-[74%] sm:w-[66%]" ,
+                    index === 2 ? "bottom-0 left-[8%] w-[78%] sm:w-[64%]" : "",
+                  ].join(" ")}
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${card.tone}`} />
+                  <div className="relative border-b border-white/8 px-5 py-4">
+                    <div className="text-sm font-semibold text-foreground">{card.title}</div>
+                    <div className="mt-1 text-sm text-muted-foreground">{card.copy}</div>
+                  </div>
+                  <div className="relative p-3 sm:p-4">
+                    <img src={card.image} alt={card.title} className="h-auto w-full rounded-[20px] border border-white/8 object-cover" />
+                  </div>
                 </div>
-            </section>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
-            {/* ═══════ FEATURE SHOWCASE (alternating layout) ═══════ */}
-            <section className="pb-20">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-28">
-                    {features.map((feature, i) => (
-                        <motion.div
-                            key={feature.title}
-                            initial={{ opacity: 0, y: 40 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, margin: "-80px" }}
-                            transition={{ duration: 0.6 }}
-                            className={`grid lg:grid-cols-2 gap-12 items-center ${i % 2 === 1 ? "" : ""}`}
-                        >
-                            {/* Text Side */}
-                            <div className={i % 2 === 1 ? "lg:order-2" : ""}>
-                                <div className={`w-14 h-14 rounded-2xl ${feature.iconBg} flex items-center justify-center mb-6`}>
-                                    <feature.icon className={`w-7 h-7 ${feature.iconColor}`} />
-                                </div>
-                                <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">{feature.title}</h2>
-                                <p className="text-muted-foreground text-lg leading-relaxed mb-6">{feature.description}</p>
-                                <div className="space-y-2 mb-6">
-                                    {feature.highlights.map((h) => (
-                                        <div key={h} className="flex items-center gap-2 text-sm text-foreground/80">
-                                            <CheckCircle2 className={`w-4 h-4 ${feature.iconColor} flex-shrink-0`} />
-                                            {h}
-                                        </div>
-                                    ))}
-                                </div>
-                                <Link to="/signup">
-                                    <Button variant="outline" className="border-border text-foreground hover:bg-primary/10 hover:border-primary/30">
-                                        Experimentar agora
-                                        <ArrowRight className="w-4 h-4 ml-2" />
-                                    </Button>
-                                </Link>
-                            </div>
+      <section className="pb-8 sm:pb-12">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-4 md:grid-cols-5">
+            {platformCards.map((platform) => (
+              <div key={platform.name} className="rounded-[24px] border border-white/8 bg-white/[0.03] p-5">
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/[0.04] ring-1 ring-white/8">
+                    <platform.icon className="h-5 w-5 text-foreground" />
+                  </div>
+                  <div className="text-sm font-semibold text-foreground">{platform.name}</div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {platform.metrics.map((metric) => (
+                    <span key={metric} className="rounded-full border border-white/8 bg-black/20 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+                      {metric}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-                            {/* Visual Card - Mockup UI */}
-                            <div className={i % 2 === 1 ? "lg:order-1" : ""}>
-                                <div className={`rounded-2xl border ${feature.border} bg-gradient-to-b ${feature.color} p-1 shadow-lg`}>
-                                    <div className="rounded-xl bg-card/80 backdrop-blur-sm overflow-hidden">
-                                        {/* Browser Chrome */}
-                                        <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50">
-                                            <div className="flex gap-1.5">
-                                                <div className="w-3 h-3 rounded-full bg-red-500/40" />
-                                                <div className="w-3 h-3 rounded-full bg-yellow-500/40" />
-                                                <div className="w-3 h-3 rounded-full bg-green-500/40" />
-                                            </div>
-                                            <div className="flex-1 mx-4">
-                                                <div className="bg-background/50 rounded-md px-3 py-1 text-xs text-muted-foreground text-center">
-                                                    app.vurp.com.br
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* Content Area */}
-                                        <div className="p-6 space-y-4 min-h-[260px]">
-                                            <div className="flex items-center gap-3 mb-4">
-                                                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center`}>
-                                                    <feature.icon className="w-5 h-5 text-white" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-semibold text-foreground">{feature.title}</p>
-                                                    <p className="text-xs text-muted-foreground">Vurp Pro</p>
-                                                </div>
-                                            </div>
-                                            {/* Simulated UI Rows */}
-                                            {[1, 2, 3].map((row) => (
-                                                <div key={row} className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/30">
-                                                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${feature.gradient} opacity-20 flex-shrink-0`} />
-                                                    <div className="flex-1 space-y-1.5">
-                                                        <div className="h-2.5 rounded-full bg-foreground/10 w-3/4" />
-                                                        <div className="h-2 rounded-full bg-foreground/5 w-1/2" />
-                                                    </div>
-                                                    <div className={`px-2 py-0.5 rounded text-[10px] font-medium ${feature.iconBg} ${feature.iconColor}`}>
-                                                        {row === 1 ? "Ativo" : row === 2 ? "50%" : "Novo"}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                            {/* Progress Indicator */}
-                                            <div className="pt-2">
-                                                <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                                                    <span>Progresso</span>
-                                                    <span className={feature.iconColor}>{feature.progress}%</span>
-                                                </div>
-                                                <div className="h-2 rounded-full bg-background/50 overflow-hidden">
-                                                    <motion.div
-                                                        className={`h-full rounded-full bg-gradient-to-r ${feature.gradient}`}
-                                                        initial={{ width: 0 }}
-                                                        whileInView={{ width: `${feature.progress}%` }}
-                                                        viewport={{ once: true }}
-                                                        transition={{ duration: 1, delay: 0.3 }}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
+      <section className="py-12 sm:py-16">
+        <div className="mx-auto max-w-7xl space-y-20 px-4 sm:px-6 lg:px-8">
+          {featureRows.map((row, index) => {
+            const Icon = row.icon;
+            return (
+              <div key={row.title} className="grid items-center gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+                <div className={index % 2 === 1 ? "lg:order-2" : ""}>
+                  <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.03] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-300/90">
+                    <Icon className="h-3.5 w-3.5" />
+                    {row.eyebrow}
+                  </div>
+                  <h2 className="max-w-2xl text-3xl font-black leading-tight tracking-[-0.03em] text-foreground sm:text-4xl">
+                    {row.title}
+                  </h2>
+                  <p className="mt-5 max-w-xl text-base leading-8 text-muted-foreground sm:text-lg">
+                    {row.description}
+                  </p>
+                  <div className="mt-7 space-y-3">
+                    {row.bullets.map((bullet) => (
+                      <div key={bullet} className="flex items-start gap-3 text-sm leading-6 text-foreground/85 sm:text-base">
+                        <CheckCircle2 className="mt-1 h-4 w-4 flex-shrink-0 text-emerald-400" />
+                        <span>{bullet}</span>
+                      </div>
                     ))}
+                  </div>
                 </div>
-            </section>
 
-            {/* ═══════ TRUST BAR ═══════ */}
-            <section className="py-16">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="grid grid-cols-1 sm:grid-cols-3 gap-6"
-                    >
-                        {[
-                            { icon: Shield, label: "Dados 100% seguros", desc: "Não armazenamos senhas ou APIs" },
-                            { icon: Zap, label: "Ultra rápido", desc: "Interface leve e responsiva" },
-                            { icon: Globe, label: "4 plataformas de Ads", desc: "Google, Meta, TikTok, LinkedIn" },
-                        ].map((item) => (
-                            <div key={item.label} className="rounded-2xl border border-border bg-card/50 p-6 text-center hover:border-primary/30 transition-colors">
-                                <item.icon className="w-8 h-8 text-primary mx-auto mb-3" />
-                                <h3 className="font-semibold text-foreground mb-1">{item.label}</h3>
-                                <p className="text-sm text-muted-foreground">{item.desc}</p>
-                            </div>
-                        ))}
-                    </motion.div>
+                <div className={index % 2 === 1 ? "lg:order-1" : ""}>
+                  <div className="overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-3 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+                    <img src={row.image} alt={row.title} className="h-auto w-full rounded-[22px] border border-white/8 object-cover" />
+                  </div>
                 </div>
-            </section>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
-            {/* ═══════ TESTIMONIAL ═══════ */}
-            <section className="py-12">
-                <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                        className="rounded-2xl bg-gradient-to-br from-primary/5 to-amber-500/5 border border-primary/10 p-8 sm:p-12 text-center"
-                    >
-                        <div className="flex justify-center gap-1 mb-4">
-                            {[1, 2, 3, 4, 5].map((s) => (
-                                <Star key={s} className="w-5 h-5 fill-primary text-primary" />
-                            ))}
-                        </div>
-                        <blockquote className="text-lg sm:text-xl text-foreground font-medium leading-relaxed mb-6">
-                            "O Vurp mudou completamente a forma como gerencio meus clientes.
-                            Economizo pelo menos 2 horas por dia com a automação de relatórios e checklists."
-                        </blockquote>
-                        <p className="text-sm text-muted-foreground">
-                            - Gestor de tráfego com 15+ clientes ativos
-                        </p>
-                    </motion.div>
-                </div>
-            </section>
+      <section className="py-14 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-8 max-w-2xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.03] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-300/90">
+              <Layers3 className="h-3.5 w-3.5" />
+              Módulos que se conectam
+            </div>
+            <h2 className="text-3xl font-black tracking-[-0.03em] text-foreground sm:text-4xl">
+              O produto não termina no relatório.
+            </h2>
+            <p className="mt-4 text-base leading-8 text-muted-foreground sm:text-lg">
+              Ele continua no processo, na operação e no acompanhamento da equipe. É isso que faz a plataforma parecer um sistema, não um conjunto solto de telas.
+            </p>
+          </div>
 
-            {/* ═══════ CTA ═══════ */}
-            <section className="py-16">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="text-center space-y-6"
-                    >
-                        <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
-                            Comece a usar{" "}
-                            <span className="vcd-gradient-text">todas as funcionalidades</span>
-                        </h2>
-                        <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-                            7 dias grátis, sem cartão de crédito. Cancele quando quiser.
-                        </p>
-                        <Link to="/signup">
-                            <Button size="lg" className="h-14 px-10 text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground vcd-button-glow group">
-                                Experimentar Grátis
-                                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                            </Button>
-                        </Link>
-                    </motion.div>
+          <div ref={utilitiesRef} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {utilityCards.map((card) => {
+              const Icon = card.icon;
+              return (
+                <div data-utility-card key={card.title} className="rounded-[24px] border border-white/8 bg-white/[0.03] p-6 opacity-0">
+                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground">{card.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">{card.text}</p>
                 </div>
-            </section>
-        </PublicLayout>
-    );
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="pb-20 pt-6 sm:pb-24">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(160,255,97,0.12),transparent_40%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-8 text-center shadow-[0_24px_80px_rgba(0,0,0,0.35)] sm:p-12">
+            <h2 className="text-3xl font-black tracking-[-0.03em] text-foreground sm:text-4xl">
+              Se a sua operação cresceu, a interface precisa acompanhar.
+            </h2>
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">
+              O Vurp foi desenhado para reduzir esforço manual, aumentar padrão de entrega e dar leitura gerencial em tempo real. Isso é o que as funcionalidades precisam provar.
+            </p>
+            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+              <Link to="/signup">
+                <Button size="lg" className="h-14 rounded-2xl px-8 text-base font-bold">
+                  Testar o Vurp
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+              <Link to="/pricing">
+                <Button size="lg" variant="outline" className="h-14 rounded-2xl border-white/10 bg-white/[0.03] px-8 text-base font-semibold text-foreground hover:bg-white/[0.06]">
+                  Ver planos e limites
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </PublicLayout>
+  );
 };
 
 export default FeaturesPage;

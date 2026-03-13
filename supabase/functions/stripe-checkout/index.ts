@@ -57,10 +57,48 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { priceId, successPath, cancelPath } = await req.json();
+    const { action = "create", priceId, successPath, cancelPath, returnPath, checkoutSessionId } = await req.json();
+
+    if (action === "session_status") {
+      if (!checkoutSessionId || typeof checkoutSessionId !== "string") {
+        return new Response(JSON.stringify({ error: "checkoutSessionId is required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const checkoutSession = await stripe.checkout.sessions.retrieve(checkoutSessionId, {
+        expand: ["subscription"],
+      });
+
+      const sub = checkoutSession.subscription;
+      const subscriptionStatus =
+        typeof sub === "object" && sub !== null && "status" in sub ? sub.status : null;
+
+      return new Response(
+        JSON.stringify({
+          sessionId: checkoutSession.id,
+          status: checkoutSession.status,
+          paymentStatus: checkoutSession.payment_status,
+          customerEmail: checkoutSession.customer_details?.email ?? null,
+          subscriptionStatus,
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
 
     if (!priceId || typeof priceId !== "string") {
       return new Response(JSON.stringify({ error: "priceId is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!priceToPlanId[priceId]) {
+      return new Response(JSON.stringify({ error: "Invalid Stripe priceId for this environment" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -101,22 +139,31 @@ Deno.serve(async (req) => {
     const origin = req.headers.get("origin") ?? Deno.env.get("APP_URL") ?? "http://localhost:8080";
     const successUrl = `${origin}${successPath || "/account/billing"}?stripe=success`;
     const cancelUrl = `${origin}${cancelPath || "/pricing"}?stripe=cancel`;
+    const embeddedReturnUrl = `${origin}${returnPath || "/account/checkout"}?session_id={CHECKOUT_SESSION_ID}`;
+    const checkoutMode = action === "create_embedded" ? "embedded" : "hosted";
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: stripeCustomerId,
       line_items: [{ price: priceId, quantity: 1 }],
       allow_promotion_codes: true,
-      success_url: successUrl,
-      cancel_url: cancelUrl,
+      ...(checkoutMode === "embedded"
+        ? {
+            ui_mode: "embedded" as const,
+            return_url: embeddedReturnUrl,
+          }
+        : {
+            success_url: successUrl,
+            cancel_url: cancelUrl,
+          }),
       metadata: {
         gestor_id: gestor.id,
-        plan_id: priceToPlanId[priceId] || "free",
+        plan_id: priceToPlanId[priceId],
       },
       subscription_data: {
         metadata: {
           gestor_id: gestor.id,
-          plan_id: priceToPlanId[priceId] || "free",
+          plan_id: priceToPlanId[priceId],
         },
       },
     });
@@ -124,7 +171,7 @@ Deno.serve(async (req) => {
     await adminClient.from("assinaturas").upsert(
       {
         gestor_id: gestor.id,
-        plano_id: priceToPlanId[priceId] || "free",
+        plano_id: priceToPlanId[priceId],
         status: "pending",
         stripe_customer_id: stripeCustomerId,
         stripe_price_id: priceId,
@@ -132,6 +179,19 @@ Deno.serve(async (req) => {
       },
       { onConflict: "gestor_id" },
     );
+
+    if (checkoutMode === "embedded") {
+      return new Response(
+        JSON.stringify({
+          sessionId: session.id,
+          clientSecret: session.client_secret,
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
 
     return new Response(JSON.stringify({ url: session.url }), {
       status: 200,

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Check, ArrowRight, Zap, Star, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AppLayout from "@/components/AppLayout";
-import { PLANS, formatPrice, redirectToCheckout } from "@/lib/stripe";
+import { PLANS, formatPrice } from "@/lib/stripe";
 import { toast } from "@/hooks/use-toast";
 
 const icons = [Zap, Star, Crown];
@@ -125,7 +125,7 @@ const PlanSelectionPage = () => {
                                             return;
                                         }
                                         try {
-                                            await redirectToCheckout(priceId);
+                                            window.location.href = `/account/checkout?priceId=${encodeURIComponent(priceId)}`;
                                         } catch (err) {
                                             toast({
                                                 title: "Erro ao abrir checkout",

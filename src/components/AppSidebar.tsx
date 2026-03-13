@@ -44,7 +44,7 @@ import { useEffect, useState } from "react";
 const AppSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { state } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
   const { agencia, gestor } = useGestor();
   const isCollapsed = state === "collapsed";
   const [agencyLogoSrc, setAgencyLogoSrc] = useState<string | null>(null);
@@ -67,6 +67,13 @@ const AppSidebar = () => {
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
     return location.pathname.startsWith(path);
+  };
+
+  const navigateTo = (path: string) => {
+    navigate(path);
+    if (isMobile) {
+      setOpenMobile(false);
+    }
   };
 
   const menuItems = {
@@ -95,9 +102,66 @@ const AppSidebar = () => {
       { title: "Gerador de UTMs", icon: Link2, path: "/ferramentas/gerador-utm" },
     ],
     config: [
+      ...(gestor?.is_admin
+        ? [{ title: "Config. Agência", icon: Settings, path: "/agencia/configuracoes" }]
+        : []),
       { title: "Configuração Pessoal", icon: Settings, path: "/configuracoes" },
     ],
   };
+
+  const menuSections = [
+    { key: "analise", title: "Performance", items: menuItems.analise, defaultOpen: true },
+    { key: "relatorios", title: "Relatórios", items: menuItems.relatorios, defaultOpen: true },
+    { key: "operacao", title: "Operação", items: menuItems.operacao, defaultOpen: true },
+    { key: "equipe", title: "Equipe", items: menuItems.equipe, defaultOpen: false },
+    { key: "ferramentas", title: "Ferramentas", items: menuItems.ferramentas, defaultOpen: false },
+    { key: "config", title: "Configurações", items: menuItems.config, defaultOpen: false },
+  ];
+
+  const MobileMenuSection = ({
+    title,
+    items,
+    defaultOpen = true,
+  }: {
+    title: string;
+    items: Array<{ title: string; icon: any; path: string }>;
+    defaultOpen?: boolean;
+  }) => (
+    <Collapsible defaultOpen={defaultOpen} className="w-full">
+      <SidebarGroup className="px-2 py-1">
+        <CollapsibleTrigger className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left">
+          <SidebarGroupLabel className="mb-0 h-auto px-0 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/70">
+            {title}
+          </SidebarGroupLabel>
+          <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform data-[state=open]:rotate-180" />
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarGroupContent>
+            <SidebarMenu className="mt-2 gap-1 px-1">
+              {items.map((item) => (
+                <SidebarMenuItem key={item.path}>
+                  <SidebarMenuButton
+                    onClick={() => navigateTo(item.path)}
+                    isActive={isActive(item.path)}
+                    tooltip={item.title}
+                    className={cn(
+                      "h-11 rounded-xl px-3 transition-all duration-200",
+                      isActive(item.path)
+                        ? "bg-primary/15 text-primary shadow-sm ring-1 ring-primary/20"
+                        : "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground"
+                    )}
+                  >
+                    <item.icon className={cn("h-4 w-4", isActive(item.path) ? "text-primary" : "text-muted-foreground")} />
+                    <span className="font-medium">{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </CollapsibleContent>
+      </SidebarGroup>
+    </Collapsible>
+  );
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border/50">
@@ -127,7 +191,20 @@ const AppSidebar = () => {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="py-6 gap-4 overflow-y-auto">
+      <SidebarContent className="gap-4 overflow-y-auto py-6">
+        {isMobile ? (
+          <>
+            {menuSections.map((section) => (
+              <MobileMenuSection
+                key={section.key}
+                title={section.title}
+                items={section.items}
+                defaultOpen={section.defaultOpen}
+              />
+            ))}
+          </>
+        ) : (
+          <>
         {/* Análise */}
         <SidebarGroup>
           <SidebarGroupLabel className={cn("text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] px-4 mb-3", isCollapsed && "sr-only")}>
@@ -138,7 +215,7 @@ const AppSidebar = () => {
               {menuItems.analise.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton
-                    onClick={() => navigate(item.path)}
+                    onClick={() => navigateTo(item.path)}
                     isActive={isActive(item.path)}
                     tooltip={item.title}
                     className={cn(
@@ -167,7 +244,7 @@ const AppSidebar = () => {
               {menuItems.relatorios.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton
-                    onClick={() => navigate(item.path)}
+                    onClick={() => navigateTo(item.path)}
                     isActive={isActive(item.path)}
                     tooltip={item.title}
                     className={cn(
@@ -196,7 +273,7 @@ const AppSidebar = () => {
               {menuItems.operacao.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton
-                    onClick={() => navigate(item.path)}
+                    onClick={() => navigateTo(item.path)}
                     isActive={isActive(item.path)}
                     tooltip={item.title}
                     className={cn(
@@ -225,7 +302,7 @@ const AppSidebar = () => {
               {menuItems.equipe.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton
-                    onClick={() => navigate(item.path)}
+                    onClick={() => navigateTo(item.path)}
                     isActive={isActive(item.path)}
                     tooltip={item.title}
                     className={cn(
@@ -256,7 +333,7 @@ const AppSidebar = () => {
               {menuItems.ferramentas.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton
-                    onClick={() => navigate(item.path)}
+                    onClick={() => navigateTo(item.path)}
                     isActive={false}
                     tooltip={item.title}
                     className="transition-all duration-200 h-9 rounded-lg mb-1 text-muted-foreground/70 hover:bg-white/[0.03] hover:text-foreground"
@@ -269,53 +346,57 @@ const AppSidebar = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+          </>
+        )}
       </SidebarContent>
 
       {/* Footer - Configuracoes */}
-      <SidebarFooter className="border-t border-border/50 p-2">
-        <SidebarMenu className="gap-2">
-          {gestor?.is_admin && (
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={() => navigate("/agencia/configuracoes")}
-                isActive={isActive("/agencia/configuracoes")}
-                tooltip="Configurações da Agência"
-                className={cn(
-                  "transition-all duration-200",
-                  isActive("/agencia/configuracoes") &&
-                  "bg-primary/10 text-primary border-l-2 border-primary"
-                )}
-              >
-                <div
-                  className="h-4 w-4 rounded-full flex items-center justify-center border border-primary/30"
-                  style={{ backgroundColor: agencia?.cor_primaria ? `${agencia.cor_primaria}22` : undefined }}
+      {!isMobile && (
+        <SidebarFooter className="border-t border-border/50 p-2">
+          <SidebarMenu className="gap-2">
+            {gestor?.is_admin && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => navigateTo("/agencia/configuracoes")}
+                  isActive={isActive("/agencia/configuracoes")}
+                  tooltip="Configurações da Agência"
+                  className={cn(
+                    "transition-all duration-200",
+                    isActive("/agencia/configuracoes") &&
+                    "bg-primary/10 text-primary border-l-2 border-primary"
+                  )}
                 >
-                  <Settings className="h-3 w-3 text-primary" style={{ color: agencia?.cor_primaria || undefined }} />
-                </div>
-                <span>Config. Agência</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
+                  <div
+                    className="flex h-4 w-4 items-center justify-center rounded-full border border-primary/30"
+                    style={{ backgroundColor: agencia?.cor_primaria ? `${agencia.cor_primaria}22` : undefined }}
+                  >
+                    <Settings className="h-3 w-3 text-primary" style={{ color: agencia?.cor_primaria || undefined }} />
+                  </div>
+                  <span>Config. Agência</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
 
-          {menuItems.config.map((item) => (
-            <SidebarMenuItem key={item.path}>
-              <SidebarMenuButton
-                onClick={() => navigate(item.path)}
-                isActive={isActive(item.path)}
-                tooltip={item.title}
-                className={cn(
-                  "transition-all duration-200",
-                  isActive(item.path) &&
-                  "bg-primary/10 text-primary border-l-2 border-primary"
-                )}
-              >
-                <item.icon className="h-4 w-4" />
-                <span>{item.title}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarFooter>
+            {menuItems.config.map((item) => (
+              <SidebarMenuItem key={item.path}>
+                <SidebarMenuButton
+                  onClick={() => navigateTo(item.path)}
+                  isActive={isActive(item.path)}
+                  tooltip={item.title}
+                  className={cn(
+                    "transition-all duration-200",
+                    isActive(item.path) &&
+                    "bg-primary/10 text-primary border-l-2 border-primary"
+                  )}
+                >
+                  <item.icon className="h-4 w-4" />
+                  <span>{item.title}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarFooter>
+      )}
     </Sidebar>
   );
 };

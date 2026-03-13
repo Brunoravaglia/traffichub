@@ -9,9 +9,10 @@ interface ReportFooterProps {
 
 export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
     const isExporting = Boolean(reportData?.isGeneratingPDF);
+    const baseUrl = (import.meta.env.VITE_SITE_URL || "https://vurp.space").replace(/\/$/, "");
     const validationUrl = reportData?.validationId
-        ? `https://vurp.vercel.app/validar-relatorio?id=${reportData.validationId}`
-        : "https://vurp.vercel.app/validar-relatorio";
+        ? `${baseUrl}/validar-relatorio?id=${reportData.validationId}`
+        : `${baseUrl}/validar-relatorio`;
 
     const handleCopy = async (value?: string) => {
         if (!value) return;
@@ -21,6 +22,9 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
             // no-op: keep silent to avoid breaking PDF/preview flows
         }
     };
+
+    const readonlyFieldClass =
+        "h-8 min-w-[250px] max-w-full rounded border border-[#ffb500]/20 bg-[#ffb500]/5 px-2.5 text-[10px] leading-[1.2] text-[#ffb500] font-mono font-black tracking-[0.08em] select-text";
 
     return (
         <div className="mt-12 pt-10 border-t border-white/10">
@@ -61,9 +65,15 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
                             <div className="space-y-1">
                                 <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">VALIDATION ID</p>
                                 <div className="flex items-center gap-1.5">
-                                    <code className="inline-flex items-center text-[10px] leading-[1.25] text-[#ffb500] font-mono font-black tracking-[0.08em] bg-[#ffb500]/5 px-2.5 py-1 rounded border border-[#ffb500]/20 whitespace-nowrap select-text">
-                                        {reportData.validationId}
-                                    </code>
+                                    <input
+                                        type="text"
+                                        readOnly
+                                        value={reportData.validationId}
+                                        onFocus={(e) => e.currentTarget.select()}
+                                        onClick={(e) => e.currentTarget.select()}
+                                        className={readonlyFieldClass}
+                                        aria-label="Validation ID"
+                                    />
                                     {!isExporting && (
                                         <button
                                             type="button"
@@ -82,9 +92,15 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
                             <div className="space-y-1">
                                 <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">ACCESS KEY</p>
                                 <div className="flex items-center gap-1.5">
-                                    <code className="inline-flex items-center text-[10px] leading-[1.25] text-[#ffb500] font-mono font-black tracking-[0.08em] bg-[#ffb500]/5 px-2.5 py-1 rounded border border-[#ffb500]/20 whitespace-nowrap select-text">
-                                        {reportData.validationPassword}
-                                    </code>
+                                    <input
+                                        type="text"
+                                        readOnly
+                                        value={reportData.validationPassword}
+                                        onFocus={(e) => e.currentTarget.select()}
+                                        onClick={(e) => e.currentTarget.select()}
+                                        className="h-8 w-[120px] rounded border border-[#ffb500]/20 bg-[#ffb500]/5 px-2.5 text-[10px] leading-[1.2] text-[#ffb500] font-mono font-black tracking-[0.08em] select-text"
+                                        aria-label="Access Key"
+                                    />
                                     {!isExporting && (
                                         <button
                                             type="button"
@@ -103,24 +119,35 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
 
                     <div className="flex flex-col items-center md:items-end gap-2">
                         <p className="text-[9px] font-black text-[#ffb500] uppercase tracking-[0.2em] mb-1">VERIFICAR AUTENTICIDADE EM:</p>
-                        <a
-                            href={validationUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[10px] text-gray-400 font-bold hover:text-[#ffb500] transition-colors border-b border-white/10 pb-0.5 select-text"
-                        >
-                            vurp.vercel.app/validar-relatorio
-                        </a>
+                        <input
+                            type="text"
+                            readOnly
+                            value={validationUrl}
+                            onFocus={(e) => e.currentTarget.select()}
+                            onClick={(e) => e.currentTarget.select()}
+                            className="h-8 w-full max-w-[360px] rounded border border-white/15 bg-white/[0.03] px-2.5 text-[10px] leading-[1.2] text-gray-300 font-bold select-text"
+                            aria-label="Link de verificação"
+                        />
                         {!isExporting && (
-                            <button
-                                type="button"
-                                onClick={() => handleCopy(validationUrl)}
-                                className="inline-flex h-7 w-7 items-center justify-center rounded border border-[#ffb500]/20 bg-[#ffb500]/5 text-[#ffb500] hover:bg-[#ffb500]/10 transition-colors"
-                                aria-label="Copiar link de verificação"
-                                title="Copiar link de verificação"
-                            >
-                                <Copy className="h-3.5 w-3.5" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <a
+                                    href={validationUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[10px] text-gray-400 font-bold hover:text-[#ffb500] transition-colors"
+                                >
+                                    Abrir link
+                                </a>
+                                <button
+                                    type="button"
+                                    onClick={() => handleCopy(validationUrl)}
+                                    className="inline-flex h-7 w-7 items-center justify-center rounded border border-[#ffb500]/20 bg-[#ffb500]/5 text-[#ffb500] hover:bg-[#ffb500]/10 transition-colors"
+                                    aria-label="Copiar link de verificação"
+                                    title="Copiar link de verificação"
+                                >
+                                    <Copy className="h-3.5 w-3.5" />
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>

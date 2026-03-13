@@ -14,6 +14,532 @@ export interface BlogPost {
 
 export const blogPosts: BlogPost[] = [
     {
+        slug: "dia-da-mulher-5-gestoras-de-trafego-que-viraram-referencia-na-internet",
+        title: "Dia da Mulher: 5 gestoras de tráfego que viraram referência na internet",
+        excerpt: "Um recorte especial com cinco nomes femininos fortes em mídia paga, social ads e performance: o que elas construíram, por que ganharam relevância e o que gestores podem aprender com cada uma.",
+        category: "Mercado",
+        readTime: 11,
+        date: "2026-03-08",
+        coverImage: "/blog/cover-27.png",
+        metaDescription: "Especial de Dia da Mulher no blog do Vurp.space: cinco referências femininas da mídia paga e do tráfego na internet, com lições práticas para gestores de tráfego e agências.",
+        ctaTarget: "/signup",
+        ctaLabel: "Conhecer o Vurp.space",
+        content: `## Um especial de Dia da Mulher para quem vive de tráfego pago
+
+No mercado de mídia paga, muita gente aprende olhando campanhas, dashboards, criativos e resultados. Mas uma parte importante da evolução profissional vem de observar **quem está construindo pensamento, operação e influência de verdade**.
+
+Neste especial de Dia da Mulher, o objetivo não é inventar um ranking absoluto. A proposta aqui é mais honesta: reunir **cinco referências femininas muito fortes da internet quando o assunto é PPC, mídia paga, social ads e growth**. São nomes com presença pública consistente, produção de conteúdo, relevância profissional e impacto real sobre como gestores e agências trabalham hoje.
+
+Para esta seleção, considerei quatro critérios:
+
+- presença pública relevante na internet;
+- autoridade reconhecida em mídia paga, PPC ou social ads;
+- produção de conteúdo prático ou educacional;
+- influência real sobre a forma como o mercado executa campanhas.
+
+## 1) Molly Pittman
+
+![Molly Pittman, referência internacional em tráfego pago, growth e aquisição de clientes](/blog/gestoras/molly-pittman.jpg)
+
+*Molly Pittman*
+
+Se existe um nome feminino que aparece repetidamente quando o assunto é tráfego pago e aquisição, é **Molly Pittman**. Ela ficou amplamente conhecida por sua atuação em performance, funis, aquisição de clientes e educação em marketing digital, com destaque especial para sua passagem pela DigitalMarketer e pelos conteúdos públicos sobre growth e paid traffic.
+
+O peso do nome dela não vem apenas de “ser famosa”. Vem do fato de que Molly ajudou a popularizar uma visão mais madura sobre aquisição: tráfego não é só comprar clique. Tráfego é construir sistema de crescimento, entender jornada, oferta, criativo, conversão e retenção.
+
+### O que gestores podem aprender com Molly
+
+- olhar para campanha como parte de um sistema, não como peça isolada;
+- tratar oferta e funil como componentes inseparáveis da mídia;
+- fugir da mentalidade de “hack” e construir operação replicável.
+
+### Por que ela entrou nesta lista
+
+Porque ela se tornou uma das vozes mais reconhecidas da internet quando o assunto é aquisição paga e growth. Para muita gente, Molly foi uma das primeiras referências femininas de peso em performance marketing.
+
+Referências:
+- [Molly Pittman](https://mollypittman.com/)
+- [DigitalMarketer](https://www.digitalmarketer.com/)
+
+## 2) Navah Hopkins
+
+![Navah Hopkins, especialista em PPC, Google Ads e estratégia de mídia paga](/blog/gestoras/navah-hopkins.webp)
+
+*Navah Hopkins*
+
+**Navah Hopkins** é outro nome extremamente forte para quem acompanha PPC com seriedade. Ela se tornou referência principalmente em Google Ads, Microsoft Ads, estratégia de mídia e conteúdo técnico para profissionais de performance.
+
+O diferencial de Navah é a combinação rara entre profundidade tática e comunicação acessível. Ela consegue falar com clareza sobre estrutura de conta, automação, bidding, eficiência e boas práticas sem cair em discurso superficial.
+
+Navah também construiu muita visibilidade através de conteúdos, eventos, podcasts e participação em comunidades especializadas de PPC. Isso fez dela uma referência muito respeitada para gestores que trabalham com mídia de busca e performance.
+
+### O que gestores podem aprender com Navah
+
+- disciplina técnica em plataformas de mídia;
+- leitura crítica de automações e machine learning;
+- cuidado com processo, qualidade de conta e decisão baseada em dados.
+
+### Por que ela entrou nesta lista
+
+Porque o nome dela aparece de forma consistente entre as lideranças mais respeitadas de PPC na internet, especialmente no universo de busca paga e estratégia de mídia.
+
+Referências:
+- [Navah Hopkins](https://www.navahhopkins.com/)
+- [Optmyzr Team – Navah Hopkins](https://www.optmyzr.com/team/navah-hopkins/)
+
+## 3) Susan Wenograd
+
+![Susan Wenograd, autoridade em paid media, social ads e mídia de performance](/blog/gestoras/susan-wenograd.png)
+
+*Susan Wenograd*
+
+Quando o assunto é paid media, social ads, search e pensamento estratégico em mídia, **Susan Wenograd** merece entrar em qualquer conversa séria. Ela se consolidou como uma profissional extremamente respeitada por sua capacidade de ensinar, analisar tendências e traduzir complexidade em orientação prática para times de marketing.
+
+Susan ficou muito conhecida por sua produção de conteúdo e por sua participação ativa no ecossistema de mídia paga, especialmente em temas que exigem leitura crítica e visão de negócios. Ela não aparece apenas como executora, mas como alguém que ajuda o mercado a pensar melhor.
+
+Isso importa muito. O mercado de tráfego pago está cheio de gente que fala de resultado sem explicar método. Susan se destaca porque construiu autoridade também pela clareza de raciocínio.
+
+### O que gestores podem aprender com Susan
+
+- pensar em mídia paga com mais maturidade estratégica;
+- comunicar performance sem transformar tudo em ruído técnico;
+- tomar decisões melhores em ambientes de mudança de plataforma.
+
+### Por que ela entrou nesta lista
+
+Porque ela é uma das profissionais mais lembradas quando se fala em autoridade pública no ecossistema de paid media e PPC.
+
+Referências:
+- [Susan Wenograd](https://www.linkedin.com/in/susanwenograd/)
+- [Search Engine Journal – Susan Wenograd](https://www.searchenginejournal.com/author/susan-wenograd/)
+
+## 4) Savannah Sanchez
+
+![Savannah Sanchez, referência em TikTok Ads, creative strategy e social ads](/blog/gestoras/savannah-sanchez.png)
+
+*Savannah Sanchez*
+
+No recorte mais atual da internet, especialmente ligado a **social ads, criativo e TikTok Ads**, um nome que ganhou força real é **Savannah Sanchez**. Ela se destacou ao construir forte presença pública explicando como anúncios em plataformas sociais, especialmente TikTok, precisam ser pensados de forma nativa, criativa e orientada à conversão.
+
+Isso é importante porque uma grande parte do mercado ainda tenta operar mídia social com mentalidade de banner ou anúncio engessado. Savannah chamou atenção justamente por mostrar que criativo, contexto da plataforma e linguagem importam tanto quanto segmentação e verba.
+
+Ela virou referência porque ajudou a aproximar duas disciplinas que muita gente ainda separa demais: criação e performance.
+
+### O que gestores podem aprender com Savannah
+
+- criativo é variável central de performance, não decoração;
+- cada plataforma exige linguagem própria;
+- social ads de alta performance pedem rapidez de teste e leitura de comportamento.
+
+### Por que ela entrou nesta lista
+
+Porque se tornou uma das vozes mais conhecidas da internet em TikTok Ads e creative strategy, especialmente para marcas e operadores focados em aquisição.
+
+Referências:
+- [Savannah Sanchez](https://www.linkedin.com/in/savannahsanchez/)
+- [The Social Savannah](https://thesocialsavannah.com/)
+
+## 5) Akvile DeFazio
+
+![Akvile DeFazio, especialista em social ads, Meta Ads e crescimento de agências](/blog/gestoras/akvile-defazio.png)
+
+*Akvile DeFazio*
+
+Fechando a lista, **Akvile DeFazio** é uma referência importante para quem acompanha social ads com viés mais profissional e consistente. Ela construiu reputação especialmente em Facebook/Instagram Ads, YouTube Ads e estratégia de mídia para marcas, além de manter presença forte em conteúdo e educação de mercado.
+
+O nome dela aparece com frequência entre profissionais respeitados de paid social porque existe coerência entre execução, posicionamento e conteúdo. Em um mercado em que muita gente depende de hype, Akvile representa algo valioso: consistência técnica ao longo do tempo.
+
+### O que gestores podem aprender com Akvile
+
+- paid social exige método, não só volume de campanha;
+- clareza de estrutura melhora leitura de performance;
+- consistência de operação sustenta autoridade no longo prazo.
+
+### Por que ela entrou nesta lista
+
+Porque ela é uma referência conhecida em social ads e performance, com presença pública robusta e reconhecimento em ambientes especializados de mídia paga.
+
+Referências:
+- [Akvile DeFazio](https://www.akviledefazio.com/)
+- [LinkedIn – Akvile DeFazio](https://www.linkedin.com/in/akviledefazio/)
+
+## O que une essas cinco profissionais
+
+Apesar das diferenças de estilo, foco e plataforma, essas cinco referências têm algo em comum:
+
+- constroem autoridade pública com consistência;
+- tratam mídia paga como disciplina séria;
+- ensinam a pensar, não apenas a repetir tática;
+- mostram que performance exige processo, leitura e critério.
+
+Esse ponto importa muito para gestores de tráfego. O mercado de internet costuma premiar barulho. Mas autoridade real é outra coisa. Autoridade real aparece quando alguém consegue:
+
+- executar;
+- explicar;
+- sustentar resultado;
+- influenciar a prática do mercado ao longo do tempo.
+
+Foi isso que tornou esses nomes relevantes.
+
+## O que o mercado brasileiro pode absorver desse recorte
+
+Mesmo que parte dessas referências tenha atuação internacional, as lições são totalmente aplicáveis à realidade brasileira. Em especial:
+
+### 1. Menos improviso, mais sistema
+
+As profissionais mais respeitadas em mídia paga não tratam campanha como loteria. Elas tratam aquisição como sistema. Isso vale para gestor solo, agência boutique ou operação maior.
+
+### 2. Criativo e mídia precisam conversar
+
+Principalmente em Meta, TikTok e social ads em geral, a separação entre “quem cria” e “quem compra mídia” custa caro. O mercado está indo para uma integração cada vez maior entre criativo, contexto e performance.
+
+### 3. Autoridade nasce de clareza
+
+Quem constrói reputação duradoura não depende só de números bonitos. Depende de clareza de raciocínio, consistência de posicionamento e qualidade de execução.
+
+### 4. Plataforma muda, fundamento continua
+
+Hoje falamos de Google, Meta, TikTok, LinkedIn e Shopee. Amanhã podem mudar formatos, automações e ferramentas. Mas os fundamentos continuam: leitura de público, oferta, criativo, operação, análise e capacidade de decisão.
+
+## Por que esse tema importa para o Vurp.space
+
+O Vurp.space existe para ajudar gestores e agências a operar melhor. E operar melhor não significa apenas gerar um PDF bonito. Significa construir rotina, padronização, clareza de entrega e visão mais profissional do trabalho.
+
+Ao olhar para referências femininas fortes da internet, fica claro que o mercado de tráfego pago avança quando une três coisas:
+
+- execução técnica;
+- comunicação clara;
+- estrutura operacional.
+
+É exatamente por isso que plataformas como o Vurp.space fazem sentido. O gestor precisa de ferramenta, mas também precisa de referência. Precisa de operação. Precisa de processo. Precisa de padrão.
+
+## Conclusão
+
+Neste Dia da Mulher, mais do que celebrar nomes conhecidos, vale reconhecer o que essas profissionais representam para o mercado: maturidade, influência, disciplina e construção de autoridade em um ambiente altamente competitivo.
+
+Molly Pittman, Navah Hopkins, Susan Wenograd, Savannah Sanchez e Akvile DeFazio mostram, cada uma à sua maneira, que tráfego pago de verdade não é só botão, painel e número. É pensamento, método e execução.
+
+Para quem trabalha com mídia paga, acompanhar referências assim é uma forma direta de subir o nível. E para quem está construindo agência, operação ou carreira, a lição é simples: consistência ainda é o ativo mais forte da internet.
+
+Se o mercado quer mais profissionais de alto nível, ele também precisa reconhecer e estudar quem já está ajudando a moldar esse padrão há anos.`
+    },
+    {
+        slug: "da-primeira-versao-ao-vurp-space-a-evolucao-da-plataforma",
+        title: "Da primeira versão ao Vurp.space: a evolução completa da plataforma para gestores de tráfego",
+        excerpt: "Como o Vurp saiu de uma primeira versão operacional para se tornar o Vurp.space: relatórios premium, utilidades, novas plataformas, checkout interno e uma operação pensada para escala.",
+        category: "Produto",
+        readTime: 12,
+        date: "2026-03-08",
+        coverImage: "/blog/cover-26.svg",
+        metaDescription: "Conheça a trajetória do Vurp desde a primeira versão até o Vurp.space atual, com relatórios premium, Google, Meta, LinkedIn, TikTok, Shopee Ads, utilidades, SEO e checkout interno.",
+        ctaTarget: "/signup",
+        ctaLabel: "Conhecer o Vurp.space",
+        content: `## Como nasceu o Vurp e por que a primeira versão precisava existir
+
+Todo produto que resolve um problema real começa de forma imperfeita. Com o Vurp não foi diferente. A primeira versão nasceu de uma dor operacional muito objetiva: gestores de tráfego e pequenas agências precisavam controlar clientes, entregas, relatórios, rotina e acompanhamento de performance sem depender de planilhas espalhadas, arquivos soltos e processos improvisados.
+
+No começo, a missão era simples: criar um ambiente centralizado que tirasse o gestor da desorganização crônica. Não era sobre parecer grande. Era sobre parar de perder prazo, parar de esquecer tarefa, parar de montar relatório manualmente e, principalmente, parar de crescer em cima de uma estrutura frágil.
+
+A primeira versão cumpriu esse papel. Ela colocou o essencial de pé. Dashboard, base de clientes, primeiros fluxos de relatório e uma estrutura inicial para o gestor começar a operar com mais clareza. Foi importante porque validou a tese principal do produto: o mercado não precisava de mais uma ferramenta genérica. Precisava de uma plataforma pensada especificamente para quem vive de tráfego pago.
+
+## O problema que o Vurp decidiu resolver de verdade
+
+Ao longo do tempo, ficou cada vez mais claro que o problema não era apenas “organização”. O problema real era a soma de várias dores que se reforçavam:
+
+- clientes sem visão clara do que estava sendo entregue;
+- gestores perdendo tempo em tarefas repetitivas;
+- relatórios inconsistentes visualmente;
+- excesso de retrabalho manual;
+- falta de padrão operacional;
+- dificuldade para escalar a carteira sem caos.
+
+Esse tipo de gargalo destrói margem, reputação e retenção. É aqui que o Vurp começou a evoluir. A plataforma deixou de ser apenas um ponto de apoio operacional e passou a assumir uma posição muito mais estratégica: ser a infraestrutura de operação de um gestor ou agência.
+
+## A transição de ferramenta operacional para plataforma de entrega
+
+Com a evolução do produto, o foco deixou de ser apenas “ter tudo em um lugar” e passou a ser “entregar melhor, mais rápido e com mais consistência”.
+
+Foi nessa etapa que o Vurp ganhou corpo como plataforma de relatórios profissionais. O relatório deixou de ser um apêndice e virou um elemento central da experiência. Isso mudou a forma como o produto passou a ser desenhado.
+
+Em vez de pensar só na coleta e edição dos dados, a plataforma começou a ser orientada pela entrega final:
+
+- o que o cliente vê;
+- o que o gestor precisa editar rápido;
+- o que precisa sair bonito no preview;
+- o que precisa sair idêntico na exportação;
+- o que precisa transmitir autoridade no PDF final.
+
+Essa mudança de mentalidade foi decisiva. A partir daí, o Vurp não era mais um sistema interno. Ele passou a ser uma ferramenta de apresentação, retenção e crescimento.
+
+## O salto visual: relatórios premium como padrão
+
+Uma das evoluções mais relevantes da plataforma foi a mudança de padrão visual dos relatórios. O objetivo deixou de ser somente mostrar métricas. O relatório precisava parecer premium, confiável e bem resolvido.
+
+Isso levou a uma série de melhorias:
+
+- cards com hierarquia visual mais limpa;
+- padronização de tipografia, espaçamento e composição;
+- exportação PDF com layout mais estável;
+- melhor previsibilidade entre preview e arquivo final;
+- footer de validação mais robusto;
+- blocos de métricas pensados para leitura executiva.
+
+Na prática, isso significa que o gestor não precisa mais “dar um jeitinho” depois. O material já sai com padrão de entrega profissional, pronto para reunião, envio ou apresentação comercial.
+
+## A expansão multi-plataforma
+
+À medida que o produto amadureceu, surgiu uma exigência natural: o relatório precisava acompanhar a realidade do tráfego pago moderno. Hoje, poucas operações vivem só de um canal. O cliente quer visão unificada, e o gestor precisa consolidar isso com velocidade.
+
+Foi aí que o Vurp evoluiu para uma plataforma multi-plataforma de verdade.
+
+Hoje a estrutura do Vurp suporta:
+
+- Google Ads
+- Meta Ads
+- LinkedIn Ads
+- TikTok Ads
+- Shopee Ads
+
+Mas o ponto importante não é apenas “ter as plataformas”. O ponto importante é que elas passaram a seguir a mesma lógica visual e operacional. Isso evita relatórios quebrados, seções desalinhadas e aquela sensação de que algumas partes foram improvisadas depois.
+
+Google e Meta serviram como base de maturidade. Em seguida, LinkedIn, TikTok e Shopee foram trazidos para o mesmo padrão, respeitando as métricas mais usadas de cada canal.
+
+## Criativos, personalização e flexibilidade real
+
+Outra evolução importante foi a ampliação das seções de criativos. Em muitas contas, o cliente quer enxergar o ativo criativo tão claramente quanto a métrica. Ele quer ver a peça. Quer lembrar o anúncio. Quer associar resultado com execução.
+
+Por isso, o Vurp passou a suportar criativos em múltiplas plataformas, e não só nos blocos mais tradicionais. Isso melhora a qualidade da reunião e reduz o tempo gasto explicando o que foi veiculado.
+
+Além disso, a plataforma ganhou mais flexibilidade para:
+
+- ativar e desativar blocos por modelo;
+- criar relatórios do zero;
+- reaproveitar modelos internos;
+- adaptar o documento à realidade de cada cliente;
+- personalizar entregas com a marca da agência.
+
+Esse é um ponto importante na maturidade do produto. Plataforma boa não é a que força um único caminho. É a que permite padronizar sem engessar.
+
+## Utilidades, blog e a construção de um ecossistema
+
+O Vurp também deixou de ser apenas um app fechado. Ele começou a virar um ecossistema de aquisição, educação e conversão.
+
+Com o tempo, entraram:
+
+- central de utilidades gratuitas;
+- calculadoras para gestores de tráfego;
+- simuladores e geradores;
+- conteúdo estratégico no blog;
+- páginas públicas otimizadas para SEO;
+- changelog para comunicar evolução de produto.
+
+Essa camada é importante porque aumenta o alcance da marca e posiciona o Vurp não só como ferramenta, mas como referência operacional para gestores e agências.
+
+Em vez de depender só de anúncio ou indicação, o produto passa a criar superfície orgânica de aquisição. Isso fortalece a marca, melhora descoberta em busca e ajuda a transformar tráfego em cadastro.
+
+## O significado de agora sermos Vurp.space
+
+A mudança para **Vurp.space** não é apenas uma troca de domínio. Ela marca um momento de consolidação da plataforma.
+
+Quando um produto muda de patamar, o domínio precisa acompanhar. O novo endereço traz mais clareza de marca, melhora percepção de produto próprio e ajuda a concentrar SEO, confiança e identidade em uma casa definitiva.
+
+Esse momento também veio acompanhado de ajustes importantes:
+
+- atualização de links públicos;
+- revisão de sitemap e robots;
+- canonicals e metadados alinhados com o novo domínio;
+- changelog atualizado com o estado real da plataforma;
+- continuidade da identidade visual no site e no produto.
+
+Em termos práticos, Vurp.space representa uma versão mais madura, mais coerente e mais preparada para ser apresentada ao mercado como produto comercial.
+
+## O estágio atual da plataforma
+
+Hoje, o Vurp é uma plataforma muito mais completa do que a primeira versão que nasceu para resolver organização básica. O estado atual do produto reúne:
+
+- gestão centralizada de clientes;
+- geração de relatórios profissionais;
+- exportação em PDF;
+- compartilhamento por link;
+- branding com marca da agência;
+- modelos reaproveitáveis;
+- relatórios do zero;
+- Google, Meta, LinkedIn, TikTok e Shopee Ads;
+- seções de criativos;
+- utilidades gratuitas para aquisição orgânica;
+- blog com estratégia e conteúdo SEO;
+- checkout interno com Stripe;
+- analytics e speed insights para leitura de uso e performance.
+
+Essa combinação mostra que a plataforma saiu da fase de validação e entrou numa fase mais séria de produto operacional e comercial.
+
+## O que vem junto com essa evolução
+
+Crescer um produto também significa assumir um padrão mais alto. Quanto mais a plataforma evolui, mais importante fica:
+
+- estabilidade real de exportação;
+- isolamento de dados entre contas;
+- clareza no fluxo de login;
+- consistência visual em todas as telas;
+- métricas certas para cada rede;
+- operação preparada para escala.
+
+É por isso que a evolução do Vurp não é só estética. Ela é estrutural. O objetivo não é parecer maior. É suportar crescimento real sem quebrar a operação do gestor.
+
+## Conclusão
+
+Olhar para a trajetória do Vurp ajuda a entender uma coisa: a primeira versão foi necessária, mas ela nunca foi o destino final. Ela foi o ponto de partida.
+
+O que existe hoje em Vurp.space é o resultado de várias camadas de refinamento: produto, UX, branding, relatórios, SEO, novas plataformas, billing e experiência de entrega.
+
+Esse movimento mostra com clareza a ambição da plataforma: deixar de ser apenas uma ferramenta de apoio e se tornar a base operacional de quem quer crescer com mais organização, mais velocidade e mais autoridade.
+
+Se a primeira versão provou que o problema era real, a versão atual mostra que existe caminho concreto para resolvê-lo de forma profissional.
+
+E agora, com o Vurp.space consolidado como domínio principal, a plataforma entra em uma fase mais madura: menos improviso, mais sistema; menos retrabalho, mais entrega; menos ruído, mais clareza para quem vive de gestão de tráfego todos os dias.`
+    },
+    {
+        slug: "atualizacao-vurp-shopee-ads-exportacao-e-novo-padrao-de-relatorios",
+        title: "Atualização Vurp: Shopee Ads, exportação estável e novo padrão visual de relatórios",
+        excerpt: "Resumo completo das melhorias mais recentes no Vurp: novas plataformas, criativos para todas as redes, ajustes de exportação PDF e evolução da home.",
+        category: "Produto",
+        readTime: 9,
+        date: "2026-03-04",
+        coverImage: "/blog/cover-25.png",
+        metaDescription: "Veja tudo o que entrou na nova atualização do Vurp: Shopee Ads, LinkedIn e TikTok no mesmo padrão visual, criativos para todas as redes, melhorias de exportação PDF e ajustes de UX.",
+        ctaTarget: "/signup",
+        ctaLabel: "Testar a nova versão",
+        content: `## O que mudou no Vurp e por que isso importa para quem vive de gestão de tráfego
+
+Se você usa o Vurp no dia a dia, esta é uma das atualizações mais relevantes que publicamos. O foco foi direto no que impacta operação real: velocidade para montar relatório, consistência visual no PDF final, inclusão de novas plataformas e redução de fricção no fluxo de criação.
+
+Não foi uma atualização “de enfeite”. Foi uma rodada completa para resolver gargalos que atrapalham a rotina de gestores, agências e times de mídia paga.
+
+Ao longo deste artigo, você vai ver exatamente o que entrou, como usar e qual o ganho prático de cada melhoria.
+
+## 1) Shopee Ads oficialmente no fluxo de relatórios
+
+A principal novidade é a entrada de **Shopee Ads** no ecossistema de relatórios. Agora, a plataforma faz parte do mesmo fluxo de criação já usado para Google e Meta, com consistência visual e operacional.
+
+### O que isso traz na prática
+
+- Mais cobertura para quem roda tráfego em e-commerce e marketplace.
+- Menos improviso com planilhas paralelas.
+- Estrutura unificada para apresentar resultados em uma única narrativa ao cliente.
+
+### Métricas adicionadas no bloco Shopee Ads
+
+Entraram as métricas mais usadas para leitura executiva de performance em marketplace:
+
+- Impressões
+- Cliques
+- Pedidos
+- Investido
+
+Com isso, você consegue levar para o relatório final um recorte objetivo de volume, eficiência e resultado comercial sem quebrar o padrão visual do documento.
+
+## 2) LinkedIn Ads e TikTok Ads no mesmo padrão premium de Google/Meta
+
+Outro avanço importante: **LinkedIn Ads e TikTok Ads** deixaram de aparecer como “blocos simplificados” e passaram a seguir o mesmo estilo visual dos módulos principais.
+
+Isso resolve dois problemas recorrentes:
+
+1. Quebra de percepção de qualidade quando o cliente compara seções dentro do mesmo PDF.
+2. Sensação de “relatório incompleto” quando canais secundários aparecem com menos detalhe visual.
+
+Agora, os cards de plataformas mantêm linguagem única de layout, hierarquia e legibilidade. O resultado é um relatório mais coeso, profissional e com aparência de produto premium do começo ao fim.
+
+## 3) Criativos para todas as plataformas (não só Google/Meta)
+
+Uma dor clássica de apresentação para cliente era: “consigo mostrar criativo só em parte dos canais”. Isso foi corrigido.
+
+O Vurp agora suporta seção de criativos para:
+
+- Google Ads
+- Meta Ads
+- LinkedIn Ads
+- TikTok Ads
+- Shopee Ads
+
+### Por que isso é estratégico
+
+Em várias contas, a discussão principal não está só no número, mas no **ativo criativo**: qual imagem performou, qual vídeo converteu, qual variação escalou. Ter esses criativos dentro do relatório reduz ruído na reunião e acelera tomada de decisão para o próximo ciclo.
+
+## 4) Home e mensagens públicas atualizadas com as novas funcionalidades
+
+A home também foi atualizada para refletir o escopo real da plataforma, incluindo Shopee Ads nos pontos principais de comunicação:
+
+- Metadados e SEO da Home
+- Hero principal
+- Seção de showcase
+- FAQ de plataformas suportadas
+- Pricing (regra de contagem por plataforma)
+- Vitrine social/depoimentos
+
+Isso evita desalinhamento entre o que o produto entrega e o que o site comunica. Para quem está avaliando contratação, a mensagem agora está mais clara e aderente ao produto atual.
+
+## 5) Melhorias de consistência na exportação PDF
+
+Nesta rodada também foram feitos ajustes em geração/exportação para reduzir discrepâncias entre preview e PDF final.
+
+### O objetivo técnico dessas melhorias
+
+- Diminuir cortes de texto em cards de métrica.
+- Reduzir variação de composição visual entre modelos.
+- Preservar melhor a legibilidade em valores monetários e números maiores.
+- Aumentar previsibilidade do resultado final no documento exportado.
+
+Se você já gerou relatórios em sequência após as mudanças, deve perceber um comportamento mais estável na saída.
+
+## 6) Ajustes de UX para acelerar criação de relatório
+
+Além das plataformas e da exportação, mexemos em pontos de fricção para encurtar o caminho entre “quero criar” e “relatório pronto”.
+
+Entre os ajustes feitos:
+
+- Organização mais clara de seções no fluxo de modelo.
+- Continuidade de padrão visual entre módulos.
+- Melhor previsibilidade de onde ativar/desativar cada bloco.
+
+O foco foi simples: reduzir cliques desnecessários e facilitar o entendimento para quem trabalha sob pressão de prazo.
+
+## 7) O que muda para gestor e agência no dia a dia
+
+Com este pacote, o ganho real aparece em três frentes:
+
+### 1. Operação
+
+Menos retrabalho para consolidar canais em documentos diferentes. Com Shopee, TikTok, LinkedIn, Google e Meta no mesmo padrão, a produção do relatório fica mais linear.
+
+### 2. Apresentação
+
+Relatório mais uniforme melhora percepção de profissionalismo. Isso impacta diretamente reuniões de fechamento, renovação e retenção.
+
+### 3. Escala
+
+Quanto mais padronizado o output, mais fácil delegar parte do processo para time interno sem perder qualidade de entrega.
+
+## 8) Próximos passos recomendados para quem já usa o Vurp
+
+Para aproveitar tudo que entrou nesta atualização, o ideal é revisar seu processo com este checklist:
+
+1. Validar quais clientes já pedem ou aceitam leitura de Shopee Ads.
+2. Atualizar seus modelos para incluir LinkedIn/TikTok/Shopee quando fizer sentido.
+3. Testar exportação em um relatório real com dados de produção.
+4. Conferir se a seção de criativos está ativa nos canais que você usa.
+5. Padronizar internamente qual estrutura de relatório seu time vai seguir.
+
+Pequenas decisões aqui melhoram muito a consistência da entrega nas próximas semanas.
+
+## 9) Conclusão
+
+Esta atualização foi construída para um objetivo claro: **fazer o Vurp acompanhar a realidade multi-plataforma de quem vive de tráfego pago**, sem sacrificar experiência visual e sem aumentar complexidade operacional.
+
+Com Shopee Ads integrado, social ampliado no mesmo padrão premium, criativos para todos os canais e melhorias no fluxo de exportação, a plataforma fica mais preparada para escalar junto com sua carteira de clientes.
+
+Se você ainda não testou a versão nova em um cenário real, vale fazer isso hoje mesmo com um cliente ativo. Em poucos minutos você consegue perceber o salto em consistência de operação e qualidade de entrega.`,
+    },
+    {
         slug: "por-que-planilhas-estao-sabotando-seus-resultados",
         title: "Por que planilhas estão sabotando seus resultados como gestor de tráfego",
         excerpt: "Você ainda controla contas de anúncios por planilha? Descubra como isso está travando seu crescimento e custando clientes.",
@@ -4081,6 +4607,291 @@ Na primeira semana, organize base e metas. Na segunda, valide mensagens e públi
 ## Conclusão
 
 A operação cresce quando o gestor sai do improviso. Use esse modelo como ponto de partida, adapte ao seu nicho e mantenha cadência de análise. Constância operacional sempre vence correria pontual.`,
+    },
+    {
+        slug: "planejamento-semanal-trafego-pago-sem-caos",
+        title: "Planejamento semanal de tráfego pago: modelo prático para operar sem caos",
+        excerpt: "Um roteiro de segunda a sexta para manter campanhas sob controle e evitar correria de última hora.",
+        category: "Gestão",
+        readTime: 7,
+        date: "2026-03-02T09:00:00",
+        coverImage: "/blog/cover-21.png",
+        metaDescription: "Aprenda um modelo semanal de operação de tráfego pago para ganhar previsibilidade, foco e qualidade de entrega.",
+        ctaTarget: "/dashboard",
+        ctaLabel: "Aplicar no Dashboard",
+        content: `## Planejamento semanal de tráfego pago: modelo prático para operar sem caos
+
+Gestores de tráfego perdem eficiência quando misturam urgência com prioridade. O melhor antídoto é transformar a semana em blocos de decisão. Em vez de reagir a tudo ao mesmo tempo, você define tema e meta para cada dia.
+
+## Roteiro de segunda a sexta
+
+### Segunda: direção e metas
+- Revisar resultados da semana anterior.
+- Definir 3 prioridades por cliente.
+- Alinhar meta de custo, volume e qualidade.
+
+### Terça: otimização de campanhas
+- Ajustar orçamento e lances.
+- Pausar ativos com baixa eficiência.
+- Duplicar o que performou bem.
+
+### Quarta: criativo e mensagem
+- Revisar CTR e taxa de retenção.
+- Atualizar criativos cansados.
+- Refinar copy por estágio de funil.
+
+### Quinta: qualidade de lead e funil
+- Validar lead qualificado com o time comercial.
+- Revisar taxa de avanço por etapa.
+- Corrigir desalinhamentos de público e oferta.
+
+### Sexta: gestão e comunicação
+- Fechar relatório executivo.
+- Registrar aprendizados da semana.
+- Propor plano de ação para a próxima semana.
+
+## O que medir para não se perder
+
+Evite acompanhar dezenas de números. Foque em 5: investimento, CPL qualificado, CPA, taxa de avanço e receita atribuída. Esses indicadores já mostram se a operação está saudável.
+
+## Conclusão
+
+Quando cada dia da semana tem função clara, o trabalho fica previsível e a qualidade sobe. O resultado não vem de esforço aleatório, mas de cadência operacional.`,
+    },
+    {
+        slug: "criativos-que-param-o-scroll-sem-aumentar-custo",
+        title: "Criativos que param o scroll sem aumentar custo: framework de teste rápido",
+        excerpt: "Como criar variações criativas com método para subir CTR e manter CPA sob controle.",
+        category: "Performance",
+        readTime: 8,
+        date: "2026-03-03T09:00:00",
+        coverImage: "/blog/cover-22.png",
+        metaDescription: "Framework simples para testar criativos no Meta e TikTok sem inflar custo por aquisição.",
+        ctaTarget: "/utilidades/gerador-headlines",
+        ctaLabel: "Gerar novas headlines",
+        content: `## Criativos que param o scroll sem aumentar custo: framework de teste rápido
+
+Escalar criativo não é publicar volume aleatório. É testar hipóteses com consistência. O objetivo é encontrar combinações de gancho, promessa e prova que aumentem atenção sem sacrificar qualidade.
+
+## Framework 3x3 para testes
+
+Crie 9 variações combinando:
+- 3 ganchos de abertura.
+- 3 propostas de valor.
+- 3 provas (depoimento, número, demonstração).
+
+Isso gera amplitude de teste com controle de variável.
+
+## Estrutura de execução em 7 dias
+
+1. Dia 1: subir as 9 variações com orçamento equilibrado.
+2. Dia 2 e 3: cortar os piores 30% por CTR e retenção.
+3. Dia 4 e 5: reforçar verba nos melhores 20%.
+4. Dia 6 e 7: consolidar vencedor e criar nova rodada.
+
+## Métricas de decisão
+
+- Primeira etapa: CTR e retenção de vídeo.
+- Segunda etapa: CPC e taxa de clique em página.
+- Terceira etapa: CPA e qualidade de conversão.
+
+Nunca decida com apenas uma métrica.
+
+## Erros que drenam orçamento
+
+- Mudar público e criativo ao mesmo tempo.
+- Escalar vencedor sem validar frequência.
+- Ignorar o feedback comercial sobre qualidade.
+
+## Conclusão
+
+Criativo bom não é o mais bonito, é o que gera resultado repetível. Use método de teste curto, decisões objetivas e iteração semanal.`,
+    },
+    {
+        slug: "ritual-de-relatorio-que-aumenta-retencao",
+        title: "Ritual de relatório que aumenta retenção: como mostrar valor em 15 minutos",
+        excerpt: "Um modelo de fechamento semanal que melhora percepção de valor e reduz risco de churn.",
+        category: "Retenção",
+        readTime: 6,
+        date: "2026-03-04T09:00:00",
+        coverImage: "/blog/cover-23.png",
+        metaDescription: "Aprenda um formato de relatório enxuto e estratégico para aumentar confiança e retenção de clientes.",
+        ctaTarget: "/modelos",
+        ctaLabel: "Abrir modelos",
+        content: `## Ritual de relatório que aumenta retenção: como mostrar valor em 15 minutos
+
+Cliente não cancela apenas por resultado ruim. Ele cancela quando não enxerga direção. Um relatório curto, recorrente e orientado a decisão reduz esse risco.
+
+## Estrutura de 1 página
+
+### 1. Resumo executivo
+- O que melhorou.
+- O que piorou.
+- Impacto no objetivo de negócio.
+
+### 2. Indicadores centrais
+- Investimento.
+- Custo por aquisição.
+- Receita ou oportunidades geradas.
+
+### 3. Decisões para próxima semana
+- O que manter.
+- O que pausar.
+- O que testar.
+
+## Linguagem que gera confiança
+
+Troque frases técnicas por decisão de negócio. Em vez de "subimos CTR", use "reduzimos custo para gerar oportunidade". O cliente compra clareza.
+
+## Frequência ideal
+
+Um fechamento semanal breve + fechamento mensal mais completo. Essa cadência mantém o cliente informado sem sobrecarregar comunicação.
+
+## Conclusão
+
+Relatório não é burocracia, é ferramenta de retenção. Quem comunica decisão com clareza fortalece confiança e aumenta tempo de contrato.`,
+    },
+    {
+        slug: "produtividade-real-gestor-de-trafego-com-blocos",
+        title: "Produtividade real do gestor de tráfego: como organizar o dia por blocos",
+        excerpt: "Pare de alternar tarefas o dia inteiro. Use blocos de foco para produzir mais com menos desgaste.",
+        category: "Produtividade",
+        readTime: 6,
+        date: "2026-03-05T09:00:00",
+        coverImage: "/blog/cover-24.png",
+        metaDescription: "Método de blocos de foco para gestores de tráfego aumentarem produtividade e reduzir retrabalho.",
+        ctaTarget: "/produtividade",
+        ctaLabel: "Ver painel de produtividade",
+        content: `## Produtividade real do gestor de tráfego: como organizar o dia por blocos
+
+A maior perda de tempo na gestão de tráfego é troca de contexto. Você abre campanha, responde mensagem, volta para relatório, muda de cliente e termina o dia cansado sem avanço real.
+
+## Modelo de blocos para operação
+
+- Bloco 1 (manhã): otimização de campanhas críticas.
+- Bloco 2 (meio-dia): comunicação e alinhamentos.
+- Bloco 3 (tarde): análise, documentação e próximos testes.
+
+Cada bloco com objetivo único e tempo definido.
+
+## Regras simples para funcionar
+
+1. Defina no máximo 3 prioridades no início do dia.
+2. Não misture execução com reunião no mesmo bloco.
+3. Finalize cada bloco com registro curto do que foi feito.
+
+## Como medir ganho de produtividade
+
+- Tarefas críticas concluídas por dia.
+- Horas focadas sem interrupção.
+- Redução de retrabalho na semana.
+
+Se esses 3 indicadores sobem, o método está funcionando.
+
+## Conclusão
+
+Produtividade não é fazer mais coisas, é concluir o que move resultado. Blocos de foco criam ritmo e previsibilidade para escalar sem esgotamento.`,
+    },
+    {
+        slug: "escala-com-qualidade-modelo-operacao-90-dias",
+        title: "Escala com qualidade: plano de 90 dias para crescer sem perder padrão",
+        excerpt: "Como aumentar carteira mantendo consistência operacional, comunicação e rentabilidade.",
+        category: "Estratégia",
+        readTime: 8,
+        date: "2026-03-06T09:00:00",
+        coverImage: "/blog/cover-25.png",
+        metaDescription: "Plano de 90 dias para escalar operação de tráfego pago com processos, métricas e padrões de qualidade.",
+        ctaTarget: "/features",
+        ctaLabel: "Estruturar processo",
+        content: `## Escala com qualidade: plano de 90 dias para crescer sem perder padrão
+
+Escalar carteira sem processo derruba qualidade. O objetivo dos próximos 90 dias deve ser aumentar capacidade de entrega com padrão definido, não só aumentar número de clientes.
+
+## Fase 1 (dias 1-30): padronização
+
+- Definir checklist mínimo por cliente.
+- Estabelecer critérios de aprovação de campanha.
+- Padronizar formato de relatório e rotina semanal.
+
+## Fase 2 (dias 31-60): previsibilidade
+
+- Implementar rotina de revisão de carteira.
+- Criar alertas para atraso, saldo e performance.
+- Ajustar distribuição de tempo por tipo de cliente.
+
+## Fase 3 (dias 61-90): crescimento controlado
+
+- Iniciar prospecção com capacidade planejada.
+- Medir impacto de novos clientes na operação.
+- Revisar margens e reajustar contratos de baixa lucratividade.
+
+## Indicadores de saúde da escala
+
+- Taxa de tarefas concluídas no prazo.
+- Retenção mensal de clientes.
+- Margem por cliente.
+- Horas operacionais por conta.
+
+Se escala aumenta e esses números pioram, a operação está frágil.
+
+## Conclusão
+
+Crescer com qualidade exige processo, não improviso. Em 90 dias, com cadência e métricas corretas, sua operação ganha volume sem perder controle.`,
+    },
+    {
+        slug: "botoes-css-react-efeitos-e-importancia",
+        title: "Botões em CSS e React: por que eles mudam seu resultado (com 10 exemplos prontos)",
+        excerpt: "Veja 5 botões CSS e 5 botões React mais avançados, com efeito ao vivo e botão de copiar com 1 clique.",
+        category: "Tutorial",
+        readTime: 12,
+        date: "2026-03-02T00:01:00",
+        coverImage: "/blog/cover-22.png",
+        metaDescription: "Aprenda a importância dos botões em interfaces e copie 10 exemplos prontos (5 CSS e 5 React) com efeitos visuais ao vivo.",
+        ctaTarget: "/features",
+        ctaLabel: "Ver mais recursos no Vurp",
+        content: `## Botões não são detalhe: são decisão, clique e conversão
+
+Quando o usuário entra na sua página, ele não lê tudo. Ele escaneia. E o botão é o ponto de decisão mais importante dessa jornada. Se o botão está confuso, sem hierarquia visual ou sem feedback, você perde clique e confiança.
+
+Na prática, um bom botão precisa cumprir três papéis:
+
+1. **Orientar ação** (o que acontece quando clicar)
+2. **Gerar segurança** (feedback visual e estado claro)
+3. **Aumentar conversão** (destaque certo no momento certo)
+
+## O que você vai ver neste artigo
+
+- 5 exemplos de botões em **CSS puro** (efeitos visuais de alto impacto)
+- 5 exemplos de botões em **React** (estados e interações mais avançadas)
+- Todos com **preview ao vivo**
+- Todos com **cópia em 1 clique**
+
+> A seção interativa está logo abaixo, com os 10 exemplos já renderizados no próprio artigo.
+
+## Quando usar CSS puro vs React
+
+### CSS puro
+Use quando o botão precisa apenas de estilo e microinteração (hover, glow, gradiente, sombra, transição).
+
+### React
+Use quando existe estado de negócio ou fluxo:
+- loading assíncrono
+- confirmação com timer
+- progresso de upload
+- contador de ação
+- feedback contextual
+
+## Regra prática para produto
+
+Se o botão afeta **dados**, **cobrança**, **publicação** ou **automação**, trate como componente de produto: estado explícito, disabled previsível e feedback de sucesso/erro.
+
+Isso reduz clique acidental, melhora UX e evita retrabalho operacional.
+
+## Conclusão
+
+Botão bonito sem lógica não escala. Botão funcional sem clareza também não converte. A combinação certa é: **visual forte + feedback imediato + comportamento previsível**.
+
+Use os exemplos deste artigo como base e padronize sua biblioteca de botões para acelerar o desenvolvimento da sua interface.`,
     }
 ];
 

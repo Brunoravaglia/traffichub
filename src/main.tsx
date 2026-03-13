@@ -1,5 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import App from "./App.tsx";
 import "./index.css";
 
@@ -8,9 +10,14 @@ const CHUNK_ERROR_PATTERNS = [
   /Importing a module script failed/i,
   /Loading chunk [\w-]+ failed/i,
   /ChunkLoadError/i,
+  /error loading dynamically imported module/i,
+  /dynamically imported module/i,
+  /Unable to preload CSS/i,
 ];
 
-const CHUNK_RELOAD_KEY = "__vurp_chunk_reload_attempted__";
+const CHUNK_RELOAD_KEY = "__vurp_chunk_reload_state__";
+const MAX_RELOADS_PER_PATH = 2;
+const CHUNK_RELOAD_WINDOW_MS = 30_000;
 
 const getErrorMessage = (value: unknown): string => {
   if (typeof value === "string") return value;
@@ -24,11 +31,66 @@ const getErrorMessage = (value: unknown): string => {
 const shouldReloadForChunkError = (message: string) =>
   CHUNK_ERROR_PATTERNS.some((pattern) => pattern.test(message));
 
+type ChunkReloadState = {
+  path: string;
+  attempts: number;
+  lastAttemptAt: number;
+};
+
+const getChunkReloadState = (): ChunkReloadState | null => {
+  try {
+    const raw = sessionStorage.getItem(CHUNK_RELOAD_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as ChunkReloadState;
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const setChunkReloadState = (state: ChunkReloadState) => {
+  try {
+    sessionStorage.setItem(CHUNK_RELOAD_KEY, JSON.stringify(state));
+  } catch {
+    // no-op
+  }
+};
+
+const clearChunkReloadState = () => {
+  try {
+    sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+  } catch {
+    // no-op
+  }
+};
+
 const reloadOnceForChunkError = () => {
-  if (sessionStorage.getItem(CHUNK_RELOAD_KEY) === "1") return;
-  sessionStorage.setItem(CHUNK_RELOAD_KEY, "1");
+  const now = Date.now();
+  const currentPath = window.location.pathname;
+  const previousState = getChunkReloadState();
+
+  const isSamePathWithinWindow =
+    previousState &&
+    previousState.path === currentPath &&
+    now - previousState.lastAttemptAt < CHUNK_RELOAD_WINDOW_MS;
+
+  const nextAttempts = isSamePathWithinWindow ? previousState.attempts + 1 : 1;
+  if (nextAttempts > MAX_RELOADS_PER_PATH) return;
+
+  setChunkReloadState({
+    path: currentPath,
+    attempts: nextAttempts,
+    lastAttemptAt: now,
+  });
+
   window.location.reload();
 };
+
+// If the app stays up for a few seconds, clear the guard so future deploys can auto-recover.
+setTimeout(() => {
+  clearChunkReloadState();
+}, 10_000);
 
 window.addEventListener("error", (event) => {
   const message = event.message || getErrorMessage(event.error);
@@ -45,7 +107,9 @@ window.addEventListener("unhandledrejection", (event) => {
 });
 
 createRoot(document.getElementById("root")!).render(
-    <HelmetProvider>
-        <App />
-    </HelmetProvider>
+  <HelmetProvider>
+    <App />
+    <Analytics />
+    <SpeedInsights />
+  </HelmetProvider>
 );

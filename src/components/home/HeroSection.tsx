@@ -24,7 +24,7 @@ const HeroSection = () => {
           </h1>
 
           <p className="mx-auto mt-3 max-w-[52ch] text-[1rem] leading-[1.5] text-muted-foreground sm:mt-5 sm:text-[1.04rem] md:text-[1.1rem]">
-            Organize seus dados, monte dashboards claros e entregue relatorios bonitos em PDF e link, com a marca da sua agencia.
+            Organize Google, Meta, TikTok, LinkedIn e Shopee Ads, monte dashboards claros e entregue relatorios bonitos em PDF e link, com a marca da sua agencia.
           </p>
 
           <div className="mt-5 flex w-full flex-col items-stretch justify-center gap-2 sm:mt-7 sm:items-center md:flex-row">

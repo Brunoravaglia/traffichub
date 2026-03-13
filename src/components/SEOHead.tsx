@@ -23,7 +23,7 @@ interface SEOHeadProps {
 }
 
 const SITE_NAME = "Vurp";
-const BASE_URL = import.meta.env.VITE_SITE_URL || "https://vurp.vercel.app";
+const BASE_URL = import.meta.env.VITE_SITE_URL || "https://vurp.space";
 const DEFAULT_IMAGE = `${BASE_URL}/og-image.png`;
 
 const SEOHead = ({

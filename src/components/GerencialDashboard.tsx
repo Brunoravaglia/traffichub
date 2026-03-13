@@ -279,24 +279,24 @@ const GerencialDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border/50 glassmorphism sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4 flex items-center gap-4">
+      <header className="sticky top-0 z-50 border-b border-border/50 glassmorphism">
+        <div className="container mx-auto flex items-center gap-3 px-4 py-3 sm:px-6 sm:py-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate("/")}
-            className="hover:bg-secondary"
+            className="h-11 w-11 shrink-0 rounded-2xl hover:bg-secondary"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <VCDLogo size="sm" />
-          <div className="h-px flex-1 mx-4 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-          <span className="text-muted-foreground text-sm">Dashboard Gerencial</span>
+          <div className="mx-2 hidden h-px flex-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent sm:block sm:mx-4" />
+          <span className="ml-auto text-xs text-muted-foreground sm:ml-0 sm:text-sm">Dashboard Gerencial</span>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-4 py-6 sm:px-6 sm:py-8">
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -305,7 +305,7 @@ const GerencialDashboard = () => {
         >
           {/* Title */}
           <motion.div variants={itemVariants} className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">
+            <h1 className="mb-2 text-2xl font-bold text-foreground sm:text-3xl">
               Visão Executiva
             </h1>
             <p className="text-muted-foreground">

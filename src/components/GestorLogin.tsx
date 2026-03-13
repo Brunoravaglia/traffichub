@@ -123,22 +123,23 @@ const GestorLogin = () => {
   const selectedGestor = gestores.find((g) => g.id === selectedGestorId);
 
   return (
-    <div className="min-h-screen bg-[#0b1120] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background glow effect */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div
-          className="w-[800px] h-[800px] rounded-full blur-[120px] opacity-20"
-          style={{ backgroundColor: agencia?.cor_primaria || '#ffffff' }}
-        />
+    <div className="min-h-screen bg-[#03070d] flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_18%_22%,rgba(22,163,74,0.2),transparent_45%),radial-gradient(circle_at_82%_12%,rgba(251,191,36,0.09),transparent_38%),linear-gradient(to_bottom,#02050a_0%,#04080f_55%,#050b12_100%)]" />
+      <div className="absolute inset-0 pointer-events-none opacity-[0.08] [background-size:56px_56px] [background-image:linear-gradient(to_right,#10b98122_1px,transparent_1px),linear-gradient(to_bottom,#10b98122_1px,transparent_1px)]" />
+      <div className="absolute top-16 left-1/2 -translate-x-1/2 h-40 w-[90vw] max-w-4xl rounded-full bg-emerald-500/15 blur-[90px] pointer-events-none" />
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20">
+        <div className="px-4 py-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 text-[11px] font-semibold tracking-[0.18em] uppercase text-emerald-300/90">
+          Acesso Vurp
+        </div>
       </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-10 w-full max-w-[420px]"
+        className="relative z-10 w-full max-w-[440px]"
       >
-        <div className="bg-zinc-950/60 backdrop-blur-2xl border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] rounded-3xl p-8">
+        <div className="bg-[#090f17]/85 backdrop-blur-2xl border border-emerald-400/18 shadow-[0_24px_80px_rgba(0,0,0,0.55)] rounded-3xl p-8">
           <div className="flex flex-col items-center gap-8">
             {/* Logo Section */}
             <div className="flex flex-col items-center gap-4">
@@ -203,10 +204,10 @@ const GestorLogin = () => {
                   className="w-full space-y-6"
                 >
                   <div className="text-center space-y-2">
-                    <h1 className="text-2xl font-bold text-foreground">
+                    <h1 className="text-2xl font-bold text-foreground tracking-tight">
                       Bem-vindo ao Vurp
                     </h1>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-zinc-400 text-sm">
                       Digite o identificador da sua agência para continuar
                     </p>
                   </div>
@@ -218,16 +219,13 @@ const GestorLogin = () => {
                         placeholder="Identificador da agência (ex: sua-agencia)"
                         value={agencySlug}
                         onChange={(e) => setAgencySlug(e.target.value)}
-                        className="pl-12 h-14 text-base bg-black/40 border border-white/10 focus:border-white/30 text-white placeholder:text-zinc-500 rounded-xl transition-all"
+                        className="pl-12 h-14 text-base bg-[#05080d]/85 border border-white/10 focus:border-emerald-400/45 text-white placeholder:text-zinc-500 rounded-xl transition-all"
                       />
                     </div>
                     <Button
                       type="submit"
                       disabled={isLoading || !agencySlug}
-                      className="w-full h-14 text-base font-semibold text-white rounded-xl shadow-lg transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
-                      style={{
-                        backgroundColor: agencia?.cor_primaria || '#3b82f6',
-                      }}
+                      className="w-full h-14 text-base font-semibold text-white rounded-xl shadow-[0_10px_35px_rgba(16,185,129,0.28)] transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400"
                     >
                       {isLoading ? (
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -249,7 +247,7 @@ const GestorLogin = () => {
                   className="w-full space-y-6"
                 >
                   <div className="text-center space-y-2">
-                    <p className="text-muted-foreground text-sm uppercase tracking-widest font-semibold opacity-70">
+                    <p className="text-zinc-400 text-sm uppercase tracking-widest font-semibold opacity-80">
                       Login de Gestor
                     </p>
                   </div>
@@ -262,7 +260,7 @@ const GestorLogin = () => {
                         onValueChange={setSelectedGestorId}
                         disabled={isFetching}
                       >
-                        <SelectTrigger className="h-14 text-base bg-black/40 border border-white/10 focus:border-white/30 text-white rounded-xl transition-all">
+                        <SelectTrigger className="h-14 text-base bg-[#05080d]/85 border border-white/10 focus:border-emerald-400/45 text-white rounded-xl transition-all">
                           <SelectValue placeholder={isFetching ? "Carregando..." : "Selecione seu perfil"}>
                             {selectedGestor && (
                               <div className="flex items-center gap-3">
@@ -311,9 +309,9 @@ const GestorLogin = () => {
                           placeholder="Sua senha"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          className={`pl-12 h-14 text-base bg-black/40 border transition-all duration-200 text-white placeholder:text-zinc-500 rounded-xl ${error
+                          className={`pl-12 h-14 text-base bg-[#05080d]/85 border transition-all duration-200 text-white placeholder:text-zinc-500 rounded-xl ${error
                             ? "border-red-500/50 focus:border-red-500"
-                            : "border-white/10 focus:border-white/30"
+                            : "border-white/10 focus:border-emerald-400/45"
                             }`}
                         />
                       </div>
@@ -322,10 +320,7 @@ const GestorLogin = () => {
                     <Button
                       type="submit"
                       disabled={isLoading || !password || !selectedGestorId}
-                      className="w-full h-14 text-base font-semibold text-white rounded-xl shadow-[0_4px_14px_0_rgba(0,0,0,0.39)] transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 mt-2"
-                      style={{
-                        backgroundColor: agencia?.cor_primaria || '#3b82f6',
-                      }}
+                      className="w-full h-14 text-base font-semibold text-white rounded-xl shadow-[0_10px_35px_rgba(16,185,129,0.28)] transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 mt-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400"
                     >
                       {isLoading ? (
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -364,7 +359,7 @@ const GestorLogin = () => {
                 variant="outline"
                 onClick={handleGoogleLogin}
                 disabled={googleLoading}
-                className="w-full h-14 text-base font-medium bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white transition-all gap-3 rounded-xl"
+                className="w-full h-14 text-base font-medium bg-white/6 border-white/15 text-white hover:bg-white/12 hover:text-white transition-all gap-3 rounded-xl"
               >
                 {googleLoading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

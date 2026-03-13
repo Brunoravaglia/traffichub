@@ -142,7 +142,7 @@ const ClientList = () => {
   };
 
   return (
-    <div className="min-h-full bg-background p-6">
+    <div className="min-h-full bg-background px-4 py-5 sm:p-6">
       {/* Main Content */}
       <div className="max-w-4xl mx-auto">
         <motion.div
@@ -151,20 +151,20 @@ const ClientList = () => {
           className="flex flex-col gap-4 mb-8"
         >
           {/* Header Row */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">
+              <h1 className="mb-2 text-3xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-4xl">
                 {gestorFilter && gestorInfo 
                   ? `Clientes de ${gestorInfo.nome}` 
                   : "Todos os Clientes"}
               </h1>
-              <p className="text-muted-foreground">
+              <p className="max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
                 Selecione um cliente para gerenciar o checklist
               </p>
             </div>
             <Button
               onClick={() => navigate("/novo-cliente")}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="h-14 w-full bg-primary text-base hover:bg-primary/90 sm:w-auto"
             >
               <Plus className="w-4 h-4 mr-2" />
               Novo Cliente
@@ -172,14 +172,16 @@ const ClientList = () => {
           </div>
 
           {/* Filter Row */}
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border">
-            <Filter className="w-5 h-5 text-muted-foreground" />
-            <span className="text-sm font-medium text-foreground">Filtrar por gestor:</span>
+          <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-3">
+              <Filter className="h-5 w-5 shrink-0 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Filtrar por gestor:</span>
+            </div>
             <Select
               value={selectedGestorId}
               onValueChange={setSelectedGestorId}
             >
-              <SelectTrigger className="w-[280px] bg-background">
+              <SelectTrigger className="h-12 w-full bg-background sm:w-[280px]">
                 <SelectValue placeholder="Selecione um gestor" />
               </SelectTrigger>
               <SelectContent>
@@ -212,7 +214,7 @@ const ClientList = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedGestorId(loggedGestor?.id || "all")}
-                className="text-muted-foreground hover:text-primary"
+                className="h-11 justify-start px-0 text-muted-foreground hover:text-primary sm:ml-auto sm:h-9 sm:px-3"
               >
                 Ver meus clientes
               </Button>
@@ -263,70 +265,76 @@ const ClientList = () => {
                   <motion.div
                     key={cliente.id}
                     variants={itemVariants}
-                    className="vcd-card-hover p-6 group"
+                    className="vcd-card-hover group p-4 sm:p-6"
                   >
-                    <div className="flex items-center gap-4">
-                      {/* Client Logo */}
-                      <Avatar className="w-14 h-14 border-2 border-border">
-                        <AvatarImage src={cliente.logo_url || undefined} alt={cliente.nome} />
-                        <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
-                          {cliente.nome.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-start gap-3 sm:gap-4">
+                        <Avatar className="h-14 w-14 shrink-0 border-2 border-border sm:h-16 sm:w-16">
+                          <AvatarImage src={cliente.logo_url || undefined} alt={cliente.nome} />
+                          <AvatarFallback className="bg-primary/10 text-lg font-semibold text-primary">
+                            {cliente.nome.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
 
-                      {/* Client Info */}
-                      <button
-                        type="button"
-                        className="flex-1 min-w-0 cursor-pointer text-left"
-                        onClick={() => navigate(`/cliente/${cliente.id}`)}
-                      >
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-                            {cliente.nome}
-                          </h3>
-                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
-                            {cliente.gestores?.nome}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            {format(new Date(cliente.data_inicio), "dd/MM/yyyy")}
-                          </span>
-                          {totalChecklists > 0 && (
-                            <span className="text-xs">
-                              {totalChecklists} relatório{totalChecklists > 1 ? 's' : ''}
-                            </span>
-                          )}
-                        </div>
-                      </button>
+                        <button
+                          type="button"
+                          className="min-w-0 flex-1 cursor-pointer text-left"
+                          onClick={() => navigate(`/cliente/${cliente.id}`)}
+                        >
+                          <div className="flex flex-col gap-2">
+                            <h3 className="line-clamp-2 text-xl font-semibold leading-tight text-foreground transition-colors group-hover:text-primary sm:text-2xl">
+                              {cliente.nome}
+                            </h3>
 
-                      {/* Progress */}
-                      <div className="w-32">
-                        <ProgressBar progress={progress} size="sm" />
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                                {cliente.gestores?.nome}
+                              </span>
+                              <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <Calendar className="h-4 w-4" />
+                                {format(new Date(cliente.data_inicio), "dd/MM/yyyy")}
+                              </span>
+                              {totalChecklists > 0 && (
+                                <span className="text-sm text-muted-foreground">
+                                  {totalChecklists} relatório{totalChecklists > 1 ? "s" : ""}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </button>
                       </div>
 
-                      {/* History Button */}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/cliente/${cliente.id}/historico`);
-                        }}
-                        className="hover:bg-primary/10 hover:text-primary"
-                        title="Ver histórico"
-                      >
-                        <History className="w-5 h-5" />
-                      </Button>
+                      <div className="flex items-center gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-2 flex items-center justify-between text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
+                            <span>Progresso</span>
+                            <span>{progress}%</span>
+                          </div>
+                          <ProgressBar progress={progress} size="sm" />
+                        </div>
 
-                      {/* Arrow */}
-                      <button
-                        onClick={() => navigate(`/cliente/${cliente.id}`)}
-                        className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
-                      >
-                        <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                      </button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/cliente/${cliente.id}/historico`);
+                          }}
+                          className="h-11 w-11 shrink-0 rounded-xl hover:bg-primary/10 hover:text-primary"
+                          title="Ver histórico"
+                        >
+                          <History className="h-5 w-5" />
+                        </Button>
+
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/cliente/${cliente.id}`)}
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors hover:bg-primary/10"
+                          title="Abrir cliente"
+                        >
+                          <ArrowRight className="h-5 w-5 text-muted-foreground transition-all group-hover:translate-x-1 group-hover:text-primary" />
+                        </button>
+                      </div>
                     </div>
                   </motion.div>
                 );

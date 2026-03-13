@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Moon, Sun } from "lucide-react";
 import AppSidebar from "./AppSidebar";
+import MobileDockNav from "./MobileDockNav";
 import SessionTimer from "./SessionTimer";
 import OnboardingChecklist from "./OnboardingChecklist";
 import WelcomeModal from "./WelcomeModal";
@@ -18,6 +19,7 @@ import { useAchievements } from "@/hooks/useAchievements";
 import { useInactivityDetection } from "@/hooks/useInactivityDetection";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -25,6 +27,7 @@ interface AppLayoutProps {
 
 const AppLayout = ({ children }: AppLayoutProps) => {
   const { gestor, isLoggedIn, logout, refreshGestor, sessionId } = useGestor();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeShownSession, setWelcomeShownSession] = useState(() => {
@@ -152,29 +155,45 @@ const AppLayout = ({ children }: AppLayoutProps) => {
     <SidebarProvider defaultOpen={true}>
       <ErrorTracker />
       <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar />
+        <div className="hidden md:block">
+          <AppSidebar />
+        </div>
         <SidebarInset className="flex flex-col flex-1">
           {/* Top Bar with Sidebar Trigger */}
-          <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:px-6">
-            <SidebarTrigger className="h-8 w-8" />
+          <header className="sticky top-0 z-40 flex h-14 items-center gap-2 border-b border-border/50 bg-background/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:gap-4 sm:px-4 md:px-6">
+            <SidebarTrigger className="hidden h-8 w-8 shrink-0 md:inline-flex" />
             <div className="flex-1" />
 
             {/* Session Timer */}
             <SessionTimer />
 
             {/* Notification Center */}
-            <NotificationCenter />
+            <div className="hidden sm:block">
+              <NotificationCenter />
+            </div>
+
+            {/* Theme Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="hidden h-8 w-8 text-muted-foreground hover:text-foreground sm:inline-flex"
+              aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
+              title={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
 
             {/* User Info */}
             {gestor && (
-              <div className="flex items-center gap-3">
+              <div className="hidden items-center gap-3 sm:flex">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={gestor.foto_url || undefined} />
                   <AvatarFallback className="bg-primary/20 text-primary text-sm">
                     {gestor.nome.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-sm font-medium hidden md:block">{gestor.nome}</span>
+                <span className="hidden text-sm font-medium md:block">{gestor.nome}</span>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -188,13 +207,14 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           </header>
 
           {/* Main Content */}
-          <main className="flex-1 p-6 md:p-8 lg:p-10 overflow-x-hidden">
+          <main className="flex-1 overflow-x-hidden p-4 pb-28 md:p-8 md:pb-8 lg:p-10">
             <div className="max-w-[1600px] mx-auto w-full">
               {children}
             </div>
           </main>
         </SidebarInset>
       </div>
+      <MobileDockNav />
 
       {/* Onboarding Checklist */}
       <OnboardingChecklist />

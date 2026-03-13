@@ -47,7 +47,7 @@ const plans = [
             "Previsão de saldo",
             "Modelos customizáveis",
         ],
-        extra: "Cada plataforma (Google/Meta/TikTok/LinkedIn) = 1 conta",
+        extra: "Cada plataforma (Google/Meta/TikTok/LinkedIn/Shopee) = 1 conta",
         cta: "Escolher Agência",
         gradient: "from-primary/15 via-primary/5 to-transparent",
         borderColor: "border-primary/40",
@@ -204,7 +204,7 @@ const PricingSection = () => {
                     transition={{ delay: 0.6 }}
                     className="text-center text-sm text-muted-foreground mt-10"
                 >
-                    *Cada plataforma de anúncio (Google, Meta, TikTok, LinkedIn) por cliente conta como uma conta separada.
+                    *Cada plataforma de anúncio (Google, Meta, TikTok, LinkedIn e Shopee) por cliente conta como uma conta separada.
                 </motion.p>
             </div>
         </section>

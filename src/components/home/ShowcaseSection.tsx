@@ -35,7 +35,7 @@ const tabs = [
         icon: FileBarChart,
         title: "Relatórios que impressionam",
         description:
-            "Crie relatórios profissionais com dados de Google, Meta, TikTok e LinkedIn. Exporte em PDF com sua marca.",
+            "Crie relatórios profissionais com dados de Google, Meta, TikTok, LinkedIn e Shopee Ads. Exporte em PDF com sua marca.",
         gradient: "from-blue-500/20 via-blue-500/5 to-transparent",
         mockupContent: (
             <div className="p-2 h-full">

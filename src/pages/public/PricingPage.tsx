@@ -4,7 +4,7 @@ import { Check, Zap, Star, Crown, Calculator, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import PublicLayout from "@/components/home/PublicLayout";
-import { PLANS, formatPrice, redirectToCheckout } from "@/lib/stripe";
+import { PLANS, formatPrice } from "@/lib/stripe";
 import SEOHead from "@/components/SEOHead";
 import { toast } from "@/hooks/use-toast";
 
@@ -172,7 +172,7 @@ const PricingPage = () => {
                                                 return;
                                             }
                                             try {
-                                                await redirectToCheckout(priceId);
+                                                window.location.href = `/account/checkout?priceId=${encodeURIComponent(priceId)}`;
                                             } catch (err) {
                                                 toast({
                                                     title: "Erro ao abrir checkout",

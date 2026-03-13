@@ -72,7 +72,7 @@ interface MetricConfig {
   key: string;
   label: string;
   icon: string;
-  platform: "google" | "meta" | "both";
+  platform: "google" | "meta" | "linkedin" | "tiktok" | "shopee" | "both";
   visible: boolean;
 }
 
@@ -86,8 +86,14 @@ interface TemplateConfig {
     showObjetivos: boolean;
     showGoogleAds: boolean;
     showMetaAds: boolean;
+    showLinkedinAds: boolean;
+    showTiktokAds: boolean;
+    showShopeeAds: boolean;
     showCriativosGoogle: boolean;
     showCriativosMeta: boolean;
+    showCriativosLinkedin: boolean;
+    showCriativosTiktok: boolean;
+    showCriativosShopee: boolean;
     showResumo: boolean;
   };
 }
@@ -99,24 +105,122 @@ const DEFAULT_METRICS: MetricConfig[] = [
   { key: "google_investido", label: "Investido", icon: "dollar", platform: "google", visible: true },
   { key: "google_cpl", label: "Custo por Lead", icon: "target", platform: "google", visible: true },
   { key: "google_cpm", label: "CPM", icon: "trending", platform: "google", visible: false },
-  { key: "google_conversoes", label: "Conversões", icon: "check", platform: "google", visible: true },
+  { key: "google_conversoes", label: "Conversões", icon: "check", platform: "google", visible: false },
   { key: "meta_impressoes", label: "Impressões", icon: "eye", platform: "meta", visible: true },
-  { key: "meta_engajamento", label: "Engajamento", icon: "trending", platform: "meta", visible: true },
-  { key: "meta_conversas", label: "Conversas", icon: "message", platform: "meta", visible: true },
+  { key: "meta_engajamento", label: "Engajamento", icon: "trending", platform: "meta", visible: false },
+  { key: "meta_conversas", label: "Conversas", icon: "message", platform: "meta", visible: false },
   { key: "meta_investido", label: "Investido", icon: "dollar", platform: "meta", visible: true },
   { key: "meta_cpl", label: "Custo por Lead", icon: "target", platform: "meta", visible: true },
   { key: "meta_cliques", label: "Cliques no Link", icon: "click", platform: "meta", visible: true },
   { key: "meta_alcance", label: "Alcance", icon: "users", platform: "meta", visible: true },
   { key: "meta_leads", label: "Leads Gerados", icon: "user-plus", platform: "meta", visible: true },
+  { key: "linkedin_impressoes", label: "Impressões", icon: "eye", platform: "linkedin", visible: true },
+  { key: "linkedin_cliques", label: "Cliques", icon: "click", platform: "linkedin", visible: true },
+  { key: "linkedin_leads", label: "Leads", icon: "user-plus", platform: "linkedin", visible: true },
+  { key: "linkedin_investido", label: "Investido", icon: "dollar", platform: "linkedin", visible: true },
+  { key: "linkedin_cpm", label: "CPM", icon: "trending", platform: "linkedin", visible: true },
+  { key: "linkedin_cpc", label: "CPC", icon: "dollar", platform: "linkedin", visible: true },
+  { key: "linkedin_ctr", label: "CTR (%)", icon: "percent", platform: "linkedin", visible: true },
+  { key: "linkedin_cpl", label: "CPL", icon: "target", platform: "linkedin", visible: true },
+  { key: "linkedin_conversoes", label: "Conversões", icon: "check", platform: "linkedin", visible: false },
+  { key: "linkedin_alcance", label: "Alcance", icon: "users", platform: "linkedin", visible: true },
+  { key: "tiktok_impressoes", label: "Impressões", icon: "eye", platform: "tiktok", visible: true },
+  { key: "tiktok_cliques", label: "Cliques", icon: "click", platform: "tiktok", visible: true },
+  { key: "tiktok_leads", label: "Leads", icon: "user-plus", platform: "tiktok", visible: true },
+  { key: "tiktok_investido", label: "Investido", icon: "dollar", platform: "tiktok", visible: true },
+  { key: "tiktok_cpm", label: "CPM", icon: "trending", platform: "tiktok", visible: true },
+  { key: "tiktok_cpc", label: "CPC", icon: "dollar", platform: "tiktok", visible: true },
+  { key: "tiktok_ctr", label: "CTR (%)", icon: "percent", platform: "tiktok", visible: true },
+  { key: "tiktok_cpl", label: "CPL", icon: "target", platform: "tiktok", visible: true },
+  { key: "tiktok_conversoes", label: "Conversões", icon: "check", platform: "tiktok", visible: false },
+  { key: "tiktok_views", label: "Views de Vídeo", icon: "eye", platform: "tiktok", visible: true },
+  { key: "shopee_impressoes", label: "Impressões", icon: "eye", platform: "shopee", visible: true },
+  { key: "shopee_cliques", label: "Cliques", icon: "click", platform: "shopee", visible: true },
+  { key: "shopee_pedidos", label: "Pedidos", icon: "check", platform: "shopee", visible: true },
+  { key: "shopee_investido", label: "Investido", icon: "dollar", platform: "shopee", visible: true },
+  { key: "shopee_gmv", label: "GMV", icon: "trending", platform: "shopee", visible: true },
+  { key: "shopee_cpm", label: "CPM", icon: "trending", platform: "shopee", visible: true },
+  { key: "shopee_cpc", label: "CPC", icon: "dollar", platform: "shopee", visible: true },
+  { key: "shopee_ctr", label: "CTR (%)", icon: "percent", platform: "shopee", visible: true },
+  { key: "shopee_cpa", label: "CPA", icon: "target", platform: "shopee", visible: true },
+  { key: "shopee_roas", label: "ROAS", icon: "trending", platform: "shopee", visible: true },
 ];
 
 const DEFAULT_SECTIONS = {
   showObjetivos: true,
   showGoogleAds: true,
   showMetaAds: true,
+  showLinkedinAds: false,
+  showTiktokAds: false,
+  showShopeeAds: false,
   showCriativosGoogle: true,
   showCriativosMeta: true,
+  showCriativosLinkedin: false,
+  showCriativosTiktok: false,
+  showCriativosShopee: false,
   showResumo: true,
+};
+
+const PLATFORM_META: Array<{
+  key: Exclude<MetricConfig["platform"], "both">;
+  label: string;
+  chipClass: string;
+}> = [
+  { key: "google", label: "Google Ads", chipClass: "bg-blue-500/10 text-blue-400 border-blue-500/30" },
+  { key: "meta", label: "Meta Ads", chipClass: "bg-purple-500/10 text-purple-400 border-purple-500/30" },
+  { key: "linkedin", label: "LinkedIn Ads", chipClass: "bg-sky-500/10 text-sky-400 border-sky-500/30" },
+  { key: "tiktok", label: "TikTok Ads", chipClass: "bg-pink-500/10 text-pink-400 border-pink-500/30" },
+  { key: "shopee", label: "Shopee Ads", chipClass: "bg-orange-500/10 text-orange-400 border-orange-500/30" },
+];
+
+const parseLayout = (layout: unknown): Record<string, unknown> => {
+  if (!layout) return {};
+  if (typeof layout === "string") {
+    try {
+      const parsed = JSON.parse(layout);
+      return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : {};
+    } catch {
+      return {};
+    }
+  }
+  return typeof layout === "object" ? (layout as Record<string, unknown>) : {};
+};
+
+const toLegacyMetric = (metric: any): MetricConfig | null => {
+  if (!metric || typeof metric !== "object") return null;
+  const key = typeof metric.metric_key === "string" ? metric.metric_key : "";
+  if (!key) return null;
+  const platformRaw = typeof metric.platform === "string" ? metric.platform : "google";
+  const platform: MetricConfig["platform"] =
+    platformRaw === "meta" || platformRaw === "both" ? platformRaw : "google";
+
+  return {
+    key,
+    label: typeof metric.label === "string" && metric.label.trim() ? metric.label : key,
+    icon: typeof metric.icon === "string" && metric.icon.trim() ? metric.icon : "bar-chart-3",
+    platform,
+    visible: metric.is_visible !== false,
+  };
+};
+
+const normalizeSections = (value: unknown): TemplateConfig["sections"] => {
+  const defaults = { ...DEFAULT_SECTIONS };
+  if (!value || typeof value !== "object") return defaults;
+  const source = value as Record<string, unknown>;
+  return {
+    showObjetivos: typeof source.showObjetivos === "boolean" ? source.showObjetivos : defaults.showObjetivos,
+    showGoogleAds: typeof source.showGoogleAds === "boolean" ? source.showGoogleAds : defaults.showGoogleAds,
+    showMetaAds: typeof source.showMetaAds === "boolean" ? source.showMetaAds : defaults.showMetaAds,
+    showLinkedinAds: typeof source.showLinkedinAds === "boolean" ? source.showLinkedinAds : defaults.showLinkedinAds,
+    showTiktokAds: typeof source.showTiktokAds === "boolean" ? source.showTiktokAds : defaults.showTiktokAds,
+    showShopeeAds: typeof source.showShopeeAds === "boolean" ? source.showShopeeAds : defaults.showShopeeAds,
+    showCriativosGoogle: typeof source.showCriativosGoogle === "boolean" ? source.showCriativosGoogle : defaults.showCriativosGoogle,
+    showCriativosMeta: typeof source.showCriativosMeta === "boolean" ? source.showCriativosMeta : defaults.showCriativosMeta,
+    showCriativosLinkedin: typeof source.showCriativosLinkedin === "boolean" ? source.showCriativosLinkedin : defaults.showCriativosLinkedin,
+    showCriativosTiktok: typeof source.showCriativosTiktok === "boolean" ? source.showCriativosTiktok : defaults.showCriativosTiktok,
+    showCriativosShopee: typeof source.showCriativosShopee === "boolean" ? source.showCriativosShopee : defaults.showCriativosShopee,
+    showResumo: typeof source.showResumo === "boolean" ? source.showResumo : defaults.showResumo,
+  };
 };
 
 type PlatformFilter = "all" | "google" | "meta";
@@ -152,7 +256,7 @@ const Modelos = () => {
     queryFn: async () => {
       let query = supabase
         .from("report_templates")
-        .select("*")
+        .select("*, report_template_metrics(*)")
         .order("created_at", { ascending: false });
 
       if (gestor?.id) {
@@ -163,14 +267,25 @@ const Modelos = () => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return (data || []).map((t) => ({
-        id: t.id,
-        nome: t.nome,
-        descricao: t.descricao || "",
-        is_global: t.is_global,
-        metrics: (t.layout as any)?.metrics || DEFAULT_METRICS,
-        sections: (t.layout as any)?.sections || DEFAULT_SECTIONS,
-      })) as TemplateConfig[];
+      return (data || []).map((t: any) => {
+        const parsedLayout = parseLayout(t.layout);
+        const layoutMetrics = Array.isArray(parsedLayout.metrics) ? (parsedLayout.metrics as MetricConfig[]) : [];
+        const legacyMetrics = Array.isArray(t.report_template_metrics)
+          ? t.report_template_metrics.map(toLegacyMetric).filter(Boolean)
+          : [];
+
+        return {
+          id: t.id,
+          nome: t.nome,
+          descricao: t.descricao || "",
+          is_global: t.is_global,
+          metrics:
+            layoutMetrics.length > 0
+              ? layoutMetrics
+              : (legacyMetrics.length > 0 ? (legacyMetrics as MetricConfig[]) : DEFAULT_METRICS),
+          sections: normalizeSections(parsedLayout.sections),
+        };
+      }) as TemplateConfig[];
     },
     enabled: true,
   });
@@ -320,8 +435,11 @@ const Modelos = () => {
   const getTemplateStats = (template: TemplateConfig) => {
     const googleMetrics = template.metrics?.filter(m => m.platform === "google" && m.visible).length || 0;
     const metaMetrics = template.metrics?.filter(m => m.platform === "meta" && m.visible).length || 0;
+    const linkedinMetrics = template.metrics?.filter(m => m.platform === "linkedin" && m.visible).length || 0;
+    const tiktokMetrics = template.metrics?.filter(m => m.platform === "tiktok" && m.visible).length || 0;
+    const shopeeMetrics = template.metrics?.filter(m => m.platform === "shopee" && m.visible).length || 0;
     const activeSections = Object.values(template.sections || {}).filter(Boolean).length;
-    return { googleMetrics, metaMetrics, activeSections };
+    return { googleMetrics, metaMetrics, linkedinMetrics, tiktokMetrics, shopeeMetrics, activeSections };
   };
 
   const getTemplateIcon = (index: number) => {
@@ -705,6 +823,30 @@ const Modelos = () => {
                             Meta: <span className="text-foreground font-medium">{stats.metaMetrics}</span>
                           </span>
                         </div>
+                        {stats.linkedinMetrics > 0 && (
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <div className="w-2 h-2 rounded-full bg-sky-500" />
+                            <span className="text-muted-foreground">
+                              LinkedIn: <span className="text-foreground font-medium">{stats.linkedinMetrics}</span>
+                            </span>
+                          </div>
+                        )}
+                        {stats.tiktokMetrics > 0 && (
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <div className="w-2 h-2 rounded-full bg-pink-500" />
+                            <span className="text-muted-foreground">
+                              TikTok: <span className="text-foreground font-medium">{stats.tiktokMetrics}</span>
+                            </span>
+                          </div>
+                        )}
+                        {stats.shopeeMetrics > 0 && (
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <div className="w-2 h-2 rounded-full bg-orange-500" />
+                            <span className="text-muted-foreground">
+                              Shopee: <span className="text-foreground font-medium">{stats.shopeeMetrics}</span>
+                            </span>
+                          </div>
+                        )}
                         <div className="flex items-center gap-1.5 text-xs">
                           <Layout className="w-3 h-3 text-muted-foreground" />
                           <span className="text-muted-foreground">
@@ -814,70 +956,42 @@ const Modelos = () => {
             </div>
 
             {/* Metrics Config */}
-            <div className="space-y-3">
-              <Label className="text-base font-semibold">
-                Métricas Google Ads ({formData.metrics.filter(m => m.platform === "google" && m.visible).length} selecionadas)
-              </Label>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-1">
-                {formData.metrics
-                  .filter((m) => m.platform === "google")
-                  .map((metric) => (
-                    <div
-                      key={metric.key}
-                      role="button"
-                      tabIndex={0}
-                      className={cn(
-                        "flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50",
-                        metric.visible
-                          ? "bg-blue-500/10 border-blue-500/30"
-                          : "bg-secondary/30 border-border"
-                      )}
-                      onClick={() => toggleMetric(metric.key)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          toggleMetric(metric.key);
-                        }
-                      }}
-                    >
-                      <span className="text-sm truncate mr-2">{metric.label}</span>
-                      <Switch checked={metric.visible} />
-                    </div>
-                  ))}
-              </div>
-            </div>
+            <div className="space-y-4">
+              {PLATFORM_META.map((platformMeta) => {
+                const platformMetrics = formData.metrics.filter((m) => m.platform === platformMeta.key);
+                if (platformMetrics.length === 0) return null;
 
-            <div className="space-y-3">
-              <Label className="text-base font-semibold">
-                Métricas Meta Ads ({formData.metrics.filter(m => m.platform === "meta" && m.visible).length} selecionadas)
-              </Label>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-1">
-                {formData.metrics
-                  .filter((m) => m.platform === "meta")
-                  .map((metric) => (
-                    <div
-                      key={metric.key}
-                      role="button"
-                      tabIndex={0}
-                      className={cn(
-                        "flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50",
-                        metric.visible
-                          ? "bg-purple-500/10 border-purple-500/30"
-                          : "bg-secondary/30 border-border"
-                      )}
-                      onClick={() => toggleMetric(metric.key)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          toggleMetric(metric.key);
-                        }
-                      }}
-                    >
-                      <span className="text-sm truncate mr-2">{metric.label}</span>
-                      <Switch checked={metric.visible} />
+                return (
+                  <div key={platformMeta.key} className="space-y-3">
+                    <Label className="text-base font-semibold">
+                      Métricas {platformMeta.label} ({platformMetrics.filter((m) => m.visible).length} selecionadas)
+                    </Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-1">
+                      {platformMetrics.map((metric) => (
+                        <div
+                          key={metric.key}
+                          role="button"
+                          tabIndex={0}
+                          className={cn(
+                            "flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50",
+                            metric.visible ? platformMeta.chipClass : "bg-secondary/30 border-border"
+                          )}
+                          onClick={() => toggleMetric(metric.key)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              toggleMetric(metric.key);
+                            }
+                          }}
+                        >
+                          <span className="text-sm truncate mr-2">{metric.label}</span>
+                          <Switch checked={metric.visible} />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-              </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Actions */}
