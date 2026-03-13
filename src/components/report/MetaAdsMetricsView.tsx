@@ -11,32 +11,13 @@ const toSafeNumber = (value: unknown, fallback = 0) => {
     return Number.isFinite(parsed) ? parsed : fallback;
 };
 
-/** Adaptive font size — always readable, never overflows */
-const getPrimarySize = (len: number, isCurrency = false) => {
-    if (isCurrency) {
-        if (len <= 10) return "text-[clamp(1.25rem,2.4vw,1.95rem)]";
-        if (len <= 14) return "text-[clamp(1.05rem,1.8vw,1.5rem)]";
-        return "text-[clamp(0.9rem,1.4vw,1.15rem)]";
-    }
-    if (len <= 6) return "text-[clamp(1.4rem,2.8vw,2.1rem)]";
-    if (len <= 10) return "text-[clamp(1.15rem,2.2vw,1.7rem)]";
-    if (len <= 14) return "text-[clamp(1rem,1.6vw,1.35rem)]";
-    return "text-[clamp(0.85rem,1.2vw,1.1rem)]";
-};
-
-const getSecondarySize = (len: number) => {
-    if (len <= 8) return "text-[clamp(0.95rem,1.6vw,1.15rem)]";
-    if (len <= 12) return "text-[clamp(0.85rem,1.3vw,1rem)]";
-    return "text-[clamp(0.78rem,1.1vw,0.9rem)]";
-};
-
 export const MetaAdsMetricsView = ({ meta, metricsConfig }: MetaAdsMetricsViewProps) => {
     const additionalMetrics: { label: string; value: string }[] = [];
     const primaryMetrics = [
         { label: "Impressões", value: formatNumber(meta.impressoes), icon: "👁️", visible: true },
         { label: "Engajamento", value: formatNumber(meta.engajamento), icon: "🔄", visible: !!metricsConfig.showMetaEngajamento },
         { label: "Conversas", value: formatNumber(meta.conversas), icon: "💬", visible: !!metricsConfig.showMetaConversas },
-        { label: "Investido", value: formatCurrency(meta.investido), icon: "💰", visible: true, isCurrency: true },
+        { label: "Investido", value: formatCurrency(meta.investido), icon: "💰", visible: true },
     ].filter((metric) => metric.visible);
     const showMetaCpl = metricsConfig.showMetaCustoPorLead ?? metricsConfig.showMetaCustoLead;
     if (showMetaCpl) additionalMetrics.push({ label: "Custo por Lead", value: formatCurrency(meta.custoPorLead) });
@@ -83,55 +64,31 @@ export const MetaAdsMetricsView = ({ meta, metricsConfig }: MetaAdsMetricsViewPr
             </div>
 
             {/* Primary Metrics */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-3 sm:mb-4 relative">
-                {primaryMetrics.map((m) => {
-                    const str = String(m.value);
-                    return (
-                        <div
-                            key={m.label}
-                            className="min-w-0 flex flex-col justify-between p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-[#ffb500]/30 transition-all duration-500 overflow-hidden"
-                            style={{ minHeight: "clamp(90px, 12vw, 130px)" }}
-                        >
-                            <p
-                                className={`font-black text-white tracking-tight leading-[1.2] tabular-nums overflow-hidden ${
-                                    (m as any).isCurrency ? getPrimarySize(str.length, true) : getPrimarySize(str.length)
-                                }`}
-                                style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
-                                title={str}
-                            >
-                                {m.value}
-                            </p>
-                            <div className="flex items-center gap-1.5 mt-auto pt-2">
-                                <span className="text-[9px] sm:text-[10px] opacity-40 flex-shrink-0">{m.icon}</span>
-                                <p className="text-[8px] sm:text-[9px] font-black text-gray-500 uppercase tracking-[0.12em] sm:tracking-[0.15em] truncate">{m.label}</p>
-                            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-3 sm:mb-4 relative">
+                {primaryMetrics.map((m) => (
+                    <div key={m.label} className="min-w-0 p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-[#ffb500]/30 transition-all duration-500 overflow-hidden">
+                        <p className="text-xl sm:text-2xl font-black text-white mb-3 sm:mb-4 tracking-tight leading-tight tabular-nums break-words" title={String(m.value)}>
+                            {m.value}
+                        </p>
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] sm:text-[10px] opacity-40 flex-shrink-0">{m.icon}</span>
+                            <p className="text-[8px] sm:text-[10px] font-black text-gray-500 uppercase tracking-[0.1em] sm:tracking-[0.15em] leading-tight">{m.label}</p>
                         </div>
-                    );
-                })}
+                    </div>
+                ))}
             </div>
 
             {/* Additional Metrics */}
             {additionalMetrics.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 relative">
-                    {additionalMetrics.map((metric) => {
-                        const str = String(metric.value);
-                        return (
-                            <div
-                                key={metric.label}
-                                className="min-w-0 flex flex-col justify-between p-3 sm:p-4 rounded-xl bg-white/[0.01] border border-white/[0.03] hover:bg-white/[0.04] transition-all duration-300 overflow-hidden"
-                                style={{ minHeight: "clamp(70px, 9vw, 100px)" }}
-                            >
-                                <p
-                                    className={`${getSecondarySize(str.length)} font-bold text-[#ffb500] tracking-tight leading-[1.2] tabular-nums overflow-hidden`}
-                                    style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
-                                    title={str}
-                                >
-                                    {str}
-                                </p>
-                                <p className="text-[7px] sm:text-[8px] font-black text-gray-500 uppercase tracking-[0.1em] sm:tracking-[0.12em] truncate mt-auto pt-1.5">{metric.label}</p>
-                            </div>
-                        );
-                    })}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 relative">
+                    {additionalMetrics.map((metric) => (
+                        <div key={metric.label} className="min-w-0 p-3 sm:p-4 rounded-xl bg-white/[0.01] border border-white/[0.03] hover:bg-white/[0.04] transition-all duration-300 overflow-hidden">
+                            <p className="text-base sm:text-lg font-bold text-[#ffb500] mb-2 tracking-tight leading-tight tabular-nums break-words" title={String(metric.value)}>
+                                {metric.value}
+                            </p>
+                            <p className="text-[7px] sm:text-[9px] font-black text-gray-500 uppercase tracking-[0.1em] sm:tracking-[0.12em] leading-tight">{metric.label}</p>
+                        </div>
+                    ))}
                 </div>
             )}
         </div>
