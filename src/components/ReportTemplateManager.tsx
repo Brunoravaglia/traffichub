@@ -62,7 +62,7 @@ const DEFAULT_METRICS: MetricConfig[] = [
   { key: "google_cpm", label: "CPM", icon: "trending", platform: "google", visible: false },
   { key: "google_ctr", label: "CTR (%)", icon: "percent", platform: "google", visible: false },
   { key: "google_cpc", label: "CPC (Custo por Clique)", icon: "dollar", platform: "google", visible: false },
-  { key: "google_conversoes", label: "Conversões", icon: "check", platform: "google", visible: true },
+  { key: "google_conversoes", label: "Conversões", icon: "check", platform: "google", visible: false },
   { key: "google_taxa_conversao", label: "Taxa de Conversão", icon: "percent", platform: "google", visible: false },
   { key: "google_roas", label: "ROAS", icon: "trending", platform: "google", visible: false },
   { key: "google_custo_conversao", label: "Custo por Conversão", icon: "target", platform: "google", visible: false },
@@ -75,8 +75,8 @@ const DEFAULT_METRICS: MetricConfig[] = [
   
   // Meta Ads Metrics
   { key: "meta_impressoes", label: "Impressões", icon: "eye", platform: "meta", visible: true },
-  { key: "meta_engajamento", label: "Engajamento", icon: "trending", platform: "meta", visible: true },
-  { key: "meta_conversas", label: "Conversas", icon: "message", platform: "meta", visible: true },
+  { key: "meta_engajamento", label: "Engajamento", icon: "trending", platform: "meta", visible: false },
+  { key: "meta_conversas", label: "Conversas", icon: "message", platform: "meta", visible: false },
   { key: "meta_investido", label: "Investido", icon: "dollar", platform: "meta", visible: true },
   { key: "meta_cpl", label: "Custo por Lead", icon: "target", platform: "meta", visible: true },
   { key: "meta_cpm", label: "CPM", icon: "trending", platform: "meta", visible: false },

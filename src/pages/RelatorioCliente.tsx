@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import html2canvas from "html2canvas";
-import { GoogleLogo, MetaLogo, LinkedInLogo, FacebookLogo, InstagramLogo, WhatsAppLogo, TikTokLogo } from '@/components/BrandLogos';
+import { GoogleLogo, MetaLogo, LinkedInLogo, FacebookLogo, InstagramLogo, WhatsAppLogo, TikTokLogo, ShopeeLogo } from '@/components/BrandLogos';
 import { jsPDF } from 'jspdf';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -63,338 +63,25 @@ import { CustomSectionGrid, type CustomSection } from "@/components/report/Custo
 import { ReportHeader } from "@/components/report/ReportHeader";
 import { GoogleAdsMetricsView } from "@/components/report/GoogleAdsMetricsView";
 import { MetaAdsMetricsView } from "@/components/report/MetaAdsMetricsView";
+import { PlatformMetricsView } from "@/components/report/PlatformMetricsView";
 import { StrategicInsightsView } from "@/components/report/StrategicInsightsView";
 import { ReportFooter } from "@/components/report/ReportFooter";
+import {
+  type ReportData,
+  type Creative,
+  type RankingCreative,
+  defaultReportData,
+  normalizeReportPayload,
+  parseTemplateLayout,
+  generateValidationId,
+  generateValidationPassword,
+  toFiniteNumber,
+  DEFAULT_SECTIONS_CONFIG,
+} from "@/lib/report-types";
+import { applyMetricsFromRegistry, metricsConfigToFullTemplate, type TemplateMetric } from "@/lib/report-metrics-registry";
 
-interface Creative {
-  id: string;
-  url: string;
-  name: string;
-  platform: "google" | "meta";
-  aspectRatio?: AspectRatioOption;
-}
-
-interface RankingCreative {
-  id: string;
-  url: string;
-  result: string;
-  position: 1 | 2 | 3;
-  aspectRatio?: AspectRatioOption;
-}
-
-interface ReportData {
-  objetivos: string[];
-  google: {
-    cliques: number;
-    impressoes: number;
-    contatos: number;
-    investido: number;
-    saldoRestante: number;
-    diasParaRecarga: number;
-    custoPorLead: number;
-    cpm: number;
-    ctr: number;
-    cpc: number;
-    conversoes: number;
-    taxaConversao: number;
-    roas: number;
-    roasValor: number;
-    custoConversao: number;
-    alcance: number;
-    frequencia: number;
-    visualizacoesVideo: number;
-    taxaVisualizacao: number;
-    interacoes: number;
-    taxaInteracao: number;
-    compras: number;
-    visitasProduto: number;
-    adicoesCarrinho: number;
-    vendas: number;
-    custoPorVisita: number;
-    custoPorAdicaoCarrinho: number;
-    custoPorVenda: number;
-  };
-  meta: {
-    impressoes: number;
-    engajamento: number;
-    conversas: number;
-    investido: number;
-    saldoRestante: number;
-    diasParaRecarga: number;
-    custoPorLead: number;
-    cpm: number;
-    custoPorSeguidor: number;
-    cliques: number;
-    ctr: number;
-    cpc: number;
-    alcance: number;
-    frequencia: number;
-    leads: number;
-    conversoes: number;
-    roas: number;
-    roasValor: number;
-    curtidasPagina: number;
-    seguidores: number;
-    compartilhamentos: number;
-    salvos: number;
-    comentarios: number;
-    visualizacoesVideo: number;
-    retencaoVideo: number;
-    mensagensIniciadas: number;
-    respostasMensagem: number;
-    agendamentos: number;
-    checkins: number;
-    compras: number;
-    visitasProduto: number;
-    adicoesCarrinho: number;
-    vendas: number;
-    custoPorVisita: number;
-    custoPorAdicaoCarrinho: number;
-    custoPorVenda: number;
-  };
-  linkedin: {
-    impressoes: number;
-    cliques: number;
-    leads: number;
-    investido: number;
-    cpm: number;
-    cpc: number;
-    ctr: number;
-    cpl: number;
-    conversoes: number;
-    alcance: number;
-  };
-  tiktok: {
-    impressoes: number;
-    cliques: number;
-    leads: number;
-    investido: number;
-    cpm: number;
-    cpc: number;
-    ctr: number;
-    cpl: number;
-    conversoes: number;
-    visualizacoesVideo: number;
-  };
-  resumo: string;
-  criativos: Creative[];
-  criativosRanking: RankingCreative[];
-  showRanking: boolean;
-  metricsConfig: {
-    // Google metrics visibility
-    showGoogleCustoPorLead: boolean;
-    showGoogleCpm: boolean;
-    showGoogleCtr: boolean;
-    showGoogleCpc: boolean;
-    showGoogleConversoes: boolean;
-    showGoogleTaxaConversao: boolean;
-    showGoogleRoas: boolean;
-    showGoogleRoasValor: boolean;
-    showGoogleCustoConversao: boolean;
-    showGoogleAlcance: boolean;
-    showGoogleFrequencia: boolean;
-    showGoogleVisualizacoesVideo: boolean;
-    showGoogleTaxaVisualizacao: boolean;
-    showGoogleInteracoes: boolean;
-    showGoogleTaxaInteracao: boolean;
-    showGoogleCompras: boolean;
-    showGoogleVisitasProduto: boolean;
-    showGoogleAdicoesCarrinho: boolean;
-    showGoogleVendas: boolean;
-    showGoogleCustoPorVisita: boolean;
-    showGoogleCustoPorAdicaoCarrinho: boolean;
-    showGoogleCustoPorVenda: boolean;
-    // Meta metrics visibility
-    showMetaCustoPorLead: boolean;
-    showMetaCpm: boolean;
-    showMetaCustoPorSeguidor: boolean;
-    showMetaCliques: boolean;
-    showMetaCtr: boolean;
-    showMetaCpc: boolean;
-    showMetaAlcance: boolean;
-    showMetaFrequencia: boolean;
-    showMetaLeads: boolean;
-    showMetaConversoes: boolean;
-    showMetaRoas: boolean;
-    showMetaRoasValor: boolean;
-    showMetaCurtidasPagina: boolean;
-    showMetaSeguidores: boolean;
-    showMetaCompartilhamentos: boolean;
-    showMetaSalvos: boolean;
-    showMetaComentarios: boolean;
-    showMetaVisualizacoesVideo: boolean;
-    showMetaRetencaoVideo: boolean;
-    showMetaMensagensIniciadas: boolean;
-    showMetaRespostasMensagem: boolean;
-    showMetaAgendamentos: boolean;
-    showMetaCheckins: boolean;
-    showMetaCompras: boolean;
-    showMetaVisitasProduto: boolean;
-    showMetaAdicoesCarrinho: boolean;
-    showMetaVendas: boolean;
-    showMetaCustoPorVisita: boolean;
-    showMetaCustoPorAdicaoCarrinho: boolean;
-    showMetaCustoPorVenda: boolean;
-    // LinkedIn metrics visibility
-    showLinkedinCpm: boolean;
-    showLinkedinCpc: boolean;
-    showLinkedinCtr: boolean;
-    showLinkedinCpl: boolean;
-    showLinkedinLeads: boolean;
-    showLinkedinConversoes: boolean;
-    showLinkedinAlcance: boolean;
-    // TikTok metrics visibility
-    showTiktokCpm: boolean;
-    showTiktokCpc: boolean;
-    showTiktokCtr: boolean;
-    showTiktokCpl: boolean;
-    showTiktokLeads: boolean;
-    showTiktokConversoes: boolean;
-    showTiktokViews: boolean;
-  };
-  autoFillSaldos: boolean;
-  sectionsConfig: {
-    showObjetivos: boolean;
-    showGoogleAds: boolean;
-    showMetaAds: boolean;
-    showLinkedinAds: boolean;
-    showTiktokAds: boolean;
-    showCriativosGoogle: boolean;
-    showCriativosMeta: boolean;
-    showResumo: boolean;
-    showSaldoRestante: boolean;
-    showPaineisAnuncio: boolean;
-    showCustomSections: boolean;
-    showStrategicInsights: boolean;
-  };
-  paineisAnuncio: AdPanelImage[];
-  customSections: CustomSection[];
-  validationId?: string;
-  validationPassword?: string;
-  validationTime?: string;
-  isGeneratingPDF?: boolean;
-}
-
-const defaultReportData: ReportData = {
-  objetivos: [
-    "Aumentar a visibilidade e reconhecimento da marca",
-    "Aumentar o Número de Leads Qualificados",
-  ],
-  google: {
-    cliques: 0, impressoes: 0, contatos: 0, investido: 0, custoPorLead: 0, cpm: 0,
-    saldoRestante: 0, diasParaRecarga: 0,
-    ctr: 0, cpc: 0, conversoes: 0, taxaConversao: 0, roas: 0, roasValor: 0, custoConversao: 0,
-    alcance: 0, frequencia: 0, visualizacoesVideo: 0, taxaVisualizacao: 0, interacoes: 0, taxaInteracao: 0,
-    compras: 0, visitasProduto: 0, adicoesCarrinho: 0, vendas: 0, custoPorVisita: 0, custoPorAdicaoCarrinho: 0, custoPorVenda: 0
-  },
-  meta: {
-    impressoes: 0, engajamento: 0, conversas: 0, investido: 0, custoPorLead: 0, cpm: 0, custoPorSeguidor: 0,
-    saldoRestante: 0, diasParaRecarga: 0,
-    cliques: 0, ctr: 0, cpc: 0, alcance: 0, frequencia: 0, leads: 0, conversoes: 0, roas: 0, roasValor: 0,
-    curtidasPagina: 0, seguidores: 0, compartilhamentos: 0, salvos: 0, comentarios: 0,
-    visualizacoesVideo: 0, retencaoVideo: 0, mensagensIniciadas: 0, respostasMensagem: 0, agendamentos: 0, checkins: 0,
-    compras: 0, visitasProduto: 0, adicoesCarrinho: 0, vendas: 0, custoPorVisita: 0, custoPorAdicaoCarrinho: 0, custoPorVenda: 0
-  },
-  linkedin: {
-    impressoes: 0, cliques: 0, leads: 0, investido: 0, cpm: 0, cpc: 0, ctr: 0, cpl: 0, conversoes: 0, alcance: 0
-  },
-  tiktok: {
-    impressoes: 0, cliques: 0, leads: 0, investido: 0, cpm: 0, cpc: 0, ctr: 0, cpl: 0, conversoes: 0, visualizacoesVideo: 0
-  },
-  resumo: "",
-  criativos: [],
-  criativosRanking: [],
-  showRanking: false,
-  metricsConfig: {
-    // Google - defaults
-    showGoogleCustoPorLead: true,
-    showGoogleCpm: false,
-    showGoogleCtr: false,
-    showGoogleCpc: false,
-    showGoogleConversoes: true,
-    showGoogleTaxaConversao: false,
-    showGoogleRoas: false,
-    showGoogleRoasValor: false,
-    showGoogleCustoConversao: false,
-    showGoogleAlcance: false,
-    showGoogleFrequencia: false,
-    showGoogleVisualizacoesVideo: false,
-    showGoogleTaxaVisualizacao: false,
-    showGoogleInteracoes: false,
-    showGoogleTaxaInteracao: false,
-    showGoogleCompras: false,
-    showGoogleVisitasProduto: false,
-    showGoogleAdicoesCarrinho: false,
-    showGoogleVendas: false,
-    showGoogleCustoPorVisita: false,
-    showGoogleCustoPorAdicaoCarrinho: false,
-    showGoogleCustoPorVenda: false,
-    // Meta - defaults
-    showMetaCustoPorLead: true,
-    showMetaCpm: false,
-    showMetaCustoPorSeguidor: false,
-    showMetaCliques: true,
-    showMetaCtr: false,
-    showMetaCpc: false,
-    showMetaAlcance: true,
-    showMetaFrequencia: false,
-    showMetaLeads: true,
-    showMetaConversoes: false,
-    showMetaRoas: false,
-    showMetaRoasValor: false,
-    showMetaCurtidasPagina: false,
-    showMetaSeguidores: false,
-    showMetaCompartilhamentos: false,
-    showMetaSalvos: false,
-    showMetaComentarios: false,
-    showMetaVisualizacoesVideo: false,
-    showMetaRetencaoVideo: false,
-    showMetaMensagensIniciadas: false,
-    showMetaRespostasMensagem: false,
-    showMetaAgendamentos: false,
-    showMetaCheckins: false,
-    showMetaCompras: false,
-    showMetaVisitasProduto: false,
-    showMetaAdicoesCarrinho: false,
-    showMetaVendas: false,
-    showMetaCustoPorVisita: false,
-    showMetaCustoPorAdicaoCarrinho: false,
-    showMetaCustoPorVenda: false,
-    // LinkedIn - defaults
-    showLinkedinCpm: true,
-    showLinkedinCpc: true,
-    showLinkedinCtr: true,
-    showLinkedinCpl: true,
-    showLinkedinLeads: true,
-    showLinkedinConversoes: false,
-    showLinkedinAlcance: true,
-    // TikTok - defaults
-    showTiktokCpm: true,
-    showTiktokCpc: true,
-    showTiktokCtr: true,
-    showTiktokCpl: true,
-    showTiktokLeads: true,
-    showTiktokConversoes: false,
-    showTiktokViews: true,
-  },
-  autoFillSaldos: false,
-  sectionsConfig: {
-    showObjetivos: true,
-    showGoogleAds: true,
-    showMetaAds: true,
-    showLinkedinAds: false,
-    showTiktokAds: false,
-    showCriativosGoogle: true,
-    showCriativosMeta: true,
-    showResumo: true,
-    showSaldoRestante: true,
-    showPaineisAnuncio: false,
-    showCustomSections: false,
-    showStrategicInsights: true,
-  },
-  paineisAnuncio: [],
-  customSections: [],
-};
+// Types, defaults, and normalization are now imported from @/lib/report-types
+// Metrics registry functions imported from @/lib/report-metrics-registry
 
 const RelatorioCliente = () => {
   const { id: clienteId } = useParams();
@@ -437,18 +124,28 @@ const RelatorioCliente = () => {
       if (!templateIdFromUrl || !gestor?.id) return null;
       let query = supabase
         .from("report_templates")
-        .select("*")
+        .select("*, report_template_metrics(*)")
         .eq("id", templateIdFromUrl);
       query = query.or(`is_global.eq.true,gestor_id.eq.${gestor.id}`);
       const { data, error } = await query.single();
       if (error) throw error;
+      const parsedLayout = parseTemplateLayout((data as any).layout);
+      const legacyMetrics = Array.isArray((data as any).report_template_metrics)
+        ? (data as any).report_template_metrics.map((metric: any) => ({
+          key: metric?.metric_key,
+          label: metric?.label,
+          icon: metric?.icon,
+          platform: metric?.platform,
+          visible: metric?.is_visible !== false,
+        }))
+        : [];
       return {
         id: data.id,
         nome: data.nome,
         descricao: data.descricao || "",
         is_global: data.is_global,
-        metrics: (data.layout as any)?.metrics || [],
-        sections: (data.layout as any)?.sections || {},
+        metrics: Array.isArray(parsedLayout.metrics) ? parsedLayout.metrics : legacyMetrics,
+        sections: parsedLayout.sections || {},
       };
     },
     enabled: !!templateIdFromUrl && !!gestor?.id,
@@ -481,6 +178,7 @@ const RelatorioCliente = () => {
           ...defaultReportData.sectionsConfig,
           showLinkedinAds: false,
           showTiktokAds: false,
+          showShopeeAds: false,
         },
       });
       setStep("editor");
@@ -489,27 +187,32 @@ const RelatorioCliente = () => {
 
     setSelectedTemplateId(template.id);
 
-    // Apply sections config from template
-    if (template.sections) {
-      setReportData(prev => ({
-        ...prev,
-        sectionsConfig: {
-          showObjetivos: template.sections.showObjetivos ?? true,
-          showGoogleAds: template.sections.showGoogleAds ?? true,
-          showMetaAds: template.sections.showMetaAds ?? true,
-          showLinkedinAds: template.sections.showLinkedinAds ?? false,
-          showTiktokAds: template.sections.showTiktokAds ?? false,
-          showCriativosGoogle: template.sections.showCriativosGoogle ?? true,
-          showCriativosMeta: template.sections.showCriativosMeta ?? true,
-          showResumo: template.sections.showResumo ?? true,
-          showSaldoRestante: template.sections.showSaldoRestante ?? true,
-          showPaineisAnuncio: template.sections.showPaineisAnuncio ?? false,
-          showCustomSections: template.sections.showCustomSections ?? false,
-          showStrategicInsights: template.sections.showStrategicInsights ?? true,
-        },
-        metricsConfig: applyMetricsFromTemplate(template.metrics || []),
-      }));
-    }
+    const templateSections = template?.sections && typeof template.sections === "object" ? template.sections : {};
+    setReportData(prev => ({
+      ...prev,
+      sectionsConfig: {
+        showObjetivos: templateSections.showObjetivos ?? true,
+        showGoogleAds: templateSections.showGoogleAds ?? true,
+        showMetaAds: templateSections.showMetaAds ?? true,
+        showLinkedinAds: templateSections.showLinkedinAds ?? false,
+        showTiktokAds: templateSections.showTiktokAds ?? false,
+        showShopeeAds: templateSections.showShopeeAds ?? false,
+        showCriativosGoogle: templateSections.showCriativosGoogle ?? true,
+        showCriativosMeta: templateSections.showCriativosMeta ?? true,
+        showCriativosLinkedin: templateSections.showCriativosLinkedin ?? false,
+        showCriativosTiktok: templateSections.showCriativosTiktok ?? false,
+        showCriativosShopee: templateSections.showCriativosShopee ?? false,
+        showResumo: templateSections.showResumo ?? true,
+        showSaldoRestante: templateSections.showSaldoRestante ?? true,
+        showPaineisAnuncio: templateSections.showPaineisAnuncio ?? false,
+        showCustomSections: templateSections.showCustomSections ?? false,
+        showStrategicInsights: templateSections.showStrategicInsights ?? true,
+      },
+      metricsConfig: applyMetricsFromRegistry(
+        Array.isArray(template?.metrics) ? template.metrics : [],
+        defaultReportData.metricsConfig,
+      ),
+    }));
 
     setStep("editor");
     toast({
@@ -529,33 +232,16 @@ const RelatorioCliente = () => {
   // Auto-apply existing report data when loaded
   useEffect(() => {
     if (existingReport && existingReport.data_values) {
-      const data = existingReport.data_values as any;
-
-      setReportData({
-        objetivos: data.objetivos || [],
-        google: data.google || defaultReportData.google,
-        meta: data.meta || defaultReportData.meta,
-        linkedin: data.linkedin || defaultReportData.linkedin,
-        tiktok: data.tiktok || defaultReportData.tiktok,
-        resumo: data.resumo || "",
-        criativos: data.criativos || [],
-        criativosRanking: data.criativosRanking || [],
-        showRanking: data.showRanking ?? true,
-        metricsConfig: data.metricsConfig || defaultReportData.metricsConfig,
-        sectionsConfig: data.sectionsConfig || defaultReportData.sectionsConfig,
-        paineisAnuncio: data.paineisAnuncio || [],
-        customSections: data.customSections || [],
-        validationId: data.validationId,
-        validationPassword: data.validationPassword,
-        validationTime: data.validationTime,
-        autoFillSaldos: false
-      });
+      const normalized = normalizeReportPayload(existingReport.data_values);
+      setReportData(normalized);
 
       if (existingReport.periodo_inicio) {
-        setPeriodoInicio(new Date(existingReport.periodo_inicio));
+        const parsedInicio = new Date(existingReport.periodo_inicio);
+        if (!Number.isNaN(parsedInicio.getTime())) setPeriodoInicio(parsedInicio);
       }
       if (existingReport.periodo_fim) {
-        setPeriodoFim(new Date(existingReport.periodo_fim));
+        const parsedFim = new Date(existingReport.periodo_fim);
+        if (!Number.isNaN(parsedFim.getTime())) setPeriodoFim(parsedFim);
       }
 
       setStep("editor");
@@ -566,69 +252,7 @@ const RelatorioCliente = () => {
     }
   }, [existingReport]);
 
-  // Convert template metrics to metricsConfig format
-  const applyMetricsFromTemplate = (metrics: any[]): ReportData["metricsConfig"] => {
-    const config = { ...defaultReportData.metricsConfig };
-
-    metrics.forEach((metric: any) => {
-      const key = metric.key;
-      const visible = metric.visible;
-
-      // Map template metric keys to metricsConfig keys
-      if (key === "google_cpl") config.showGoogleCustoPorLead = visible;
-      else if (key === "google_cpm") config.showGoogleCpm = visible;
-      else if (key === "google_ctr") config.showGoogleCtr = visible;
-      else if (key === "google_cpc") config.showGoogleCpc = visible;
-      else if (key === "google_conversoes") config.showGoogleConversoes = visible;
-      else if (key === "google_taxa_conversao") config.showGoogleTaxaConversao = visible;
-      else if (key === "google_roas") config.showGoogleRoas = visible;
-      else if (key === "google_custo_conversao") config.showGoogleCustoConversao = visible;
-      else if (key === "google_alcance") config.showGoogleAlcance = visible;
-      else if (key === "google_frequencia") config.showGoogleFrequencia = visible;
-      else if (key === "google_visualizacoes_video") config.showGoogleVisualizacoesVideo = visible;
-      else if (key === "google_taxa_visualizacao") config.showGoogleTaxaVisualizacao = visible;
-      else if (key === "google_interacoes") config.showGoogleInteracoes = visible;
-      else if (key === "google_taxa_interacao") config.showGoogleTaxaInteracao = visible;
-      else if (key === "meta_cpl") config.showMetaCustoPorLead = visible;
-      else if (key === "meta_cpm") config.showMetaCpm = visible;
-      else if (key === "meta_custo_seguidor") config.showMetaCustoPorSeguidor = visible;
-      else if (key === "meta_cliques") config.showMetaCliques = visible;
-      else if (key === "meta_ctr") config.showMetaCtr = visible;
-      else if (key === "meta_cpc") config.showMetaCpc = visible;
-      else if (key === "meta_alcance") config.showMetaAlcance = visible;
-      else if (key === "meta_frequencia") config.showMetaFrequencia = visible;
-      else if (key === "meta_leads") config.showMetaLeads = visible;
-      else if (key === "meta_conversoes") config.showMetaConversoes = visible;
-      else if (key === "meta_roas") config.showMetaRoas = visible;
-      else if (key === "meta_curtidas_pagina") config.showMetaCurtidasPagina = visible;
-      else if (key === "meta_seguidores") config.showMetaSeguidores = visible;
-      else if (key === "meta_compartilhamentos") config.showMetaCompartilhamentos = visible;
-      else if (key === "meta_salvos") config.showMetaSalvos = visible;
-      else if (key === "meta_comentarios") config.showMetaComentarios = visible;
-      else if (key === "meta_visualizacoes_video") config.showMetaVisualizacoesVideo = visible;
-      else if (key === "meta_retencao_video") config.showMetaRetencaoVideo = visible;
-      else if (key === "meta_mensagens_iniciadas") config.showMetaMensagensIniciadas = visible;
-      else if (key === "meta_respostas_mensagem") config.showMetaRespostasMensagem = visible;
-      else if (key === "meta_agendamentos") config.showMetaAgendamentos = visible;
-      else if (key === "meta_checkins") config.showMetaCheckins = visible;
-      else if (key === "linkedin_cpm") config.showLinkedinCpm = visible;
-      else if (key === "linkedin_cpc") config.showLinkedinCpc = visible;
-      else if (key === "linkedin_ctr") config.showLinkedinCtr = visible;
-      else if (key === "linkedin_cpl") config.showLinkedinCpl = visible;
-      else if (key === "linkedin_leads") config.showLinkedinLeads = visible;
-      else if (key === "linkedin_conversoes") config.showLinkedinConversoes = visible;
-      else if (key === "linkedin_alcance") config.showLinkedinAlcance = visible;
-      else if (key === "tiktok_cpm") config.showTiktokCpm = visible;
-      else if (key === "tiktok_cpc") config.showTiktokCpc = visible;
-      else if (key === "tiktok_ctr") config.showTiktokCtr = visible;
-      else if (key === "tiktok_cpl") config.showTiktokCpl = visible;
-      else if (key === "tiktok_leads") config.showTiktokLeads = visible;
-      else if (key === "tiktok_conversoes") config.showTiktokConversoes = visible;
-      else if (key === "tiktok_views") config.showTiktokViews = visible;
-    });
-
-    return config;
-  };
+  // applyMetricsFromTemplate is now handled by applyMetricsFromRegistry from @/lib/report-metrics-registry
 
   // Fetch client data
   const { data: cliente, isLoading: clienteLoading, error: clienteError, refetch: refetchCliente } = useQuery({
@@ -711,59 +335,154 @@ const RelatorioCliente = () => {
 
   // Auto-calculate CPL and CPM
   const calculateMetrics = () => {
+    const safeDivision = (numerator: number, denominator: number, fallback: number) => {
+      const safeNumerator = toFiniteNumber(numerator);
+      const safeDenominator = toFiniteNumber(denominator);
+      if (safeDenominator <= 0) return fallback;
+      const result = safeNumerator / safeDenominator;
+      return Number.isFinite(result) ? result : fallback;
+    };
+
     setReportData(prev => ({
       ...prev,
       google: {
         ...prev.google,
-        custoPorLead: (prev.google.contatos > 0 ? prev.google.investido / prev.google.contatos : prev.google.conversoes > 0 ? prev.google.investido / prev.google.conversoes : prev.google.custoPorLead),
-        cpm: prev.google.impressoes > 0 ? (prev.google.investido / prev.google.impressoes) * 1000 : prev.google.cpm,
-        custoPorVisita: prev.google.visitasProduto > 0 ? prev.google.investido / prev.google.visitasProduto : prev.google.custoPorVisita,
-        custoPorAdicaoCarrinho: prev.google.adicoesCarrinho > 0 ? prev.google.investido / prev.google.adicoesCarrinho : prev.google.custoPorAdicaoCarrinho,
-        custoPorVenda: prev.google.vendas > 0 ? prev.google.investido / prev.google.vendas : prev.google.custoPorVenda,
+        custoPorLead:
+          prev.google.contatos > 0
+            ? safeDivision(prev.google.investido, prev.google.contatos, prev.google.custoPorLead)
+            : prev.google.conversoes > 0
+              ? safeDivision(prev.google.investido, prev.google.conversoes, prev.google.custoPorLead)
+              : prev.google.custoPorLead,
+        cpm:
+          prev.google.impressoes > 0
+            ? safeDivision(prev.google.investido * 1000, prev.google.impressoes, prev.google.cpm)
+            : prev.google.cpm,
+        custoPorVisita:
+          prev.google.visitasProduto > 0
+            ? safeDivision(prev.google.investido, prev.google.visitasProduto, prev.google.custoPorVisita)
+            : prev.google.custoPorVisita,
+        custoPorAdicaoCarrinho:
+          prev.google.adicoesCarrinho > 0
+            ? safeDivision(prev.google.investido, prev.google.adicoesCarrinho, prev.google.custoPorAdicaoCarrinho)
+            : prev.google.custoPorAdicaoCarrinho,
+        custoPorVenda:
+          prev.google.vendas > 0
+            ? safeDivision(prev.google.investido, prev.google.vendas, prev.google.custoPorVenda)
+            : prev.google.custoPorVenda,
       },
       meta: {
         ...prev.meta,
-        custoPorLead: (prev.meta.conversas > 0 ? prev.meta.investido / prev.meta.conversas : prev.meta.leads > 0 ? prev.meta.investido / prev.meta.leads : prev.meta.custoPorLead),
-        cpm: prev.meta.impressoes > 0 ? (prev.meta.investido / prev.meta.impressoes) * 1000 : prev.meta.cpm,
-        custoPorVisita: prev.meta.visitasProduto > 0 ? prev.meta.investido / prev.meta.visitasProduto : prev.meta.custoPorVisita,
-        custoPorAdicaoCarrinho: prev.meta.adicoesCarrinho > 0 ? prev.meta.investido / prev.meta.adicoesCarrinho : prev.meta.custoPorAdicaoCarrinho,
-        custoPorVenda: prev.meta.vendas > 0 ? prev.meta.investido / prev.meta.vendas : prev.meta.custoPorVenda,
+        custoPorLead:
+          prev.meta.conversas > 0
+            ? safeDivision(prev.meta.investido, prev.meta.conversas, prev.meta.custoPorLead)
+            : prev.meta.leads > 0
+              ? safeDivision(prev.meta.investido, prev.meta.leads, prev.meta.custoPorLead)
+              : prev.meta.custoPorLead,
+        cpm:
+          prev.meta.impressoes > 0
+            ? safeDivision(prev.meta.investido * 1000, prev.meta.impressoes, prev.meta.cpm)
+            : prev.meta.cpm,
+        custoPorVisita:
+          prev.meta.visitasProduto > 0
+            ? safeDivision(prev.meta.investido, prev.meta.visitasProduto, prev.meta.custoPorVisita)
+            : prev.meta.custoPorVisita,
+        custoPorAdicaoCarrinho:
+          prev.meta.adicoesCarrinho > 0
+            ? safeDivision(prev.meta.investido, prev.meta.adicoesCarrinho, prev.meta.custoPorAdicaoCarrinho)
+            : prev.meta.custoPorAdicaoCarrinho,
+        custoPorVenda:
+          prev.meta.vendas > 0
+            ? safeDivision(prev.meta.investido, prev.meta.vendas, prev.meta.custoPorVenda)
+            : prev.meta.custoPorVenda,
       },
       linkedin: {
         ...prev.linkedin,
-        cpm: prev.linkedin.impressoes > 0 ? (prev.linkedin.investido / prev.linkedin.impressoes) * 1000 : prev.linkedin.cpm,
-        cpc: prev.linkedin.cliques > 0 ? prev.linkedin.investido / prev.linkedin.cliques : prev.linkedin.cpc,
-        ctr: prev.linkedin.impressoes > 0 ? (prev.linkedin.cliques / prev.linkedin.impressoes) * 100 : prev.linkedin.ctr,
-        cpl: prev.linkedin.leads > 0 ? prev.linkedin.investido / prev.linkedin.leads : prev.linkedin.cpl,
+        cpm:
+          prev.linkedin.impressoes > 0
+            ? safeDivision(prev.linkedin.investido * 1000, prev.linkedin.impressoes, prev.linkedin.cpm)
+            : prev.linkedin.cpm,
+        cpc:
+          prev.linkedin.cliques > 0
+            ? safeDivision(prev.linkedin.investido, prev.linkedin.cliques, prev.linkedin.cpc)
+            : prev.linkedin.cpc,
+        ctr:
+          prev.linkedin.impressoes > 0
+            ? safeDivision(prev.linkedin.cliques * 100, prev.linkedin.impressoes, prev.linkedin.ctr)
+            : prev.linkedin.ctr,
+        cpl:
+          prev.linkedin.leads > 0
+            ? safeDivision(prev.linkedin.investido, prev.linkedin.leads, prev.linkedin.cpl)
+            : prev.linkedin.cpl,
       },
       tiktok: {
         ...prev.tiktok,
-        cpm: prev.tiktok.impressoes > 0 ? (prev.tiktok.investido / prev.tiktok.impressoes) * 1000 : prev.tiktok.cpm,
-        cpc: prev.tiktok.cliques > 0 ? prev.tiktok.investido / prev.tiktok.cliques : prev.tiktok.cpc,
-        ctr: prev.tiktok.impressoes > 0 ? (prev.tiktok.cliques / prev.tiktok.impressoes) * 100 : prev.tiktok.ctr,
-        cpl: prev.tiktok.leads > 0 ? prev.tiktok.investido / prev.tiktok.leads : prev.tiktok.cpl,
+        cpm:
+          prev.tiktok.impressoes > 0
+            ? safeDivision(prev.tiktok.investido * 1000, prev.tiktok.impressoes, prev.tiktok.cpm)
+            : prev.tiktok.cpm,
+        cpc:
+          prev.tiktok.cliques > 0
+            ? safeDivision(prev.tiktok.investido, prev.tiktok.cliques, prev.tiktok.cpc)
+            : prev.tiktok.cpc,
+        ctr:
+          prev.tiktok.impressoes > 0
+            ? safeDivision(prev.tiktok.cliques * 100, prev.tiktok.impressoes, prev.tiktok.ctr)
+            : prev.tiktok.ctr,
+        cpl:
+          prev.tiktok.leads > 0
+            ? safeDivision(prev.tiktok.investido, prev.tiktok.leads, prev.tiktok.cpl)
+            : prev.tiktok.cpl,
+      },
+      shopee: {
+        ...prev.shopee,
+        cpm:
+          prev.shopee.impressoes > 0
+            ? safeDivision(prev.shopee.investido * 1000, prev.shopee.impressoes, prev.shopee.cpm)
+            : prev.shopee.cpm,
+        cpc:
+          prev.shopee.cliques > 0
+            ? safeDivision(prev.shopee.investido, prev.shopee.cliques, prev.shopee.cpc)
+            : prev.shopee.cpc,
+        ctr:
+          prev.shopee.impressoes > 0
+            ? safeDivision(prev.shopee.cliques * 100, prev.shopee.impressoes, prev.shopee.ctr)
+            : prev.shopee.ctr,
+        cpa:
+          prev.shopee.pedidos > 0
+            ? safeDivision(prev.shopee.investido, prev.shopee.pedidos, prev.shopee.cpa)
+            : prev.shopee.cpa,
+        roas:
+          prev.shopee.investido > 0
+            ? safeDivision(prev.shopee.gmv, prev.shopee.investido, prev.shopee.roas)
+            : prev.shopee.roas,
       },
     }));
   };
 
   const saveReportMutation = useMutation({
     mutationFn: async () => {
-      const validationId = reportData.validationId || crypto.randomUUID();
-      const validationPassword = reportData.validationPassword || Math.random().toString(36).substring(2, 8).toUpperCase();
+      const normalizedReport = normalizeReportPayload(reportData);
+      const validationId = reportData.validationId || generateValidationId();
+      const validationPassword = reportData.validationPassword || generateValidationPassword();
       const validationTime = reportData.validationTime || format(new Date(), "yyyy-MM-dd HH:mm:ss");
 
       const dataValues = JSON.parse(JSON.stringify({
-        google: reportData.google,
-        meta: reportData.meta,
-        linkedin: reportData.linkedin,
-        tiktok: reportData.tiktok,
-        objetivos: reportData.objetivos.filter(Boolean),
-        resumo: reportData.resumo,
-        criativos: reportData.criativos,
-        criativosRanking: reportData.criativosRanking,
-        showRanking: reportData.showRanking,
-        metricsConfig: reportData.metricsConfig,
-        sectionsConfig: reportData.sectionsConfig,
+        google: normalizedReport.google,
+        meta: normalizedReport.meta,
+        linkedin: normalizedReport.linkedin,
+        tiktok: normalizedReport.tiktok,
+        shopee: normalizedReport.shopee,
+        objetivos: normalizedReport.objetivos.filter(Boolean),
+        resumo: normalizedReport.resumo,
+        criativos: normalizedReport.criativos,
+        criativosRanking: normalizedReport.criativosRanking,
+        showRanking: normalizedReport.showRanking,
+        creativeScaleGoogle: normalizedReport.creativeScaleGoogle,
+        creativeScaleMeta: normalizedReport.creativeScaleMeta,
+        metricsConfig: normalizedReport.metricsConfig,
+        sectionsConfig: normalizedReport.sectionsConfig,
+        paineisAnuncio: normalizedReport.paineisAnuncio,
+        customSections: normalizedReport.customSections,
         validationId,
         validationPassword,
         validationTime
@@ -776,19 +495,19 @@ const RelatorioCliente = () => {
           nome: `Relatório ${format(periodoInicio, "MMMM yyyy", { locale: ptBR })}`,
           periodo_inicio: format(periodoInicio, "yyyy-MM-dd"),
           periodo_fim: format(periodoFim, "yyyy-MM-dd"),
-          google_cliques: reportData.google.cliques,
-          google_impressoes: reportData.google.impressoes,
-          google_contatos: reportData.google.contatos,
-          google_investido: reportData.google.investido,
-          google_custo_por_lead: reportData.google.custoPorLead,
-          google_cpm: reportData.google.cpm,
-          meta_impressoes: reportData.meta.impressoes,
-          meta_engajamento: reportData.meta.engajamento,
-          meta_conversas: reportData.meta.conversas,
-          meta_investido: reportData.meta.investido,
-          meta_custo_por_lead: reportData.meta.custoPorLead,
-          meta_cpm: reportData.meta.cpm,
-          meta_custo_por_seguidor: reportData.meta.custoPorSeguidor,
+          google_cliques: normalizedReport.google.cliques,
+          google_impressoes: normalizedReport.google.impressoes,
+          google_contatos: normalizedReport.google.contatos,
+          google_investido: normalizedReport.google.investido,
+          google_custo_por_lead: normalizedReport.google.custoPorLead,
+          google_cpm: normalizedReport.google.cpm,
+          meta_impressoes: normalizedReport.meta.impressoes,
+          meta_engajamento: normalizedReport.meta.engajamento,
+          meta_conversas: normalizedReport.meta.conversas,
+          meta_investido: normalizedReport.meta.investido,
+          meta_custo_por_lead: normalizedReport.meta.custoPorLead,
+          meta_cpm: normalizedReport.meta.cpm,
+          meta_custo_por_seguidor: normalizedReport.meta.custoPorSeguidor,
           data_values: dataValues,
         }]);
 
@@ -930,7 +649,9 @@ const RelatorioCliente = () => {
     try {
       const element = pdfRef.current;
       const elementRect = element.getBoundingClientRect();
-      const captureWidth = Math.max(800, Math.round(elementRect.width));
+      // Force desktop capture width so PDF layout is stable across templates
+      // and never falls back to tablet/mobile grid breakpoints.
+      const captureWidth = Math.max(1400, Math.round(elementRect.width));
 
       // Temporary style to ensure it's fully expanded for capture
       originalStyle = element.style.cssText;
@@ -974,22 +695,16 @@ const RelatorioCliente = () => {
       }
 
       const canvas = await html2canvas(clone, {
-        scale: 2, // 2 is usually enough and faster
+        scale: Math.max(2, Math.min(3, window.devicePixelRatio || 2)),
         useCORS: true,
+        allowTaint: true,
+        imageTimeout: 15000,
         logging: false,
         backgroundColor: "#0b1120",
         width: captureWidth,
         windowWidth: captureWidth,
         scrollX: 0,
         scrollY: 0,
-        onclone: (doc) => {
-          doc.querySelectorAll<HTMLElement>("*").forEach((el) => {
-            el.style.animation = "none";
-            el.style.transition = "none";
-            el.style.transform = "none";
-            el.style.filter = el.style.filter || "none";
-          });
-        },
       });
 
       const imgData = canvas.toDataURL("image/jpeg", 0.95);
@@ -1026,36 +741,69 @@ const RelatorioCliente = () => {
   };
 
   // Export PDF only (saves report automatically first)
+  const waitForPreviewReady = async (timeoutMs = 7000) => {
+    const start = Date.now();
+    const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    while (Date.now() - start < timeoutMs) {
+      const element = pdfRef.current;
+      if (!element) {
+        await wait(60);
+        continue;
+      }
+
+      if (document.fonts?.ready) {
+        await Promise.race([document.fonts.ready, wait(300)]);
+      }
+
+      const hasSize = element.offsetWidth > 0 && element.offsetHeight > 0;
+      const images = Array.from(element.querySelectorAll("img"));
+      const imagesReady = images.every((img) => img.complete);
+
+      if (hasSize && imagesReady) {
+        await wait(80);
+        return true;
+      }
+
+      await wait(120);
+    }
+
+    return false;
+  };
+
   const handleExport = async () => {
     setIsExporting(true);
-    // Force preview mode immediately
     setIsPreview(true);
 
     try {
-      // 1. Mutate and get the EXACT credentials saved to DB
       const credentials = await saveReportMutation.mutateAsync();
 
-      // 2. Update local state with these credentials FIRST
       setReportData(prev => ({
         ...prev,
         ...credentials,
         isGeneratingPDF: true
       }));
 
-      // 3. Wait for React to finish rendering the new bottom footer 
-      // containing the new Validation ID and Password before taking the screenshot.
-      // Increased timeout to 2500ms to guarantee DOM paint cycle and image loading completes.
-      setTimeout(async () => {
-        await handleExportPDF();
-        setIsExporting(false);
-        setReportData(prev => ({ ...prev, isGeneratingPDF: false }));
-      }, 2500);
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+      );
 
-    } catch (e) {
+      const previewReady = await waitForPreviewReady();
+      if (!previewReady) {
+        throw new Error("A pré-visualização não ficou pronta para exportação.");
+      }
+
+      await handleExportPDF();
+    } catch (e: any) {
       console.error(e);
+      toast({
+        title: "Erro ao exportar relatório",
+        description: e?.message || "Não foi possível gerar o PDF agora.",
+        variant: "destructive"
+      });
+    } finally {
       setIsExporting(false);
       setReportData(prev => ({ ...prev, isGeneratingPDF: false }));
-      toast({ title: "Erro ao salvar relatório", variant: "destructive" });
     }
   };
 
@@ -1068,53 +816,8 @@ const RelatorioCliente = () => {
 
     setIsSavingTemplate(true);
     try {
-      // Convert current metricsConfig to template metrics format
-      const metrics = [
-        // Google metrics
-        { key: "google_cliques", label: "Cliques", icon: "click", platform: "google", visible: true },
-        { key: "google_impressoes", label: "Impressões", icon: "eye", platform: "google", visible: true },
-        { key: "google_contatos", label: "Conversões", icon: "message", platform: "google", visible: true },
-        { key: "google_investido", label: "Investido", icon: "dollar", platform: "google", visible: true },
-        { key: "google_cpl", label: "Custo por Lead", icon: "target", platform: "google", visible: reportData.metricsConfig.showGoogleCustoPorLead },
-        { key: "google_cpm", label: "CPM", icon: "trending", platform: "google", visible: reportData.metricsConfig.showGoogleCpm },
-        { key: "google_ctr", label: "CTR (%)", icon: "percent", platform: "google", visible: reportData.metricsConfig.showGoogleCtr },
-        { key: "google_cpc", label: "CPC", icon: "dollar", platform: "google", visible: reportData.metricsConfig.showGoogleCpc },
-        { key: "google_conversoes", label: "Conversões", icon: "check", platform: "google", visible: reportData.metricsConfig.showGoogleConversoes },
-        { key: "google_roas", label: "ROAS", icon: "trending", platform: "google", visible: reportData.metricsConfig.showGoogleRoas },
-        // Meta metrics
-        { key: "meta_impressoes", label: "Impressões", icon: "eye", platform: "meta", visible: true },
-        { key: "meta_engajamento", label: "Engajamento", icon: "trending", platform: "meta", visible: true },
-        { key: "meta_conversas", label: "Conversas", icon: "message", platform: "meta", visible: true },
-        { key: "meta_investido", label: "Investido", icon: "dollar", platform: "meta", visible: true },
-        { key: "meta_cpl", label: "Custo por Lead", icon: "target", platform: "meta", visible: reportData.metricsConfig.showMetaCustoPorLead },
-        { key: "meta_cpm", label: "CPM", icon: "trending", platform: "meta", visible: reportData.metricsConfig.showMetaCpm },
-        { key: "meta_cliques", label: "Cliques no Link", icon: "click", platform: "meta", visible: reportData.metricsConfig.showMetaCliques },
-        { key: "meta_alcance", label: "Alcance", icon: "users", platform: "meta", visible: reportData.metricsConfig.showMetaAlcance },
-        { key: "meta_leads", label: "Leads", icon: "user-plus", platform: "meta", visible: reportData.metricsConfig.showMetaLeads },
-        { key: "meta_roas", label: "ROAS", icon: "trending", platform: "meta", visible: reportData.metricsConfig.showMetaRoas },
-        // LinkedIn metrics
-        { key: "linkedin_impressoes", label: "Impressões", icon: "eye", platform: "linkedin", visible: true },
-        { key: "linkedin_cliques", label: "Cliques", icon: "click", platform: "linkedin", visible: true },
-        { key: "linkedin_leads", label: "Leads", icon: "user-plus", platform: "linkedin", visible: reportData.metricsConfig.showLinkedinLeads },
-        { key: "linkedin_investido", label: "Investido", icon: "dollar", platform: "linkedin", visible: true },
-        { key: "linkedin_cpm", label: "CPM", icon: "trending", platform: "linkedin", visible: reportData.metricsConfig.showLinkedinCpm },
-        { key: "linkedin_cpc", label: "CPC", icon: "dollar", platform: "linkedin", visible: reportData.metricsConfig.showLinkedinCpc },
-        { key: "linkedin_ctr", label: "CTR (%)", icon: "percent", platform: "linkedin", visible: reportData.metricsConfig.showLinkedinCtr },
-        { key: "linkedin_cpl", label: "CPL", icon: "target", platform: "linkedin", visible: reportData.metricsConfig.showLinkedinCpl },
-        { key: "linkedin_conversoes", label: "Conversões", icon: "check", platform: "linkedin", visible: reportData.metricsConfig.showLinkedinConversoes },
-        { key: "linkedin_alcance", label: "Alcance", icon: "users", platform: "linkedin", visible: reportData.metricsConfig.showLinkedinAlcance },
-        // TikTok metrics
-        { key: "tiktok_impressoes", label: "Impressões", icon: "eye", platform: "tiktok", visible: true },
-        { key: "tiktok_cliques", label: "Cliques", icon: "click", platform: "tiktok", visible: true },
-        { key: "tiktok_leads", label: "Leads", icon: "user-plus", platform: "tiktok", visible: reportData.metricsConfig.showTiktokLeads },
-        { key: "tiktok_investido", label: "Investido", icon: "dollar", platform: "tiktok", visible: true },
-        { key: "tiktok_cpm", label: "CPM", icon: "trending", platform: "tiktok", visible: reportData.metricsConfig.showTiktokCpm },
-        { key: "tiktok_cpc", label: "CPC", icon: "dollar", platform: "tiktok", visible: reportData.metricsConfig.showTiktokCpc },
-        { key: "tiktok_ctr", label: "CTR (%)", icon: "percent", platform: "tiktok", visible: reportData.metricsConfig.showTiktokCtr },
-        { key: "tiktok_cpl", label: "CPL", icon: "target", platform: "tiktok", visible: reportData.metricsConfig.showTiktokCpl },
-        { key: "tiktok_conversoes", label: "Conversões", icon: "check", platform: "tiktok", visible: reportData.metricsConfig.showTiktokConversoes },
-        { key: "tiktok_views", label: "Views de Vídeo", icon: "eye", platform: "tiktok", visible: reportData.metricsConfig.showTiktokViews },
-      ];
+      // Convert current metricsConfig to template metrics format using centralized registry
+      const metrics = metricsConfigToFullTemplate(reportData.metricsConfig);
 
       const layoutData = JSON.parse(JSON.stringify({
         metrics,
@@ -1482,7 +1185,7 @@ const RelatorioCliente = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {reportData.objetivos.map((obj, index) => (
-                    <div key={`objective-item-${obj}`} className="flex gap-2">
+                    <div key={`objective-item-${index}-${obj.slice(0, 24)}`} className="flex gap-2">
                       <Input
                         value={obj}
                         onChange={(e) => {
@@ -1532,139 +1235,100 @@ const RelatorioCliente = () => {
                     Seções do Relatório
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">Mostrar Objetivos</Label>
-                    <Switch
-                      checked={reportData.sectionsConfig.showObjetivos}
-                      onCheckedChange={(checked) =>
-                        setReportData({
-                          ...reportData,
-                          sectionsConfig: { ...reportData.sectionsConfig, showObjetivos: checked },
-                        })
-                      }
-                    />
+                <CardContent className="space-y-4">
+                  {/* 📊 Plataformas de Tráfego */}
+                  <div className="space-y-2.5">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                      <BarChart3 className="w-3.5 h-3.5" />
+                      Plataformas de Tráfego
+                    </p>
+                    {[
+                      { key: "showGoogleAds" as const, label: "Google Ads", color: "bg-blue-500" },
+                      { key: "showMetaAds" as const, label: "Meta Ads", color: "bg-purple-500" },
+                      { key: "showLinkedinAds" as const, label: "LinkedIn Ads", color: "bg-sky-600" },
+                      { key: "showTiktokAds" as const, label: "TikTok Ads", color: "bg-pink-500" },
+                      { key: "showShopeeAds" as const, label: "Shopee Ads", color: "bg-orange-500" },
+                    ].map(({ key, label, color }) => (
+                      <div key={key} className="flex items-center justify-between py-0.5">
+                        <Label className="text-sm flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full ${color}`} />
+                          {label}
+                        </Label>
+                        <Switch
+                          checked={reportData.sectionsConfig[key]}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              sectionsConfig: { ...reportData.sectionsConfig, [key]: checked },
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">Mostrar Tráfego Google</Label>
-                    <Switch
-                      checked={reportData.sectionsConfig.showGoogleAds}
-                      onCheckedChange={(checked) =>
-                        setReportData({
-                          ...reportData,
-                          sectionsConfig: { ...reportData.sectionsConfig, showGoogleAds: checked },
-                        })
-                      }
-                    />
+
+                  <Separator />
+
+                  {/* 🎨 Visuais e Criativos */}
+                  <div className="space-y-2.5">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Visuais e Criativos
+                    </p>
+                    {[
+                      { key: "showCriativosGoogle" as const, label: "Criativos Google", color: "bg-blue-500" },
+                      { key: "showCriativosMeta" as const, label: "Criativos Meta", color: "bg-purple-500" },
+                      { key: "showCriativosLinkedin" as const, label: "Criativos LinkedIn", color: "bg-sky-600" },
+                      { key: "showCriativosTiktok" as const, label: "Criativos TikTok", color: "bg-pink-500" },
+                      { key: "showCriativosShopee" as const, label: "Criativos Shopee", color: "bg-orange-500" },
+                      { key: "showPaineisAnuncio" as const, label: "Painéis de Anúncio", color: "bg-slate-400" },
+                    ].map(({ key, label, color }) => (
+                      <div key={key} className="flex items-center justify-between py-0.5">
+                        <Label className="text-sm flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full ${color}`} />
+                          {label}
+                        </Label>
+                        <Switch
+                          checked={reportData.sectionsConfig[key]}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              sectionsConfig: { ...reportData.sectionsConfig, [key]: checked },
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">Mostrar Tráfego Meta</Label>
-                    <Switch
-                      checked={reportData.sectionsConfig.showMetaAds}
-                      onCheckedChange={(checked) =>
-                        setReportData({
-                          ...reportData,
-                          sectionsConfig: { ...reportData.sectionsConfig, showMetaAds: checked },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">Mostrar Tráfego LinkedIn</Label>
-                    <Switch
-                      checked={reportData.sectionsConfig.showLinkedinAds}
-                      onCheckedChange={(checked) =>
-                        setReportData({
-                          ...reportData,
-                          sectionsConfig: { ...reportData.sectionsConfig, showLinkedinAds: checked },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">Mostrar Tráfego TikTok</Label>
-                    <Switch
-                      checked={reportData.sectionsConfig.showTiktokAds}
-                      onCheckedChange={(checked) =>
-                        setReportData({
-                          ...reportData,
-                          sectionsConfig: { ...reportData.sectionsConfig, showTiktokAds: checked },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">Mostrar Criativos Google</Label>
-                    <Switch
-                      checked={reportData.sectionsConfig.showCriativosGoogle}
-                      onCheckedChange={(checked) =>
-                        setReportData({
-                          ...reportData,
-                          sectionsConfig: { ...reportData.sectionsConfig, showCriativosGoogle: checked },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">Mostrar Criativos Meta</Label>
-                    <Switch
-                      checked={reportData.sectionsConfig.showCriativosMeta}
-                      onCheckedChange={(checked) =>
-                        setReportData({
-                          ...reportData,
-                          sectionsConfig: { ...reportData.sectionsConfig, showCriativosMeta: checked },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">Mostrar Resumo</Label>
-                    <Switch
-                      checked={reportData.sectionsConfig.showResumo}
-                      onCheckedChange={(checked) =>
-                        setReportData({
-                          ...reportData,
-                          sectionsConfig: { ...reportData.sectionsConfig, showResumo: checked },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">Mostrar Saldo Restante</Label>
-                    <Switch
-                      checked={reportData.sectionsConfig.showSaldoRestante}
-                      onCheckedChange={(checked) =>
-                        setReportData({
-                          ...reportData,
-                          sectionsConfig: { ...reportData.sectionsConfig, showSaldoRestante: checked },
-                        })
-                      }
-                    />
-                  </div>
-                  <Separator className="my-2" />
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">Mostrar Painéis de Anúncio</Label>
-                    <Switch
-                      checked={reportData.sectionsConfig.showPaineisAnuncio}
-                      onCheckedChange={(checked) =>
-                        setReportData({
-                          ...reportData,
-                          sectionsConfig: { ...reportData.sectionsConfig, showPaineisAnuncio: checked },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">Mostrar Seções Personalizadas</Label>
-                    <Switch
-                      checked={reportData.sectionsConfig.showCustomSections}
-                      onCheckedChange={(checked) =>
-                        setReportData({
-                          ...reportData,
-                          sectionsConfig: { ...reportData.sectionsConfig, showCustomSections: checked },
-                        })
-                      }
-                    />
+
+                  <Separator />
+
+                  {/* 📝 Conteúdo e Extras */}
+                  <div className="space-y-2.5">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5" />
+                      Conteúdo e Extras
+                    </p>
+                    {[
+                      { key: "showObjetivos" as const, label: "Objetivos" },
+                      { key: "showResumo" as const, label: "Resumo" },
+                      { key: "showStrategicInsights" as const, label: "Insights Estratégicos" },
+                      { key: "showSaldoRestante" as const, label: "Saldo Restante" },
+                      { key: "showCustomSections" as const, label: "Seções Personalizadas" },
+                    ].map(({ key, label }) => (
+                      <div key={key} className="flex items-center justify-between py-0.5">
+                        <Label className="text-sm">{label}</Label>
+                        <Switch
+                          checked={reportData.sectionsConfig[key]}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              sectionsConfig: { ...reportData.sectionsConfig, [key]: checked },
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -1672,1337 +1336,1361 @@ const RelatorioCliente = () => {
 
             {/* Google Ads Metrics */}
             {reportData.sectionsConfig.showGoogleAds && (
-            <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <div className="w-6 h-6 bg-blue-500/20 rounded flex items-center justify-center">
-                    <span className="text-blue-500 text-xs font-bold">G</span>
-                  </div>
-                  Tráfego Google Ads
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Core metrics - always visible */}
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2 text-xs">
-                      <MousePointer className="w-4 h-4 text-muted-foreground" />
-                      Cliques
-                    </Label>
-                    <NumericInput
-                      value={reportData.google.cliques}
-                      onChange={(value) =>
-                        setReportData({
-                          ...reportData,
-                          google: { ...reportData.google, cliques: value },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2 text-xs">
-                      <Eye className="w-4 h-4 text-muted-foreground" />
-                      Impressões
-                    </Label>
-                    <NumericInput
-                      value={reportData.google.impressoes}
-                      onChange={(value) =>
-                        setReportData({
-                          ...reportData,
-                          google: { ...reportData.google, impressoes: value },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2 text-xs">
-                      <Mail className="w-4 h-4 text-muted-foreground" />
-                      Conversões
-                    </Label>
-                    <NumericInput
-                      value={reportData.google.contatos}
-                      onChange={(value) =>
-                        setReportData({
-                          ...reportData,
-                          google: { ...reportData.google, contatos: value },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2 text-xs">
-                      <DollarSign className="w-4 h-4 text-muted-foreground" />
-                      Investido (R$)
-                    </Label>
-                    <NumericInput
-                      value={reportData.google.investido}
-                      onChange={(value) =>
-                        setReportData({
-                          ...reportData,
-                          google: { ...reportData.google, investido: value },
-                        })
-                      }
-                      isDecimal
-                    />
-                  </div>
-                </div>
-
-                {/* Additional metrics */}
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
-                  {reportData.metricsConfig.showGoogleCustoPorLead && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">CPL (R$)</Label>
-                      <NumericInput
-                        value={reportData.google.custoPorLead}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            google: { ...reportData.google, custoPorLead: value },
-                          })
-                        }
-                        isDecimal
-                      />
+              <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <div className="w-6 h-6 bg-blue-500/20 rounded flex items-center justify-center">
+                      <span className="text-blue-500 text-xs font-bold">G</span>
                     </div>
-                  )}
-                  {reportData.metricsConfig.showGoogleCpm && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">CPM (R$)</Label>
-                      <NumericInput
-                        value={reportData.google.cpm}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            google: { ...reportData.google, cpm: value },
-                          })
-                        }
-                        isDecimal
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showGoogleConversoes && (
+                    Tráfego Google Ads
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Core metrics - always visible */}
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">
-                        <Target className="w-4 h-4 text-muted-foreground" />
+                        <MousePointer className="w-4 h-4 text-muted-foreground" />
+                        Cliques
+                      </Label>
+                      <NumericInput
+                        value={reportData.google.cliques}
+                        onChange={(value) =>
+                          setReportData({
+                            ...reportData,
+                            google: { ...reportData.google, cliques: value },
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">
+                        <Eye className="w-4 h-4 text-muted-foreground" />
+                        Impressões
+                      </Label>
+                      <NumericInput
+                        value={reportData.google.impressoes}
+                        onChange={(value) =>
+                          setReportData({
+                            ...reportData,
+                            google: { ...reportData.google, impressoes: value },
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs">
+                        <Mail className="w-4 h-4 text-muted-foreground" />
                         Conversões
                       </Label>
                       <NumericInput
-                        value={reportData.google.conversoes}
+                        value={reportData.google.contatos}
                         onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            google: { ...reportData.google, conversoes: value },
+                            google: { ...reportData.google, contatos: value },
                           })
                         }
                       />
                     </div>
-                  )}
-                  {reportData.metricsConfig.showGoogleCtr && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">CTR (%)</Label>
-                      <NumericInput
-                        value={reportData.google.ctr}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            google: { ...reportData.google, ctr: value },
-                          })
-                        }
-                        isDecimal
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showGoogleCpc && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">CPC (R$)</Label>
-                      <NumericInput
-                        value={reportData.google.cpc}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            google: { ...reportData.google, cpc: value },
-                          })
-                        }
-                        isDecimal
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showGoogleRoas && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">ROAS</Label>
-                      <NumericInput
-                        value={reportData.google.roas}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            google: { ...reportData.google, roas: value },
-                          })
-                        }
-                        isDecimal
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showGoogleAlcance && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">
-                        <Users className="w-4 h-4 text-muted-foreground" />
-                        Alcance
-                      </Label>
-                      <NumericInput
-                        value={reportData.google.alcance}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            google: { ...reportData.google, alcance: value },
-                          })
-                        }
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showGoogleFrequencia && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Frequência</Label>
-                      <NumericInput
-                        value={reportData.google.frequencia}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            google: { ...reportData.google, frequencia: value },
-                          })
-                        }
-                        isDecimal
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showGoogleVisualizacoesVideo && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Views de Vídeo</Label>
-                      <NumericInput
-                        value={reportData.google.visualizacoesVideo}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            google: { ...reportData.google, visualizacoesVideo: value },
-                          })
-                        }
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showGoogleInteracoes && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Interações</Label>
-                      <NumericInput
-                        value={reportData.google.interacoes}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            google: { ...reportData.google, interacoes: value },
-                          })
-                        }
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showGoogleCompras && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">
                         <DollarSign className="w-4 h-4 text-muted-foreground" />
-                        Compras
+                        Investido (R$)
                       </Label>
                       <NumericInput
-                        value={reportData.google.compras}
+                        value={reportData.google.investido}
                         onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            google: { ...reportData.google, compras: value },
-                          })
-                        }
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showGoogleRoasValor && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">
-                        <DollarSign className="w-4 h-4 text-muted-foreground" />
-                        ROAS (R$)
-                      </Label>
-                      <NumericInput
-                        value={reportData.google.roasValor}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            google: { ...reportData.google, roasValor: value },
+                            google: { ...reportData.google, investido: value },
                           })
                         }
                         isDecimal
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showGoogleVisitasProduto && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Visitas Produto</Label>
-                      <NumericInput
-                        value={reportData.google.visitasProduto}
-                        onChange={(value) =>
-                          setReportData({ ...reportData, google: { ...reportData.google, visitasProduto: value } })
-                        }
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showGoogleAdicoesCarrinho && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Adições ao Carrinho</Label>
-                      <NumericInput
-                        value={reportData.google.adicoesCarrinho}
-                        onChange={(value) =>
-                          setReportData({ ...reportData, google: { ...reportData.google, adicoesCarrinho: value } })
-                        }
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showGoogleVendas && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Vendas</Label>
-                      <NumericInput
-                        value={reportData.google.vendas}
-                        onChange={(value) =>
-                          setReportData({ ...reportData, google: { ...reportData.google, vendas: value } })
-                        }
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showGoogleCustoPorVisita && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Custo/Visita (R$)</Label>
-                      <NumericInput
-                        value={reportData.google.custoPorVisita}
-                        onChange={(value) =>
-                          setReportData({ ...reportData, google: { ...reportData.google, custoPorVisita: value } })
-                        }
-                        isDecimal
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showGoogleCustoPorAdicaoCarrinho && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Custo/Add Carrinho (R$)</Label>
-                      <NumericInput
-                        value={reportData.google.custoPorAdicaoCarrinho}
-                        onChange={(value) =>
-                          setReportData({ ...reportData, google: { ...reportData.google, custoPorAdicaoCarrinho: value } })
-                        }
-                        isDecimal
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showGoogleCustoPorVenda && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Custo/Venda (R$)</Label>
-                      <NumericInput
-                        value={reportData.google.custoPorVenda}
-                        onChange={(value) =>
-                          setReportData({ ...reportData, google: { ...reportData.google, custoPorVenda: value } })
-                        }
-                        isDecimal
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Google Metrics Config */}
-                <div className="pt-4 border-t border-border space-y-3">
-                  <p className="text-sm text-muted-foreground font-medium">Métricas a exibir no relatório:</p>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">CPL</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleCustoPorLead}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showGoogleCustoPorLead: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">CPM</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleCpm}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showGoogleCpm: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">CTR</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleCtr}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showGoogleCtr: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">CPC</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleCpc}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showGoogleCpc: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Conversões</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleConversoes}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showGoogleConversoes: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Taxa Conversão</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleTaxaConversao}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showGoogleTaxaConversao: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">ROAS</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleRoas}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showGoogleRoas: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Custo/Conversão</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleCustoConversao}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showGoogleCustoConversao: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Alcance</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleAlcance}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showGoogleAlcance: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Frequência</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleFrequencia}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showGoogleFrequencia: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Views Vídeo</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleVisualizacoesVideo}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showGoogleVisualizacoesVideo: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Interações</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleInteracoes}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showGoogleInteracoes: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Compras</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleCompras}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showGoogleCompras: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">ROAS (R$)</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleRoasValor}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showGoogleRoasValor: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Visitas Produto</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleVisitasProduto}
-                        onCheckedChange={(checked) =>
-                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showGoogleVisitasProduto: checked } })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Add Carrinho</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleAdicoesCarrinho}
-                        onCheckedChange={(checked) =>
-                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showGoogleAdicoesCarrinho: checked } })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Vendas</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleVendas}
-                        onCheckedChange={(checked) =>
-                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showGoogleVendas: checked } })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Custo/Visita</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleCustoPorVisita}
-                        onCheckedChange={(checked) =>
-                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showGoogleCustoPorVisita: checked } })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Custo/Add Carrinho</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleCustoPorAdicaoCarrinho}
-                        onCheckedChange={(checked) =>
-                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showGoogleCustoPorAdicaoCarrinho: checked } })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Custo/Venda</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showGoogleCustoPorVenda}
-                        onCheckedChange={(checked) =>
-                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showGoogleCustoPorVenda: checked } })
-                        }
                       />
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+
+                  {/* Additional metrics */}
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
+                    {reportData.metricsConfig.showGoogleCustoPorLead && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">CPL (R$)</Label>
+                        <NumericInput
+                          value={reportData.google.custoPorLead}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              google: { ...reportData.google, custoPorLead: value },
+                            })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showGoogleCpm && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">CPM (R$)</Label>
+                        <NumericInput
+                          value={reportData.google.cpm}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              google: { ...reportData.google, cpm: value },
+                            })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showGoogleConversoes && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">
+                          <Target className="w-4 h-4 text-muted-foreground" />
+                          Conversões
+                        </Label>
+                        <NumericInput
+                          value={reportData.google.conversoes}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              google: { ...reportData.google, conversoes: value },
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showGoogleCtr && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">CTR (%)</Label>
+                        <NumericInput
+                          value={reportData.google.ctr}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              google: { ...reportData.google, ctr: value },
+                            })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showGoogleCpc && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">CPC (R$)</Label>
+                        <NumericInput
+                          value={reportData.google.cpc}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              google: { ...reportData.google, cpc: value },
+                            })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showGoogleRoas && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">ROAS</Label>
+                        <NumericInput
+                          value={reportData.google.roas}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              google: { ...reportData.google, roas: value },
+                            })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showGoogleAlcance && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">
+                          <Users className="w-4 h-4 text-muted-foreground" />
+                          Alcance
+                        </Label>
+                        <NumericInput
+                          value={reportData.google.alcance}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              google: { ...reportData.google, alcance: value },
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showGoogleFrequencia && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Frequência</Label>
+                        <NumericInput
+                          value={reportData.google.frequencia}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              google: { ...reportData.google, frequencia: value },
+                            })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showGoogleVisualizacoesVideo && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Views de Vídeo</Label>
+                        <NumericInput
+                          value={reportData.google.visualizacoesVideo}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              google: { ...reportData.google, visualizacoesVideo: value },
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showGoogleInteracoes && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Interações</Label>
+                        <NumericInput
+                          value={reportData.google.interacoes}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              google: { ...reportData.google, interacoes: value },
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showGoogleCompras && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">
+                          <DollarSign className="w-4 h-4 text-muted-foreground" />
+                          Compras
+                        </Label>
+                        <NumericInput
+                          value={reportData.google.compras}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              google: { ...reportData.google, compras: value },
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showGoogleRoasValor && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">
+                          <DollarSign className="w-4 h-4 text-muted-foreground" />
+                          ROAS (R$)
+                        </Label>
+                        <NumericInput
+                          value={reportData.google.roasValor}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              google: { ...reportData.google, roasValor: value },
+                            })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showGoogleVisitasProduto && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Visitas Produto</Label>
+                        <NumericInput
+                          value={reportData.google.visitasProduto}
+                          onChange={(value) =>
+                            setReportData({ ...reportData, google: { ...reportData.google, visitasProduto: value } })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showGoogleAdicoesCarrinho && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Adições ao Carrinho</Label>
+                        <NumericInput
+                          value={reportData.google.adicoesCarrinho}
+                          onChange={(value) =>
+                            setReportData({ ...reportData, google: { ...reportData.google, adicoesCarrinho: value } })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showGoogleVendas && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Vendas</Label>
+                        <NumericInput
+                          value={reportData.google.vendas}
+                          onChange={(value) =>
+                            setReportData({ ...reportData, google: { ...reportData.google, vendas: value } })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showGoogleCustoPorVisita && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Custo/Visita (R$)</Label>
+                        <NumericInput
+                          value={reportData.google.custoPorVisita}
+                          onChange={(value) =>
+                            setReportData({ ...reportData, google: { ...reportData.google, custoPorVisita: value } })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showGoogleCustoPorAdicaoCarrinho && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Custo/Add Carrinho (R$)</Label>
+                        <NumericInput
+                          value={reportData.google.custoPorAdicaoCarrinho}
+                          onChange={(value) =>
+                            setReportData({ ...reportData, google: { ...reportData.google, custoPorAdicaoCarrinho: value } })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showGoogleCustoPorVenda && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Custo/Venda (R$)</Label>
+                        <NumericInput
+                          value={reportData.google.custoPorVenda}
+                          onChange={(value) =>
+                            setReportData({ ...reportData, google: { ...reportData.google, custoPorVenda: value } })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Google Metrics Config */}
+                  <div className="pt-4 border-t border-border space-y-3">
+                    <p className="text-sm text-muted-foreground font-medium">Métricas a exibir no relatório:</p>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CPL</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleCustoPorLead}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showGoogleCustoPorLead: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CPM</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleCpm}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showGoogleCpm: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CTR</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleCtr}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showGoogleCtr: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CPC</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleCpc}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showGoogleCpc: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Conversões</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleConversoes}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showGoogleConversoes: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Taxa Conversão</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleTaxaConversao}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showGoogleTaxaConversao: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">ROAS</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleRoas}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showGoogleRoas: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Custo/Conversão</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleCustoConversao}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showGoogleCustoConversao: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Alcance</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleAlcance}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showGoogleAlcance: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Frequência</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleFrequencia}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showGoogleFrequencia: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Views Vídeo</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleVisualizacoesVideo}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showGoogleVisualizacoesVideo: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Interações</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleInteracoes}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showGoogleInteracoes: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Compras</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleCompras}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showGoogleCompras: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">ROAS (R$)</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleRoasValor}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showGoogleRoasValor: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Visitas Produto</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleVisitasProduto}
+                          onCheckedChange={(checked) =>
+                            setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showGoogleVisitasProduto: checked } })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Add Carrinho</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleAdicoesCarrinho}
+                          onCheckedChange={(checked) =>
+                            setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showGoogleAdicoesCarrinho: checked } })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Vendas</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleVendas}
+                          onCheckedChange={(checked) =>
+                            setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showGoogleVendas: checked } })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Custo/Visita</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleCustoPorVisita}
+                          onCheckedChange={(checked) =>
+                            setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showGoogleCustoPorVisita: checked } })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Custo/Add Carrinho</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleCustoPorAdicaoCarrinho}
+                          onCheckedChange={(checked) =>
+                            setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showGoogleCustoPorAdicaoCarrinho: checked } })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Custo/Venda</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showGoogleCustoPorVenda}
+                          onCheckedChange={(checked) =>
+                            setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showGoogleCustoPorVenda: checked } })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* Meta Ads Metrics */}
             {reportData.sectionsConfig.showMetaAds && (
-            <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <div className="w-6 h-6 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded flex items-center justify-center">
-                    <span className="text-purple-500 text-xs font-bold">M</span>
-                  </div>
-                  Tráfego Meta Ads
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Core metrics - always visible */}
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2 text-xs">
-                      <Eye className="w-4 h-4 text-muted-foreground" />
-                      Impressões
-                    </Label>
-                    <NumericInput
-                      value={reportData.meta.impressoes}
-                      onChange={(value) =>
-                        setReportData({
-                          ...reportData,
-                          meta: { ...reportData.meta, impressoes: value },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2 text-xs">
-                      <TrendingUp className="w-4 h-4 text-muted-foreground" />
-                      Engajamento
-                    </Label>
-                    <NumericInput
-                      value={reportData.meta.engajamento}
-                      onChange={(value) =>
-                        setReportData({
-                          ...reportData,
-                          meta: { ...reportData.meta, engajamento: value },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2 text-xs">
-                      <MessageSquare className="w-4 h-4 text-muted-foreground" />
-                      Conversas
-                    </Label>
-                    <NumericInput
-                      value={reportData.meta.conversas}
-                      onChange={(value) =>
-                        setReportData({
-                          ...reportData,
-                          meta: { ...reportData.meta, conversas: value },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2 text-xs">
-                      <DollarSign className="w-4 h-4 text-muted-foreground" />
-                      Investido (R$)
-                    </Label>
-                    <NumericInput
-                      value={reportData.meta.investido}
-                      onChange={(value) =>
-                        setReportData({
-                          ...reportData,
-                          meta: { ...reportData.meta, investido: value },
-                        })
-                      }
-                      isDecimal
-                    />
-                  </div>
-                </div>
-
-                {/* Additional metrics based on config */}
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
-                  {reportData.metricsConfig.showMetaCustoPorLead && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">CPL (R$)</Label>
-                      <NumericInput
-                        value={reportData.meta.custoPorLead}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            meta: { ...reportData.meta, custoPorLead: value },
-                          })
-                        }
-                        isDecimal
-                      />
+              <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <div className="w-6 h-6 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded flex items-center justify-center">
+                      <span className="text-purple-500 text-xs font-bold">M</span>
                     </div>
-                  )}
-                  {reportData.metricsConfig.showMetaCpm && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">CPM (R$)</Label>
-                      <NumericInput
-                        value={reportData.meta.cpm}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            meta: { ...reportData.meta, cpm: value },
-                          })
-                        }
-                        isDecimal
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaCliques && (
+                    Tráfego Meta Ads
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Core metrics - always visible */}
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">
-                        <MousePointer className="w-4 h-4 text-muted-foreground" />
-                        Cliques no Link
+                        <Eye className="w-4 h-4 text-muted-foreground" />
+                        Impressões
                       </Label>
                       <NumericInput
-                        value={reportData.meta.cliques}
+                        value={reportData.meta.impressoes}
                         onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            meta: { ...reportData.meta, cliques: value },
+                            meta: { ...reportData.meta, impressoes: value },
                           })
                         }
                       />
                     </div>
-                  )}
-                  {reportData.metricsConfig.showMetaAlcance && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">
-                        <Users className="w-4 h-4 text-muted-foreground" />
-                        Alcance
+                        <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                        Engajamento
                       </Label>
                       <NumericInput
-                        value={reportData.meta.alcance}
+                        value={reportData.meta.engajamento}
                         onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            meta: { ...reportData.meta, alcance: value },
+                            meta: { ...reportData.meta, engajamento: value },
                           })
                         }
                       />
                     </div>
-                  )}
-                  {reportData.metricsConfig.showMetaLeads && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">
-                        <Target className="w-4 h-4 text-muted-foreground" />
-                        Leads Gerados
+                        <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                        Conversas
                       </Label>
                       <NumericInput
-                        value={reportData.meta.leads}
+                        value={reportData.meta.conversas}
                         onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            meta: { ...reportData.meta, leads: value },
+                            meta: { ...reportData.meta, conversas: value },
                           })
                         }
                       />
                     </div>
-                  )}
-                  {reportData.metricsConfig.showMetaSeguidores && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Novos Seguidores</Label>
-                      <NumericInput
-                        value={reportData.meta.seguidores}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            meta: { ...reportData.meta, seguidores: value },
-                          })
-                        }
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaCtr && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">CTR (%)</Label>
-                      <NumericInput
-                        value={reportData.meta.ctr}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            meta: { ...reportData.meta, ctr: value },
-                          })
-                        }
-                        isDecimal
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaCpc && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">CPC (R$)</Label>
-                      <NumericInput
-                        value={reportData.meta.cpc}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            meta: { ...reportData.meta, cpc: value },
-                          })
-                        }
-                        isDecimal
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaRoas && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">ROAS</Label>
-                      <NumericInput
-                        value={reportData.meta.roas}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            meta: { ...reportData.meta, roas: value },
-                          })
-                        }
-                        isDecimal
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaFrequencia && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Frequência</Label>
-                      <NumericInput
-                        value={reportData.meta.frequencia}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            meta: { ...reportData.meta, frequencia: value },
-                          })
-                        }
-                        isDecimal
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaCurtidasPagina && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Curtidas Página</Label>
-                      <NumericInput
-                        value={reportData.meta.curtidasPagina}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            meta: { ...reportData.meta, curtidasPagina: value },
-                          })
-                        }
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaCompartilhamentos && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Compartilhamentos</Label>
-                      <NumericInput
-                        value={reportData.meta.compartilhamentos}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            meta: { ...reportData.meta, compartilhamentos: value },
-                          })
-                        }
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaSalvos && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Salvos</Label>
-                      <NumericInput
-                        value={reportData.meta.salvos}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            meta: { ...reportData.meta, salvos: value },
-                          })
-                        }
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaComentarios && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Comentários</Label>
-                      <NumericInput
-                        value={reportData.meta.comentarios}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            meta: { ...reportData.meta, comentarios: value },
-                          })
-                        }
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaVisualizacoesVideo && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Views Vídeo</Label>
-                      <NumericInput
-                        value={reportData.meta.visualizacoesVideo}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            meta: { ...reportData.meta, visualizacoesVideo: value },
-                          })
-                        }
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaMensagensIniciadas && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Mensagens Iniciadas</Label>
-                      <NumericInput
-                        value={reportData.meta.mensagensIniciadas}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            meta: { ...reportData.meta, mensagensIniciadas: value },
-                          })
-                        }
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaAgendamentos && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Agendamentos</Label>
-                      <NumericInput
-                        value={reportData.meta.agendamentos}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            meta: { ...reportData.meta, agendamentos: value },
-                          })
-                        }
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaCompras && (
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-xs">
                         <DollarSign className="w-4 h-4 text-muted-foreground" />
-                        Compras
+                        Investido (R$)
                       </Label>
                       <NumericInput
-                        value={reportData.meta.compras}
+                        value={reportData.meta.investido}
                         onChange={(value) =>
                           setReportData({
                             ...reportData,
-                            meta: { ...reportData.meta, compras: value },
-                          })
-                        }
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaRoasValor && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">
-                        <DollarSign className="w-4 h-4 text-muted-foreground" />
-                        ROAS (R$)
-                      </Label>
-                      <NumericInput
-                        value={reportData.meta.roasValor}
-                        onChange={(value) =>
-                          setReportData({
-                            ...reportData,
-                            meta: { ...reportData.meta, roasValor: value },
+                            meta: { ...reportData.meta, investido: value },
                           })
                         }
                         isDecimal
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaVisitasProduto && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Visitas Produto</Label>
-                      <NumericInput
-                        value={reportData.meta.visitasProduto}
-                        onChange={(value) =>
-                          setReportData({ ...reportData, meta: { ...reportData.meta, visitasProduto: value } })
-                        }
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaAdicoesCarrinho && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Adições ao Carrinho</Label>
-                      <NumericInput
-                        value={reportData.meta.adicoesCarrinho}
-                        onChange={(value) =>
-                          setReportData({ ...reportData, meta: { ...reportData.meta, adicoesCarrinho: value } })
-                        }
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaVendas && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Vendas</Label>
-                      <NumericInput
-                        value={reportData.meta.vendas}
-                        onChange={(value) =>
-                          setReportData({ ...reportData, meta: { ...reportData.meta, vendas: value } })
-                        }
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaCustoPorVisita && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Custo/Visita (R$)</Label>
-                      <NumericInput
-                        value={reportData.meta.custoPorVisita}
-                        onChange={(value) =>
-                          setReportData({ ...reportData, meta: { ...reportData.meta, custoPorVisita: value } })
-                        }
-                        isDecimal
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaCustoPorAdicaoCarrinho && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Custo/Add Carrinho (R$)</Label>
-                      <NumericInput
-                        value={reportData.meta.custoPorAdicaoCarrinho}
-                        onChange={(value) =>
-                          setReportData({ ...reportData, meta: { ...reportData.meta, custoPorAdicaoCarrinho: value } })
-                        }
-                        isDecimal
-                      />
-                    </div>
-                  )}
-                  {reportData.metricsConfig.showMetaCustoPorVenda && (
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-xs">Custo/Venda (R$)</Label>
-                      <NumericInput
-                        value={reportData.meta.custoPorVenda}
-                        onChange={(value) =>
-                          setReportData({ ...reportData, meta: { ...reportData.meta, custoPorVenda: value } })
-                        }
-                        isDecimal
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Meta Metrics Config */}
-                <div className="pt-4 border-t border-border space-y-3">
-                  <p className="text-sm text-muted-foreground font-medium">Métricas a exibir no relatório:</p>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">CPL</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaCustoPorLead}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaCustoPorLead: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">CPM</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaCpm}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaCpm: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Custo/Seguidor</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaCustoPorSeguidor}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaCustoPorSeguidor: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Cliques</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaCliques}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaCliques: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">CTR</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaCtr}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaCtr: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">CPC</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaCpc}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaCpc: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Alcance</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaAlcance}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaAlcance: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Frequência</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaFrequencia}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaFrequencia: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Leads</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaLeads}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaLeads: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Conversões</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaConversoes}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaConversoes: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">ROAS</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaRoas}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaRoas: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Curtidas Página</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaCurtidasPagina}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaCurtidasPagina: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Seguidores</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaSeguidores}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaSeguidores: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Compartilhamentos</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaCompartilhamentos}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaCompartilhamentos: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Salvos</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaSalvos}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaSalvos: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Comentários</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaComentarios}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaComentarios: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Views Vídeo</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaVisualizacoesVideo}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaVisualizacoesVideo: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Retenção Vídeo</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaRetencaoVideo}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaRetencaoVideo: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Mensagens</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaMensagensIniciadas}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaMensagensIniciadas: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Agendamentos</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaAgendamentos}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaAgendamentos: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Compras</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaCompras}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaCompras: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">ROAS (R$)</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaRoasValor}
-                        onCheckedChange={(checked) =>
-                          setReportData({
-                            ...reportData,
-                            metricsConfig: { ...reportData.metricsConfig, showMetaRoasValor: checked },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Visitas Produto</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaVisitasProduto}
-                        onCheckedChange={(checked) =>
-                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showMetaVisitasProduto: checked } })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Add Carrinho</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaAdicoesCarrinho}
-                        onCheckedChange={(checked) =>
-                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showMetaAdicoesCarrinho: checked } })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Vendas</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaVendas}
-                        onCheckedChange={(checked) =>
-                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showMetaVendas: checked } })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Custo/Visita</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaCustoPorVisita}
-                        onCheckedChange={(checked) =>
-                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showMetaCustoPorVisita: checked } })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Custo/Add Carrinho</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaCustoPorAdicaoCarrinho}
-                        onCheckedChange={(checked) =>
-                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showMetaCustoPorAdicaoCarrinho: checked } })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
-                      <Label className="text-xs">Custo/Venda</Label>
-                      <Switch
-                        checked={reportData.metricsConfig.showMetaCustoPorVenda}
-                        onCheckedChange={(checked) =>
-                          setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showMetaCustoPorVenda: checked } })
-                        }
                       />
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+
+                  {/* Additional metrics based on config */}
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
+                    {reportData.metricsConfig.showMetaCustoPorLead && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">CPL (R$)</Label>
+                        <NumericInput
+                          value={reportData.meta.custoPorLead}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              meta: { ...reportData.meta, custoPorLead: value },
+                            })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaCpm && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">CPM (R$)</Label>
+                        <NumericInput
+                          value={reportData.meta.cpm}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              meta: { ...reportData.meta, cpm: value },
+                            })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaCliques && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">
+                          <MousePointer className="w-4 h-4 text-muted-foreground" />
+                          Cliques no Link
+                        </Label>
+                        <NumericInput
+                          value={reportData.meta.cliques}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              meta: { ...reportData.meta, cliques: value },
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaAlcance && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">
+                          <Users className="w-4 h-4 text-muted-foreground" />
+                          Alcance
+                        </Label>
+                        <NumericInput
+                          value={reportData.meta.alcance}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              meta: { ...reportData.meta, alcance: value },
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaLeads && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">
+                          <Target className="w-4 h-4 text-muted-foreground" />
+                          Leads Gerados
+                        </Label>
+                        <NumericInput
+                          value={reportData.meta.leads}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              meta: { ...reportData.meta, leads: value },
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaSeguidores && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Novos Seguidores</Label>
+                        <NumericInput
+                          value={reportData.meta.seguidores}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              meta: { ...reportData.meta, seguidores: value },
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaCtr && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">CTR (%)</Label>
+                        <NumericInput
+                          value={reportData.meta.ctr}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              meta: { ...reportData.meta, ctr: value },
+                            })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaCpc && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">CPC (R$)</Label>
+                        <NumericInput
+                          value={reportData.meta.cpc}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              meta: { ...reportData.meta, cpc: value },
+                            })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaRoas && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">ROAS</Label>
+                        <NumericInput
+                          value={reportData.meta.roas}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              meta: { ...reportData.meta, roas: value },
+                            })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaFrequencia && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Frequência</Label>
+                        <NumericInput
+                          value={reportData.meta.frequencia}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              meta: { ...reportData.meta, frequencia: value },
+                            })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaCurtidasPagina && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Curtidas Página</Label>
+                        <NumericInput
+                          value={reportData.meta.curtidasPagina}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              meta: { ...reportData.meta, curtidasPagina: value },
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaCompartilhamentos && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Compartilhamentos</Label>
+                        <NumericInput
+                          value={reportData.meta.compartilhamentos}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              meta: { ...reportData.meta, compartilhamentos: value },
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaSalvos && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Salvos</Label>
+                        <NumericInput
+                          value={reportData.meta.salvos}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              meta: { ...reportData.meta, salvos: value },
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaComentarios && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Comentários</Label>
+                        <NumericInput
+                          value={reportData.meta.comentarios}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              meta: { ...reportData.meta, comentarios: value },
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaVisualizacoesVideo && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Views Vídeo</Label>
+                        <NumericInput
+                          value={reportData.meta.visualizacoesVideo}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              meta: { ...reportData.meta, visualizacoesVideo: value },
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaMensagensIniciadas && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Mensagens Iniciadas</Label>
+                        <NumericInput
+                          value={reportData.meta.mensagensIniciadas}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              meta: { ...reportData.meta, mensagensIniciadas: value },
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaAgendamentos && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Agendamentos</Label>
+                        <NumericInput
+                          value={reportData.meta.agendamentos}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              meta: { ...reportData.meta, agendamentos: value },
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaCompras && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">
+                          <DollarSign className="w-4 h-4 text-muted-foreground" />
+                          Compras
+                        </Label>
+                        <NumericInput
+                          value={reportData.meta.compras}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              meta: { ...reportData.meta, compras: value },
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaRoasValor && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">
+                          <DollarSign className="w-4 h-4 text-muted-foreground" />
+                          ROAS (R$)
+                        </Label>
+                        <NumericInput
+                          value={reportData.meta.roasValor}
+                          onChange={(value) =>
+                            setReportData({
+                              ...reportData,
+                              meta: { ...reportData.meta, roasValor: value },
+                            })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaVisitasProduto && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Visitas Produto</Label>
+                        <NumericInput
+                          value={reportData.meta.visitasProduto}
+                          onChange={(value) =>
+                            setReportData({ ...reportData, meta: { ...reportData.meta, visitasProduto: value } })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaAdicoesCarrinho && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Adições ao Carrinho</Label>
+                        <NumericInput
+                          value={reportData.meta.adicoesCarrinho}
+                          onChange={(value) =>
+                            setReportData({ ...reportData, meta: { ...reportData.meta, adicoesCarrinho: value } })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaVendas && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Vendas</Label>
+                        <NumericInput
+                          value={reportData.meta.vendas}
+                          onChange={(value) =>
+                            setReportData({ ...reportData, meta: { ...reportData.meta, vendas: value } })
+                          }
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaCustoPorVisita && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Custo/Visita (R$)</Label>
+                        <NumericInput
+                          value={reportData.meta.custoPorVisita}
+                          onChange={(value) =>
+                            setReportData({ ...reportData, meta: { ...reportData.meta, custoPorVisita: value } })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaCustoPorAdicaoCarrinho && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Custo/Add Carrinho (R$)</Label>
+                        <NumericInput
+                          value={reportData.meta.custoPorAdicaoCarrinho}
+                          onChange={(value) =>
+                            setReportData({ ...reportData, meta: { ...reportData.meta, custoPorAdicaoCarrinho: value } })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showMetaCustoPorVenda && (
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-xs">Custo/Venda (R$)</Label>
+                        <NumericInput
+                          value={reportData.meta.custoPorVenda}
+                          onChange={(value) =>
+                            setReportData({ ...reportData, meta: { ...reportData.meta, custoPorVenda: value } })
+                          }
+                          isDecimal
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Meta Metrics Config */}
+                  <div className="pt-4 border-t border-border space-y-3">
+                    <p className="text-sm text-muted-foreground font-medium">Métricas a exibir no relatório:</p>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Engajamento</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaEngajamento}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaEngajamento: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Conversas</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaConversas}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaConversas: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CPL</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaCustoPorLead}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaCustoPorLead: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CPM</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaCpm}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaCpm: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Custo/Seguidor</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaCustoPorSeguidor}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaCustoPorSeguidor: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Cliques</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaCliques}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaCliques: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CTR</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaCtr}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaCtr: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CPC</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaCpc}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaCpc: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Alcance</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaAlcance}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaAlcance: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Frequência</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaFrequencia}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaFrequencia: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Leads</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaLeads}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaLeads: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Conversões</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaConversoes}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaConversoes: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">ROAS</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaRoas}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaRoas: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Curtidas Página</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaCurtidasPagina}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaCurtidasPagina: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Seguidores</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaSeguidores}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaSeguidores: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Compartilhamentos</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaCompartilhamentos}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaCompartilhamentos: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Salvos</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaSalvos}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaSalvos: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Comentários</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaComentarios}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaComentarios: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Views Vídeo</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaVisualizacoesVideo}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaVisualizacoesVideo: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Retenção Vídeo</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaRetencaoVideo}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaRetencaoVideo: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Mensagens</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaMensagensIniciadas}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaMensagensIniciadas: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Agendamentos</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaAgendamentos}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaAgendamentos: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Compras</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaCompras}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaCompras: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">ROAS (R$)</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaRoasValor}
+                          onCheckedChange={(checked) =>
+                            setReportData({
+                              ...reportData,
+                              metricsConfig: { ...reportData.metricsConfig, showMetaRoasValor: checked },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Visitas Produto</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaVisitasProduto}
+                          onCheckedChange={(checked) =>
+                            setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showMetaVisitasProduto: checked } })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Add Carrinho</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaAdicoesCarrinho}
+                          onCheckedChange={(checked) =>
+                            setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showMetaAdicoesCarrinho: checked } })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Vendas</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaVendas}
+                          onCheckedChange={(checked) =>
+                            setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showMetaVendas: checked } })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Custo/Visita</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaCustoPorVisita}
+                          onCheckedChange={(checked) =>
+                            setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showMetaCustoPorVisita: checked } })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Custo/Add Carrinho</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaCustoPorAdicaoCarrinho}
+                          onCheckedChange={(checked) =>
+                            setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showMetaCustoPorAdicaoCarrinho: checked } })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Custo/Venda</Label>
+                        <Switch
+                          checked={reportData.metricsConfig.showMetaCustoPorVenda}
+                          onCheckedChange={(checked) =>
+                            setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showMetaCustoPorVenda: checked } })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* LinkedIn Ads Metrics */}
@@ -3213,6 +2901,110 @@ const RelatorioCliente = () => {
               </Card>
             )}
 
+            {/* Shopee Ads Metrics */}
+            {reportData.sectionsConfig.showShopeeAds && (
+              <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <div className="w-6 h-6 bg-[#EE4D2D]/20 rounded flex items-center justify-center border border-[#EE4D2D]/30">
+                      <ShopeeLogo className="w-4 h-4" />
+                    </div>
+                    Tráfego Shopee Ads
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs"><Eye className="w-4 h-4 text-muted-foreground" />Impressões</Label>
+                      <NumericInput value={reportData.shopee.impressoes} onChange={(value) => setReportData({ ...reportData, shopee: { ...reportData.shopee, impressoes: value } })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs"><MousePointer className="w-4 h-4 text-muted-foreground" />Cliques</Label>
+                      <NumericInput value={reportData.shopee.cliques} onChange={(value) => setReportData({ ...reportData, shopee: { ...reportData.shopee, cliques: value } })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs"><Target className="w-4 h-4 text-muted-foreground" />Pedidos</Label>
+                      <NumericInput value={reportData.shopee.pedidos} onChange={(value) => setReportData({ ...reportData, shopee: { ...reportData.shopee, pedidos: value } })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 text-xs"><DollarSign className="w-4 h-4 text-muted-foreground" />Investido (R$)</Label>
+                      <NumericInput value={reportData.shopee.investido} onChange={(value) => setReportData({ ...reportData, shopee: { ...reportData.shopee, investido: value } })} isDecimal />
+                    </div>
+                    {reportData.metricsConfig.showShopeeGmv && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">GMV (R$)</Label>
+                        <NumericInput value={reportData.shopee.gmv} onChange={(value) => setReportData({ ...reportData, shopee: { ...reportData.shopee, gmv: value } })} isDecimal />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showShopeeCpm && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">CPM (R$)</Label>
+                        <NumericInput value={reportData.shopee.cpm} onChange={(value) => setReportData({ ...reportData, shopee: { ...reportData.shopee, cpm: value } })} isDecimal />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showShopeeCpc && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">CPC (R$)</Label>
+                        <NumericInput value={reportData.shopee.cpc} onChange={(value) => setReportData({ ...reportData, shopee: { ...reportData.shopee, cpc: value } })} isDecimal />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showShopeeCtr && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">CTR (%)</Label>
+                        <NumericInput value={reportData.shopee.ctr} onChange={(value) => setReportData({ ...reportData, shopee: { ...reportData.shopee, ctr: value } })} isDecimal />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showShopeeCpa && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">CPA (R$)</Label>
+                        <NumericInput value={reportData.shopee.cpa} onChange={(value) => setReportData({ ...reportData, shopee: { ...reportData.shopee, cpa: value } })} isDecimal />
+                      </div>
+                    )}
+                    {reportData.metricsConfig.showShopeeRoas && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">ROAS (x)</Label>
+                        <NumericInput value={reportData.shopee.roas} onChange={(value) => setReportData({ ...reportData, shopee: { ...reportData.shopee, roas: value } })} isDecimal />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-4 border-t border-border space-y-3">
+                    <p className="text-sm text-muted-foreground font-medium">Métricas a exibir no relatório:</p>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">Pedidos</Label>
+                        <Switch checked={reportData.metricsConfig.showShopeePedidos} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showShopeePedidos: checked } })} />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">GMV</Label>
+                        <Switch checked={reportData.metricsConfig.showShopeeGmv} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showShopeeGmv: checked } })} />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CPM</Label>
+                        <Switch checked={reportData.metricsConfig.showShopeeCpm} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showShopeeCpm: checked } })} />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CPC</Label>
+                        <Switch checked={reportData.metricsConfig.showShopeeCpc} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showShopeeCpc: checked } })} />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CTR</Label>
+                        <Switch checked={reportData.metricsConfig.showShopeeCtr} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showShopeeCtr: checked } })} />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">CPA</Label>
+                        <Switch checked={reportData.metricsConfig.showShopeeCpa} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showShopeeCpa: checked } })} />
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-secondary/30 rounded">
+                        <Label className="text-xs">ROAS</Label>
+                        <Switch checked={reportData.metricsConfig.showShopeeRoas} onCheckedChange={(checked) => setReportData({ ...reportData, metricsConfig: { ...reportData.metricsConfig, showShopeeRoas: checked } })} />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Saldos / Recarga */}
             <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
               <CardHeader>
@@ -3359,6 +3151,113 @@ const RelatorioCliente = () => {
                   clienteId={clienteId!}
                   maxCreatives={5}
                 />
+              </CardContent>
+            </Card>
+
+            {/* Creatives - LinkedIn */}
+            <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <div className="w-6 h-6 bg-sky-500/20 rounded flex items-center justify-center">
+                    <span className="text-sky-400 text-[10px] font-bold">in</span>
+                  </div>
+                  Criativos LinkedIn ({reportData.criativos.filter(c => c.platform === "linkedin").length}/5)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <CreativeGrid
+                  platform="linkedin"
+                  creatives={reportData.criativos}
+                  onChange={(newCreatives) => setReportData((prev) => ({ ...prev, criativos: newCreatives }))}
+                  clienteId={clienteId!}
+                  maxCreatives={5}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Creatives - TikTok */}
+            <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <div className="w-6 h-6 bg-pink-500/20 rounded flex items-center justify-center">
+                    <span className="text-pink-400 text-[10px] font-bold">TT</span>
+                  </div>
+                  Criativos TikTok ({reportData.criativos.filter(c => c.platform === "tiktok").length}/5)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <CreativeGrid
+                  platform="tiktok"
+                  creatives={reportData.criativos}
+                  onChange={(newCreatives) => setReportData((prev) => ({ ...prev, criativos: newCreatives }))}
+                  clienteId={clienteId!}
+                  maxCreatives={5}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Creatives - Shopee */}
+            <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <div className="w-6 h-6 bg-orange-500/20 rounded flex items-center justify-center">
+                    <span className="text-orange-400 text-[10px] font-bold">S</span>
+                  </div>
+                  Criativos Shopee ({reportData.criativos.filter(c => c.platform === "shopee").length}/5)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <CreativeGrid
+                  platform="shopee"
+                  creatives={reportData.criativos}
+                  onChange={(newCreatives) => setReportData((prev) => ({ ...prev, criativos: newCreatives }))}
+                  clienteId={clienteId!}
+                  maxCreatives={5}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Ranking Criativos */}
+            <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Image className="w-5 h-5 text-primary" />
+                  Tamanho dos criativos no relatório
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs">Google ({Math.round(reportData.creativeScaleGoogle)}%)</Label>
+                  <Input
+                    type="range"
+                    min={100}
+                    max={280}
+                    step={10}
+                    value={reportData.creativeScaleGoogle}
+                    onChange={(event) =>
+                      setReportData({
+                        ...reportData,
+                        creativeScaleGoogle: Number(event.target.value),
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Meta ({Math.round(reportData.creativeScaleMeta)}%)</Label>
+                  <Input
+                    type="range"
+                    min={100}
+                    max={280}
+                    step={10}
+                    value={reportData.creativeScaleMeta}
+                    onChange={(event) =>
+                      setReportData({
+                        ...reportData,
+                        creativeScaleMeta: Number(event.target.value),
+                      })
+                    }
+                  />
+                </div>
               </CardContent>
             </Card>
 
@@ -3602,51 +3501,66 @@ const RelatorioCliente = () => {
                 )}
 
                 {reportData.sectionsConfig.showLinkedinAds && (
-                  <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6 shadow-inner">
-                    <h3 className="mb-4 text-lg font-bold tracking-widest uppercase text-[#78c2ff]">LINKEDIN ADS</h3>
-                    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                      <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-                        <p className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">Impressões</p>
-                        <p className="text-xl font-bold text-white">{formatNumber(reportData.linkedin.impressoes)}</p>
-                      </div>
-                      <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-                        <p className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">Cliques</p>
-                        <p className="text-xl font-bold text-white">{formatNumber(reportData.linkedin.cliques)}</p>
-                      </div>
-                      <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-                        <p className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">Leads</p>
-                        <p className="text-xl font-bold text-white">{formatNumber(reportData.linkedin.leads)}</p>
-                      </div>
-                      <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-                        <p className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">Investido</p>
-                        <p className="text-xl font-bold text-white">{formatCurrency(reportData.linkedin.investido)}</p>
-                      </div>
-                    </div>
-                  </div>
+                  <PlatformMetricsView
+                    title="LinkedIn Ads"
+                    logo={<LinkedInLogo className="w-7 h-7" />}
+                    primaryMetrics={[
+                      { label: "Impressões", value: reportData.linkedin.impressoes, icon: "👁️" },
+                      { label: "Cliques", value: reportData.linkedin.cliques, icon: "🖱️" },
+                      { label: "Leads", value: reportData.linkedin.leads, icon: "👤" },
+                      { label: "Investido", value: reportData.linkedin.investido, icon: "💰", isCurrency: true },
+                    ]}
+                    additionalMetrics={[
+                      ...(reportData.metricsConfig.showLinkedinConversoes ? [{ label: "Conversões", value: formatNumber(reportData.linkedin.conversoes) }] : []),
+                      ...(reportData.metricsConfig.showLinkedinAlcance ? [{ label: "Alcance", value: formatNumber(reportData.linkedin.alcance) }] : []),
+                      ...(reportData.metricsConfig.showLinkedinCpm ? [{ label: "CPM", value: formatCurrency(reportData.linkedin.cpm) }] : []),
+                      ...(reportData.metricsConfig.showLinkedinCpc ? [{ label: "CPC", value: formatCurrency(reportData.linkedin.cpc) }] : []),
+                      ...(reportData.metricsConfig.showLinkedinCtr ? [{ label: "CTR (%)", value: `${Number(reportData.linkedin.ctr || 0).toFixed(2)}%` }] : []),
+                      ...(reportData.metricsConfig.showLinkedinCpl ? [{ label: "CPL", value: formatCurrency(reportData.linkedin.cpl) }] : []),
+                    ]}
+                  />
                 )}
 
                 {reportData.sectionsConfig.showTiktokAds && (
-                  <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6 shadow-inner">
-                    <h3 className="mb-4 text-lg font-bold tracking-widest uppercase text-[#f8d85a]">TIKTOK ADS</h3>
-                    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                      <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-                        <p className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">Impressões</p>
-                        <p className="text-xl font-bold text-white">{formatNumber(reportData.tiktok.impressoes)}</p>
-                      </div>
-                      <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-                        <p className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">Cliques</p>
-                        <p className="text-xl font-bold text-white">{formatNumber(reportData.tiktok.cliques)}</p>
-                      </div>
-                      <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-                        <p className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">Leads</p>
-                        <p className="text-xl font-bold text-white">{formatNumber(reportData.tiktok.leads)}</p>
-                      </div>
-                      <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-                        <p className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">Investido</p>
-                        <p className="text-xl font-bold text-white">{formatCurrency(reportData.tiktok.investido)}</p>
-                      </div>
-                    </div>
-                  </div>
+                  <PlatformMetricsView
+                    title="TikTok Ads"
+                    logo={<TikTokLogo className="w-7 h-7 text-white" />}
+                    primaryMetrics={[
+                      { label: "Impressões", value: reportData.tiktok.impressoes, icon: "👁️" },
+                      { label: "Cliques", value: reportData.tiktok.cliques, icon: "🖱️" },
+                      { label: "Leads", value: reportData.tiktok.leads, icon: "👤" },
+                      { label: "Investido", value: reportData.tiktok.investido, icon: "💰", isCurrency: true },
+                    ]}
+                    additionalMetrics={[
+                      ...(reportData.metricsConfig.showTiktokConversoes ? [{ label: "Conversões", value: formatNumber(reportData.tiktok.conversoes) }] : []),
+                      ...(reportData.metricsConfig.showTiktokViews ? [{ label: "Views Vídeo", value: formatNumber(reportData.tiktok.visualizacoesVideo) }] : []),
+                      ...(reportData.metricsConfig.showTiktokCpm ? [{ label: "CPM", value: formatCurrency(reportData.tiktok.cpm) }] : []),
+                      ...(reportData.metricsConfig.showTiktokCpc ? [{ label: "CPC", value: formatCurrency(reportData.tiktok.cpc) }] : []),
+                      ...(reportData.metricsConfig.showTiktokCtr ? [{ label: "CTR (%)", value: `${Number(reportData.tiktok.ctr || 0).toFixed(2)}%` }] : []),
+                      ...(reportData.metricsConfig.showTiktokCpl ? [{ label: "CPL", value: formatCurrency(reportData.tiktok.cpl) }] : []),
+                    ]}
+                  />
+                )}
+
+                {reportData.sectionsConfig.showShopeeAds && (
+                  <PlatformMetricsView
+                    title="Shopee Ads"
+                    logo={<ShopeeLogo className="w-7 h-7" />}
+                    primaryMetrics={[
+                      { label: "Impressões", value: reportData.shopee.impressoes, icon: "👁️" },
+                      { label: "Cliques", value: reportData.shopee.cliques, icon: "🖱️" },
+                      { label: "Pedidos", value: reportData.shopee.pedidos, icon: "🛍️" },
+                      { label: "Investido", value: reportData.shopee.investido, icon: "💰", isCurrency: true },
+                    ]}
+                    additionalMetrics={[
+                      ...(reportData.metricsConfig.showShopeeGmv ? [{ label: "GMV", value: formatCurrency(reportData.shopee.gmv) }] : []),
+                      ...(reportData.metricsConfig.showShopeeCpm ? [{ label: "CPM", value: formatCurrency(reportData.shopee.cpm) }] : []),
+                      ...(reportData.metricsConfig.showShopeeCpc ? [{ label: "CPC", value: formatCurrency(reportData.shopee.cpc) }] : []),
+                      ...(reportData.metricsConfig.showShopeeCtr ? [{ label: "CTR (%)", value: `${Number(reportData.shopee.ctr || 0).toFixed(2)}%` }] : []),
+                      ...(reportData.metricsConfig.showShopeeCpa ? [{ label: "CPA", value: formatCurrency(reportData.shopee.cpa) }] : []),
+                      ...(reportData.metricsConfig.showShopeeRoas ? [{ label: "ROAS", value: `${Number(reportData.shopee.roas || 0).toFixed(2)}x` }] : []),
+                    ]}
+                  />
                 )}
 
                 {/* Google Creatives */}
@@ -3658,11 +3572,16 @@ const RelatorioCliente = () => {
                     <div className="flex flex-wrap gap-3 justify-center">
                       {reportData.criativos.filter(c => c.platform === "google").slice(0, 5).map((creative) => {
                         const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
+                        const creativeWidth = Math.round(140 * (reportData.creativeScaleGoogle / 100));
                         return (
                           <div
                             key={creative.id}
-                            className="rounded-lg overflow-hidden border border-blue-500/30 max-w-[140px]"
-                            style={aspectCss ? { aspectRatio: aspectCss } : undefined}
+                            className="rounded-lg overflow-hidden border border-blue-500/30"
+                            style={{
+                              ...(aspectCss ? { aspectRatio: aspectCss } : {}),
+                              width: `${creativeWidth}px`,
+                              maxWidth: "46%",
+                            }}
                           >
                             <img
                               src={creative.url}
@@ -3686,11 +3605,115 @@ const RelatorioCliente = () => {
                     <div className="flex flex-wrap gap-3 justify-center">
                       {reportData.criativos.filter(c => c.platform === "meta").slice(0, 5).map((creative) => {
                         const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
+                        const creativeWidth = Math.round(140 * (reportData.creativeScaleMeta / 100));
                         return (
                           <div
                             key={creative.id}
-                            className="rounded-lg overflow-hidden border border-purple-500/30 max-w-[140px]"
-                            style={aspectCss ? { aspectRatio: aspectCss } : undefined}
+                            className="rounded-lg overflow-hidden border border-purple-500/30"
+                            style={{
+                              ...(aspectCss ? { aspectRatio: aspectCss } : {}),
+                              width: `${creativeWidth}px`,
+                              maxWidth: "46%",
+                            }}
+                          >
+                            <img
+                              src={creative.url}
+                              alt={creative.name}
+                              className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
+                              crossOrigin="anonymous"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* LinkedIn Creatives */}
+                {reportData.sectionsConfig.showCriativosLinkedin && reportData.criativos.filter(c => c.platform === "linkedin").length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold mb-4 tracking-widest uppercase text-sky-400">
+                      CRIATIVOS LINKEDIN
+                    </h3>
+                    <div className="flex flex-wrap gap-3 justify-center">
+                      {reportData.criativos.filter(c => c.platform === "linkedin").slice(0, 5).map((creative) => {
+                        const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
+                        const creativeWidth = Math.round(140 * (reportData.creativeScaleMeta / 100));
+                        return (
+                          <div
+                            key={creative.id}
+                            className="rounded-lg overflow-hidden border border-sky-500/30"
+                            style={{
+                              ...(aspectCss ? { aspectRatio: aspectCss } : {}),
+                              width: `${creativeWidth}px`,
+                              maxWidth: "46%",
+                            }}
+                          >
+                            <img
+                              src={creative.url}
+                              alt={creative.name}
+                              className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
+                              crossOrigin="anonymous"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* TikTok Creatives */}
+                {reportData.sectionsConfig.showCriativosTiktok && reportData.criativos.filter(c => c.platform === "tiktok").length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold mb-4 tracking-widest uppercase text-pink-400">
+                      CRIATIVOS TIKTOK
+                    </h3>
+                    <div className="flex flex-wrap gap-3 justify-center">
+                      {reportData.criativos.filter(c => c.platform === "tiktok").slice(0, 5).map((creative) => {
+                        const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
+                        const creativeWidth = Math.round(140 * (reportData.creativeScaleMeta / 100));
+                        return (
+                          <div
+                            key={creative.id}
+                            className="rounded-lg overflow-hidden border border-pink-500/30"
+                            style={{
+                              ...(aspectCss ? { aspectRatio: aspectCss } : {}),
+                              width: `${creativeWidth}px`,
+                              maxWidth: "46%",
+                            }}
+                          >
+                            <img
+                              src={creative.url}
+                              alt={creative.name}
+                              className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
+                              crossOrigin="anonymous"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Shopee Creatives */}
+                {reportData.sectionsConfig.showCriativosShopee && reportData.criativos.filter(c => c.platform === "shopee").length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold mb-4 tracking-widest uppercase text-orange-400">
+                      CRIATIVOS SHOPEE
+                    </h3>
+                    <div className="flex flex-wrap gap-3 justify-center">
+                      {reportData.criativos.filter(c => c.platform === "shopee").slice(0, 5).map((creative) => {
+                        const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
+                        const creativeWidth = Math.round(140 * (reportData.creativeScaleMeta / 100));
+                        return (
+                          <div
+                            key={creative.id}
+                            className="rounded-lg overflow-hidden border border-orange-500/30"
+                            style={{
+                              ...(aspectCss ? { aspectRatio: aspectCss } : {}),
+                              width: `${creativeWidth}px`,
+                              maxWidth: "46%",
+                            }}
                           >
                             <img
                               src={creative.url}
