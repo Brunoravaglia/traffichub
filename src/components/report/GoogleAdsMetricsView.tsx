@@ -67,7 +67,7 @@ export const GoogleAdsMetricsView = ({ google, metricsConfig }: GoogleAdsMetrics
     if (metricsConfig.showGoogleCustoPorVenda) additionalMetrics.push({ label: "Custo/Venda", value: formatCurrency(google.custoPorVenda), color: "text-red-400" });
 
     return (
-        <div className="mb-8 p-10 rounded-[2.5rem] bg-gradient-to-br from-black/60 to-black/30 border border-[#ffb500]/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-md relative overflow-hidden group">
+        <div className="mb-8 p-5 sm:p-10 rounded-3xl sm:rounded-[2.5rem] bg-gradient-to-br from-black/60 to-black/30 border border-[#ffb500]/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-md relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#ffb500]/5 rounded-full blur-[100px] -mr-32 -mt-32"></div>
 
             <div className="flex items-center mb-8 relative">
@@ -83,7 +83,7 @@ export const GoogleAdsMetricsView = ({ google, metricsConfig }: GoogleAdsMetrics
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4 relative">
                 {primaryMetrics.map((m) => (
-                    <div key={m.label} className="min-w-0 min-h-[144px] p-6 rounded-3xl bg-white/[0.02] border border-white/[0.05] hover:border-[#ffb500]/30 transition-all duration-500 group/item">
+                    <div key={m.label} className="min-w-0 min-h-[144px] p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/[0.02] border border-white/[0.05] hover:border-[#ffb500]/30 transition-all duration-500 group/item">
                         <p
                             className={`block w-full font-black text-white mb-2 tracking-tight whitespace-normal break-all leading-[1.3] tabular-nums group-hover:text-[#ffb500] transition-colors ${
                                 m.label === "Investido"

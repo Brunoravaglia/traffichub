@@ -1009,7 +1009,7 @@ const RelatorioCliente = () => {
             </div>
           </div>
 
-          <div className="grid w-full grid-cols-4 gap-2 sm:flex sm:w-auto sm:items-center">
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
             <Button
               variant="outline"
               onClick={() => setSaveTemplateDialogOpen(true)}
@@ -1017,7 +1017,7 @@ const RelatorioCliente = () => {
             >
               <FileText className="mr-1.5 h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Salvar Modelo</span>
-              <span className="sm:hidden">Modelo</span>
+              <span className="sm:hidden text-[10px]">Modelo</span>
             </Button>
             <Button
               variant={isPreview ? "default" : "outline"}
@@ -1036,7 +1036,7 @@ const RelatorioCliente = () => {
             >
               <BarChart3 className="w-4 h-4 mr-1.5 sm:mr-2" />
               <span className="hidden sm:inline">Calcular métricas</span>
-              <span className="sm:hidden">Calcular</span>
+              <span className="sm:hidden text-[10px]">Calcular</span>
             </Button>
             <Button
               onClick={handleExport}
@@ -3468,7 +3468,7 @@ const RelatorioCliente = () => {
                 isExporting={Boolean(reportData.isGeneratingPDF)}
               />
 
-              <div className="p-8 pt-0">
+              <div className="p-4 sm:p-8 pt-0">
                 {/* Objectives */}
                 {reportData.sectionsConfig.showObjetivos && reportData.objetivos.filter(Boolean).length > 0 && (
                   <div className="mb-8 p-6 rounded-2xl bg-white/[0.03] border border-white/10 shadow-inner">
