@@ -11,16 +11,16 @@ interface ReportHeaderProps {
 
 export const ReportHeader = ({ cliente, periodoInicio, periodoFim, isExporting = false }: ReportHeaderProps) => {
     return (
-        <div className="p-6 sm:p-10 pb-6 bg-gradient-to-b from-black/40 to-transparent">
-            <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between mb-8 sm:mb-10 text-center sm:text-left gap-6 sm:gap-0">
-                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
+        <div className="p-4 sm:p-10 pb-4 sm:pb-6 bg-gradient-to-b from-black/40 to-transparent overflow-hidden w-full">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between mb-6 sm:mb-8 text-center sm:text-left gap-5 sm:gap-0">
+                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
                     {cliente?.logo_url || (cliente?.agencias as any)?.logo_url ? (
                         <div className="p-1 bg-gradient-to-br from-[#ffb500] to-[#cc9200] rounded-2xl shadow-[0_0_20px_rgba(255,181,0,0.2)]">
-                            <div className="h-20 sm:h-24 max-w-[240px] sm:max-w-[280px] rounded-xl overflow-hidden flex items-center justify-center bg-black/90">
+                            <div className="w-[160px] h-20 sm:w-[200px] sm:h-24 rounded-xl overflow-hidden flex items-center justify-center bg-black/90">
                                 <img
                                     src={cliente.logo_url || (cliente?.agencias as any)?.logo_url}
                                     alt={cliente.nome}
-                                    className="w-full h-full object-contain p-2"
+                                    className="max-w-full max-h-full object-contain p-2"
                                     crossOrigin="anonymous"
                                 />
                             </div>
@@ -30,10 +30,10 @@ export const ReportHeader = ({ cliente, periodoInicio, periodoFim, isExporting =
                             <span className="text-3xl sm:text-4xl font-bold text-black tracking-widest">{cliente?.nome?.charAt(0)}</span>
                         </div>
                     )}
-                    <div className="space-y-1 sm:space-y-2 py-0 sm:py-1">
+                    <div className="space-y-1 py-0 sm:py-1">
                         <p
                             className={cn(
-                                "text-2xl sm:text-4xl font-black tracking-tight uppercase leading-[1.12]",
+                                "text-2xl sm:text-3xl md:text-4xl font-black tracking-tight uppercase leading-[1.12] break-words max-w-full",
                                 isExporting
                                     ? "text-[#ffcc33]"
                                     : "text-transparent bg-clip-text bg-gradient-to-r from-[#ffb500] via-[#ffd700] to-[#cc9200]"
@@ -41,38 +41,25 @@ export const ReportHeader = ({ cliente, periodoInicio, periodoFim, isExporting =
                         >
                             {cliente?.nome}
                         </p>
-                        <p className="text-[10px] sm:text-xs text-gray-400 font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase opacity-70">
-                            Performance Analytics Report
+                        <p className="text-[9px] sm:text-[10px] text-gray-500 font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase">
+                            Relatório de Performance
                         </p>
                     </div>
                 </div>
-                <div className="flex flex-col items-center sm:items-end sm:text-right justify-center">
-                    <h1 className="text-2xl sm:text-4xl font-light text-white mb-0 tracking-tighter leading-none opacity-40 italic">RESULTS</h1>
-                    <h1
-                        className={cn(
-                            "text-3xl sm:text-5xl font-black mb-2 sm:mb-3 tracking-tighter leading-none",
-                            isExporting
-                                ? "text-[#ffcc33]"
-                                : "text-transparent bg-clip-text bg-gradient-to-tr from-[#ffb500] to-[#ffd700]"
-                        )}
-                    >
-                        INSIGHTS
-                    </h1>
-                    <div className="flex flex-col items-center sm:items-end gap-1">
-                        <p className="text-xs sm:text-sm text-[#ffb500] uppercase font-bold tracking-[0.2em] bg-[#ffb500]/10 px-3 py-1 rounded-sm border border-[#ffb500]/20">
-                            {format(periodoInicio, "MMMM yyyy", { locale: ptBR })}
-                        </p>
-                    </div>
+                <div className="flex flex-col items-center sm:items-end sm:text-right justify-center gap-1">
+                    <p className="text-xs sm:text-sm text-[#ffb500] uppercase font-black tracking-[0.2em] bg-[#ffb500]/10 px-4 py-1.5 rounded-md border border-[#ffb500]/20">
+                        {format(periodoInicio, "MMMM yyyy", { locale: ptBR })}
+                    </p>
                 </div>
             </div>
 
-            <div className="flex justify-center mb-10">
-                <div className="relative group">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-[#ffb500]/20 to-[#cc9200]/20 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
-                    <div className="relative px-4 sm:px-8 py-2 sm:py-3 rounded-full bg-black/40 border border-[#ffb500]/30 backdrop-blur-sm">
-                        <p className="text-[10px] sm:text-xs text-gray-200 tracking-[0.2em] sm:tracking-[0.25em] font-black uppercase flex items-center gap-2 sm:gap-3">
+            <div className="flex justify-center mb-8">
+                <div className="relative">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-[#ffb500]/15 to-[#cc9200]/15 rounded-full blur opacity-30"></div>
+                    <div className="relative px-5 sm:px-8 py-2 rounded-full bg-black/40 border border-[#ffb500]/20 backdrop-blur-sm">
+                        <p className="text-[10px] sm:text-xs text-gray-300 tracking-[0.15em] sm:tracking-[0.2em] font-bold uppercase flex items-center gap-2">
                             <span className={cn("w-1 h-1 rounded-full bg-[#ffb500]", !isExporting && "animate-pulse")}></span>
-                            Período: {format(periodoInicio, "dd/MM")} — {format(periodoFim, "dd/MM")}
+                            {format(periodoInicio, "dd/MM")} — {format(periodoFim, "dd/MM/yyyy")}
                             <span className={cn("w-1 h-1 rounded-full bg-[#ffb500]", !isExporting && "animate-pulse")}></span>
                         </p>
                     </div>

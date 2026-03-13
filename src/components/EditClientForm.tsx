@@ -20,7 +20,7 @@ const REDES_SOCIAIS = [
   { id: "meta", label: "Meta Ads (Facebook/Instagram)" },
   { id: "google", label: "Google Ads" },
   { id: "tiktok", label: "TikTok Ads" },
-  { id: "linkedin", label: "LinkedIn Ads" },
+  { id: "shopee", label: "Shopee Ads" },
   { id: "youtube", label: "YouTube Ads" },
   { id: "twitter", label: "Twitter/X Ads" },
   { id: "pinterest", label: "Pinterest Ads" },

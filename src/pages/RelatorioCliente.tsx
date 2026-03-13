@@ -648,13 +648,14 @@ const RelatorioCliente = () => {
 
     try {
       const element = pdfRef.current;
-      const elementRect = element.getBoundingClientRect();
-      // Force desktop capture width so PDF layout is stable across templates
-      // and never falls back to tablet/mobile grid breakpoints.
-      const captureWidth = Math.max(1400, Math.round(elementRect.width));
+      // Use the actual styled width (800px during export) so the PDF
+      // content fills the A4 page instead of being downscaled from 1400px.
+      const captureWidth = 800;
 
       // Temporary style to ensure it's fully expanded for capture
       originalStyle = element.style.cssText;
+      element.style.width = `${captureWidth}px`;
+      element.style.maxWidth = `${captureWidth}px`;
       element.style.height = 'auto';
       element.style.overflow = 'visible';
       element.style.transform = 'none';
@@ -695,7 +696,7 @@ const RelatorioCliente = () => {
       }
 
       const canvas = await html2canvas(clone, {
-        scale: Math.max(2, Math.min(3, window.devicePixelRatio || 2)),
+        scale: 3,
         useCORS: true,
         allowTaint: true,
         imageTimeout: 15000,
@@ -3468,10 +3469,10 @@ const RelatorioCliente = () => {
                 isExporting={Boolean(reportData.isGeneratingPDF)}
               />
 
-              <div className="p-4 sm:p-8 pt-0">
+              <div className="p-2 sm:p-8 pt-0">
                 {/* Objectives */}
                 {reportData.sectionsConfig.showObjetivos && reportData.objetivos.filter(Boolean).length > 0 && (
-                  <div className="mb-8 p-6 rounded-2xl bg-white/[0.03] border border-white/10 shadow-inner">
+                  <div className="mb-6 sm:mb-8 p-4 sm:p-6 rounded-2xl bg-white/[0.03] border border-white/10 shadow-inner">
                     <h2 className="text-sm font-bold mb-4 text-[#ffb500] tracking-widest uppercase">OBJETIVOS</h2>
                     <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
                       {reportData.objetivos.filter(Boolean).map((obj, i) => (

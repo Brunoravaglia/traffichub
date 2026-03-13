@@ -53,7 +53,7 @@ export function PlatformMetricsView({
   additionalMetrics = [],
 }: PlatformMetricsViewProps) {
   return (
-    <div className="mb-8 p-5 sm:p-10 rounded-3xl sm:rounded-[2.5rem] bg-gradient-to-br from-black/60 to-black/30 border border-[#ffb500]/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-md relative overflow-hidden group">
+    <div className="mb-6 sm:mb-8 p-4 sm:p-10 rounded-2xl sm:rounded-[2.5rem] bg-gradient-to-br from-black/60 to-black/30 border border-[#ffb500]/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-md relative overflow-hidden group">
       <div className="absolute top-0 right-0 w-64 h-64 bg-[#ffb500]/5 rounded-full blur-[100px] -mr-32 -mt-32" />
 
       <div className="flex items-center mb-8 relative">
@@ -65,11 +65,11 @@ export function PlatformMetricsView({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4 relative">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 relative">
         {primaryMetrics.map((metric) => {
           const value = toDisplay(metric.value, metric.isCurrency);
           return (
-            <div key={metric.label} className="min-w-0 min-h-[144px] p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/[0.02] border border-white/[0.05] hover:border-[#ffb500]/30 transition-all duration-500 group/item">
+            <div key={metric.label} className="min-w-0 min-h-[110px] sm:min-h-[144px] p-3 sm:p-6 rounded-xl sm:rounded-3xl bg-white/[0.02] border border-white/[0.05] hover:border-[#ffb500]/30 transition-all duration-500 group/item">
               <p
                 className={`block w-full font-black text-white mb-2 tracking-tight whitespace-normal break-all leading-[1.3] tabular-nums group-hover:text-[#ffb500] transition-colors ${
                   metric.isCurrency
@@ -90,11 +90,11 @@ export function PlatformMetricsView({
       </div>
 
       {additionalMetrics.length > 0 && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 relative">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 relative">
           {additionalMetrics.map((metric) => {
             const value = String(metric.value);
             return (
-              <div key={metric.label} className="min-w-0 min-h-[108px] p-5 rounded-2xl bg-white/[0.01] border border-white/[0.03] hover:bg-white/[0.04] transition-all duration-300">
+              <div key={metric.label} className="min-w-0 min-h-[80px] sm:min-h-[108px] p-3 sm:p-5 rounded-xl bg-white/[0.01] border border-white/[0.03] hover:bg-white/[0.04] transition-all duration-300">
                 <p
                   className={`${getAdditionalMetricValueClass(value)} block w-full font-bold text-[#ffb500] mb-1 tracking-tight whitespace-normal break-all leading-[1.25] tabular-nums`}
                   title={value}

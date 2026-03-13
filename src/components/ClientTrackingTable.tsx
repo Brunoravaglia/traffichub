@@ -81,6 +81,7 @@ interface ClientTracking {
     nome: string;
     logo_url: string | null;
     gestor_id: string | null;
+    redes_sociais: string[] | null;
   };
 }
 
@@ -250,7 +251,7 @@ const ClientTrackingTable = ({ gestorFilter }: { gestorFilter?: string }) => {
       if (!agencyId || scopedClientIds.length === 0) return [];
       const { data, error } = await supabase
         .from("client_tracking")
-        .select(`*, clientes(nome, logo_url, gestor_id)`)
+        .select(`*, clientes(nome, logo_url, gestor_id, redes_sociais)`)
         .in("cliente_id", scopedClientIds);
       if (error) throw error;
       return data as ClientTracking[];
@@ -273,16 +274,23 @@ const ClientTrackingTable = ({ gestorFilter }: { gestorFilter?: string }) => {
     initialData: [],
   });
 
+  const handleEdit = (tracking: ClientTracking) => {
+    setEditingTracking(tracking);
+    setNewClienteId(tracking.cliente_id);
+    setNewClienteNome(tracking.clientes?.nome || "");
+    setIsDialogOpen(true);
+  };
+
   const saveMutation = useMutation({
-    mutationFn: async (data: Partial<ClientTracking>) => {
+    mutationFn: async (data: any) => {
       if (!agencyId) {
         throw new Error("Agência não identificada");
       }
-      const gD = data.google_valor_diario! > 0 ? Math.floor(data.google_saldo! / data.google_valor_diario!) : 0;
-      const mD = data.meta_valor_diario! > 0 ? Math.floor(data.meta_saldo! / data.meta_valor_diario!) : 0;
+      const gD = (data.google_valor_diario || 0) > 0 ? Math.floor((data.google_saldo || 0) / data.google_valor_diario!) : 0;
+      const mD = (data.meta_valor_diario || 0) > 0 ? Math.floor((data.meta_saldo || 0) / data.meta_valor_diario!) : 0;
       const now = format(new Date(), "yyyy-MM-dd");
       const payload = { ...data, google_dias_restantes: gD, meta_dias_restantes: mD, google_ultima_validacao: now, meta_ultima_validacao: now };
-      delete (payload as any).clientes;
+      delete payload.clientes;
       if (data.id) return supabase.from("client_tracking").update(payload).eq("id", data.id).in("cliente_id", scopedClientIds);
       if (!data.cliente_id || !scopedClientIds.includes(data.cliente_id)) {
         throw new Error("Cliente fora da sua agência");
@@ -410,6 +418,7 @@ const ClientTrackingTable = ({ gestorFilter }: { gestorFilter?: string }) => {
                     <TableHead className="w-[120px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">Clarity</TableHead>
                     <TableHead className="w-[120px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">G-Ads</TableHead>
                     <TableHead className="w-[120px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">M-Ads</TableHead>
+                    <TableHead className="w-[120px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">Shopee</TableHead>
                     <TableHead className="w-[150px] text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">Saldo Total</TableHead>
                   </>
                 )}
@@ -472,6 +481,11 @@ const ClientTrackingTable = ({ gestorFilter }: { gestorFilter?: string }) => {
                         <TableCell className="text-center">
                           <Badge variant="outline" className={cn("text-[9px] font-bold uppercase", t.meta_ads_active ? "text-blue-400 border-blue-400/30" : "text-gray-600 border-gray-600/30")}>
                             {t.meta_ads_active ? "Ativo" : "Off"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline" className={cn("text-[9px] font-bold uppercase", t.clientes?.redes_sociais?.includes("shopee") ? "text-orange-400 border-orange-400/30" : "text-gray-600 border-gray-600/30")}>
+                            {t.clientes?.redes_sociais?.includes("shopee") ? "Ativo" : "Off"}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-center font-mono text-xs font-black text-emerald-400">
