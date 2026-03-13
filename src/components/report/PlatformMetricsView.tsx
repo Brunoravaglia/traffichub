@@ -20,27 +20,23 @@ interface PlatformMetricsViewProps {
   additionalMetrics?: AdditionalMetric[];
 }
 
-const getPrimaryMetricValueClass = (value: string, isInvested = false) => {
-  const len = value.length;
-  if (isInvested) {
-    if (len <= 10) return "text-[clamp(1.2rem,1.8vw,1.95rem)]";
-    if (len <= 13) return "text-[clamp(1.05rem,1.55vw,1.6rem)]";
-    if (len <= 16) return "text-[clamp(0.94rem,1.25vw,1.25rem)]";
-    return "text-[clamp(0.86rem,1.05vw,1.08rem)]";
+/** Adaptive font size — always readable, never overflows */
+const getPrimarySize = (len: number, isCurrency = false) => {
+  if (isCurrency) {
+    if (len <= 10) return "text-[clamp(1.25rem,2.4vw,1.95rem)]";
+    if (len <= 14) return "text-[clamp(1.05rem,1.8vw,1.5rem)]";
+    return "text-[clamp(0.9rem,1.4vw,1.15rem)]";
   }
-
-  if (len <= 8) return "text-[clamp(1.2rem,1.85vw,2rem)]";
-  if (len <= 11) return "text-[clamp(1.05rem,1.55vw,1.6rem)]";
-  if (len <= 14) return "text-[clamp(0.94rem,1.25vw,1.25rem)]";
-  return "text-[clamp(0.86rem,1.05vw,1.08rem)]";
+  if (len <= 6) return "text-[clamp(1.4rem,2.8vw,2.1rem)]";
+  if (len <= 10) return "text-[clamp(1.15rem,2.2vw,1.7rem)]";
+  if (len <= 14) return "text-[clamp(1rem,1.6vw,1.35rem)]";
+  return "text-[clamp(0.85rem,1.2vw,1.1rem)]";
 };
 
-const getAdditionalMetricValueClass = (value: string) => {
-  const len = value.length;
-  if (len <= 9) return "text-[clamp(0.9rem,1.2vw,1.05rem)]";
-  if (len <= 12) return "text-[clamp(0.82rem,1.05vw,0.96rem)]";
-  if (len <= 15) return "text-[clamp(0.76rem,0.95vw,0.88rem)]";
-  return "text-[clamp(0.72rem,0.88vw,0.82rem)]";
+const getSecondarySize = (len: number) => {
+  if (len <= 8) return "text-[clamp(0.95rem,1.6vw,1.15rem)]";
+  if (len <= 12) return "text-[clamp(0.85rem,1.3vw,1rem)]";
+  return "text-[clamp(0.78rem,1.1vw,0.9rem)]";
 };
 
 const toDisplay = (value: string | number, isCurrency?: boolean) =>
@@ -56,52 +52,63 @@ export function PlatformMetricsView({
     <div className="mb-6 sm:mb-8 p-4 sm:p-10 rounded-2xl sm:rounded-[2.5rem] bg-gradient-to-br from-black/60 to-black/30 border border-[#ffb500]/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-md relative overflow-hidden group">
       <div className="absolute top-0 right-0 w-64 h-64 bg-[#ffb500]/5 rounded-full blur-[100px] -mr-32 -mt-32" />
 
-      <div className="flex items-center mb-8 relative">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-br from-[#ffb500]/20 to-transparent rounded-2xl border border-[#ffb500]/20 shadow-[0_0_15px_rgba(255,181,0,0.1)]">
+      <div className="flex items-center mb-6 sm:mb-8 relative">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="p-2.5 sm:p-3 bg-gradient-to-br from-[#ffb500]/20 to-transparent rounded-xl sm:rounded-2xl border border-[#ffb500]/20 shadow-[0_0_15px_rgba(255,181,0,0.1)]">
             {logo}
           </div>
-          <h3 className="text-xl font-black text-white tracking-[0.2em] uppercase">{title}</h3>
+          <h3 className="text-lg sm:text-xl font-black text-white tracking-[0.15em] sm:tracking-[0.2em] uppercase">{title}</h3>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 relative">
+      {/* Primary Metrics */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-3 sm:mb-4 relative">
         {primaryMetrics.map((metric) => {
-          const value = toDisplay(metric.value, metric.isCurrency);
+          const display = toDisplay(metric.value, metric.isCurrency);
+          const str = String(display);
           return (
-            <div key={metric.label} className="min-w-0 min-h-[110px] sm:min-h-[144px] p-3 sm:p-6 rounded-xl sm:rounded-3xl bg-white/[0.02] border border-white/[0.05] hover:border-[#ffb500]/30 transition-all duration-500 group/item">
+            <div
+              key={metric.label}
+              className="min-w-0 flex flex-col justify-between p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-[#ffb500]/30 transition-all duration-500 overflow-hidden"
+              style={{ minHeight: "clamp(90px, 12vw, 130px)" }}
+            >
               <p
-                className={`block w-full font-black text-white mb-2 tracking-tight whitespace-normal break-all leading-[1.3] tabular-nums group-hover:text-[#ffb500] transition-colors ${
-                  metric.isCurrency
-                    ? getPrimaryMetricValueClass(String(value), true)
-                    : getPrimaryMetricValueClass(String(value))
+                className={`font-black text-white tracking-tight leading-[1.2] tabular-nums overflow-hidden ${
+                  metric.isCurrency ? getPrimarySize(str.length, true) : getPrimarySize(str.length)
                 }`}
-                title={String(value)}
+                style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
+                title={str}
               >
-                {value}
+                {display}
               </p>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] opacity-50">{metric.icon}</span>
-                <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">{metric.label}</p>
+              <div className="flex items-center gap-1.5 mt-auto pt-2">
+                <span className="text-[9px] sm:text-[10px] opacity-40 flex-shrink-0">{metric.icon}</span>
+                <p className="text-[8px] sm:text-[9px] font-black text-gray-500 uppercase tracking-[0.12em] sm:tracking-[0.15em] truncate">{metric.label}</p>
               </div>
             </div>
           );
         })}
       </div>
 
+      {/* Additional Metrics */}
       {additionalMetrics.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 relative">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 relative">
           {additionalMetrics.map((metric) => {
-            const value = String(metric.value);
+            const str = String(metric.value);
             return (
-              <div key={metric.label} className="min-w-0 min-h-[80px] sm:min-h-[108px] p-3 sm:p-5 rounded-xl bg-white/[0.01] border border-white/[0.03] hover:bg-white/[0.04] transition-all duration-300">
+              <div
+                key={metric.label}
+                className="min-w-0 flex flex-col justify-between p-3 sm:p-4 rounded-xl bg-white/[0.01] border border-white/[0.03] hover:bg-white/[0.04] transition-all duration-300 overflow-hidden"
+                style={{ minHeight: "clamp(70px, 9vw, 100px)" }}
+              >
                 <p
-                  className={`${getAdditionalMetricValueClass(value)} block w-full font-bold text-[#ffb500] mb-1 tracking-tight whitespace-normal break-all leading-[1.25] tabular-nums`}
-                  title={value}
+                  className={`${getSecondarySize(str.length)} font-bold text-[#ffb500] tracking-tight leading-[1.2] tabular-nums overflow-hidden`}
+                  style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
+                  title={str}
                 >
-                  {value}
+                  {str}
                 </p>
-                <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.15em]">{metric.label}</p>
+                <p className="text-[7px] sm:text-[8px] font-black text-gray-500 uppercase tracking-[0.1em] sm:tracking-[0.12em] truncate mt-auto pt-1.5">{metric.label}</p>
               </div>
             );
           })}

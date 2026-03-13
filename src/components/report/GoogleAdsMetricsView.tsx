@@ -11,110 +11,120 @@ const toSafeNumber = (value: unknown, fallback = 0) => {
     return Number.isFinite(parsed) ? parsed : fallback;
 };
 
-const getPrimaryMetricValueClass = (value: string, isInvested = false) => {
-    const len = value.length;
-    if (isInvested) {
-        if (len <= 10) return "text-[clamp(1.2rem,1.8vw,1.95rem)]";
-        if (len <= 13) return "text-[clamp(1.05rem,1.55vw,1.6rem)]";
-        if (len <= 16) return "text-[clamp(0.94rem,1.25vw,1.25rem)]";
-        return "text-[clamp(0.86rem,1.05vw,1.08rem)]";
+/** Adaptive font size — always readable, never overflows */
+const getPrimarySize = (len: number, isCurrency = false) => {
+    if (isCurrency) {
+        if (len <= 10) return "text-[clamp(1.25rem,2.4vw,1.95rem)]";
+        if (len <= 14) return "text-[clamp(1.05rem,1.8vw,1.5rem)]";
+        return "text-[clamp(0.9rem,1.4vw,1.15rem)]";
     }
-
-    if (len <= 8) return "text-[clamp(1.2rem,1.85vw,2rem)]";
-    if (len <= 11) return "text-[clamp(1.05rem,1.55vw,1.6rem)]";
-    if (len <= 14) return "text-[clamp(0.94rem,1.25vw,1.25rem)]";
-    return "text-[clamp(0.86rem,1.05vw,1.08rem)]";
+    if (len <= 6) return "text-[clamp(1.4rem,2.8vw,2.1rem)]";
+    if (len <= 10) return "text-[clamp(1.15rem,2.2vw,1.7rem)]";
+    if (len <= 14) return "text-[clamp(1rem,1.6vw,1.35rem)]";
+    return "text-[clamp(0.85rem,1.2vw,1.1rem)]";
 };
 
-const getAdditionalMetricValueClass = (value: string) => {
-    const len = value.length;
-    if (len <= 9) return "text-[clamp(0.9rem,1.2vw,1.05rem)]";
-    if (len <= 12) return "text-[clamp(0.82rem,1.05vw,0.96rem)]";
-    if (len <= 15) return "text-[clamp(0.76rem,0.95vw,0.88rem)]";
-    return "text-[clamp(0.72rem,0.88vw,0.82rem)]";
+const getSecondarySize = (len: number) => {
+    if (len <= 8) return "text-[clamp(0.95rem,1.6vw,1.15rem)]";
+    if (len <= 12) return "text-[clamp(0.85rem,1.3vw,1rem)]";
+    return "text-[clamp(0.78rem,1.1vw,0.9rem)]";
 };
 
 export const GoogleAdsMetricsView = ({ google, metricsConfig }: GoogleAdsMetricsViewProps) => {
-    const additionalMetrics = [];
+    const additionalMetrics: { label: string; value: string }[] = [];
     const primaryMetrics = [
         { label: "Cliques", value: formatNumber(google.cliques), icon: "🖱️", visible: true },
         { label: "Impressões", value: formatNumber(google.impressoes), icon: "👁️", visible: true },
         { label: "Conversões", value: formatNumber(google.contatos), icon: "🎯", visible: true },
-        { label: "Investido", value: formatCurrency(google.investido), icon: "💰", visible: true },
+        { label: "Investido", value: formatCurrency(google.investido), icon: "💰", visible: true, isCurrency: true },
     ].filter((metric) => metric.visible);
     const showGoogleCpl = metricsConfig.showGoogleCustoPorLead ?? metricsConfig.showGoogleCustoLead;
-    if (showGoogleCpl) additionalMetrics.push({ label: "Custo por Lead", value: formatCurrency(google.custoPorLead), color: "text-green-400" });
-    if (metricsConfig.showGoogleCpm) additionalMetrics.push({ label: "CPM", value: formatCurrency(google.cpm), color: "text-yellow-400" });
-    if (metricsConfig.showGoogleCtr) additionalMetrics.push({ label: "CTR (%)", value: `${toSafeNumber(google.ctr).toFixed(2)}%`, color: "text-blue-400" });
-    if (metricsConfig.showGoogleCpc) additionalMetrics.push({ label: "CPC", value: formatCurrency(google.cpc), color: "text-orange-400" });
-    if (metricsConfig.showGoogleConversoes) additionalMetrics.push({ label: "Conversões Ads", value: formatNumber(google.conversoes), color: "text-emerald-400" });
-    if (metricsConfig.showGoogleTaxaConversao) additionalMetrics.push({ label: "Taxa Conv.", value: `${toSafeNumber(google.taxaConversao).toFixed(2)}%`, color: "text-cyan-400" });
-    if (metricsConfig.showGoogleRoas) additionalMetrics.push({ label: "ROAS", value: `${toSafeNumber(google.roas).toFixed(2)}x`, color: "text-pink-400" });
-    if (metricsConfig.showGoogleRoasValor) additionalMetrics.push({ label: "ROAS (R$)", value: formatCurrency(google.roasValor), color: "text-fuchsia-400" });
-    if (metricsConfig.showGoogleCustoConversao) additionalMetrics.push({ label: "Custo/Conv.", value: formatCurrency(google.custoConversao), color: "text-red-400" });
-    if (metricsConfig.showGoogleAlcance) additionalMetrics.push({ label: "Alcance", value: formatNumber(google.alcance), color: "text-indigo-400" });
-    if (metricsConfig.showGoogleFrequencia) additionalMetrics.push({ label: "Frequência", value: toSafeNumber(google.frequencia).toFixed(2), color: "text-violet-400" });
-    if (metricsConfig.showGoogleVisualizacoesVideo) additionalMetrics.push({ label: "Views Vídeo", value: formatNumber(google.visualizacoesVideo), color: "text-teal-400" });
-    if (metricsConfig.showGoogleTaxaVisualizacao) additionalMetrics.push({ label: "Taxa View", value: `${toSafeNumber(google.taxaVisualizacao).toFixed(2)}%`, color: "text-sky-400" });
-    if (metricsConfig.showGoogleInteracoes) additionalMetrics.push({ label: "Interações", value: formatNumber(google.interacoes), color: "text-lime-400" });
-    if (metricsConfig.showGoogleTaxaInteracao) additionalMetrics.push({ label: "Taxa Inter.", value: `${toSafeNumber(google.taxaInteracao).toFixed(2)}%`, color: "text-amber-400" });
-    if (metricsConfig.showGoogleCompras) additionalMetrics.push({ label: "Compras", value: formatNumber(google.compras), color: "text-emerald-400" });
-    if (metricsConfig.showGoogleVisitasProduto) additionalMetrics.push({ label: "Visitas Produto", value: formatNumber(google.visitasProduto), color: "text-sky-400" });
-    if (metricsConfig.showGoogleAdicoesCarrinho) additionalMetrics.push({ label: "Add Carrinho", value: formatNumber(google.adicoesCarrinho), color: "text-orange-400" });
-    if (metricsConfig.showGoogleVendas) additionalMetrics.push({ label: "Vendas", value: formatNumber(google.vendas), color: "text-green-400" });
-    if (metricsConfig.showGoogleCustoPorVisita) additionalMetrics.push({ label: "Custo/Visita", value: formatCurrency(google.custoPorVisita), color: "text-cyan-400" });
-    if (metricsConfig.showGoogleCustoPorAdicaoCarrinho) additionalMetrics.push({ label: "Custo/Add Carrinho", value: formatCurrency(google.custoPorAdicaoCarrinho), color: "text-yellow-400" });
-    if (metricsConfig.showGoogleCustoPorVenda) additionalMetrics.push({ label: "Custo/Venda", value: formatCurrency(google.custoPorVenda), color: "text-red-400" });
+    if (showGoogleCpl) additionalMetrics.push({ label: "Custo por Lead", value: formatCurrency(google.custoPorLead) });
+    if (metricsConfig.showGoogleCpm) additionalMetrics.push({ label: "CPM", value: formatCurrency(google.cpm) });
+    if (metricsConfig.showGoogleCtr) additionalMetrics.push({ label: "CTR (%)", value: `${toSafeNumber(google.ctr).toFixed(2)}%` });
+    if (metricsConfig.showGoogleCpc) additionalMetrics.push({ label: "CPC", value: formatCurrency(google.cpc) });
+    if (metricsConfig.showGoogleConversoes) additionalMetrics.push({ label: "Conversões Ads", value: formatNumber(google.conversoes) });
+    if (metricsConfig.showGoogleTaxaConversao) additionalMetrics.push({ label: "Taxa Conv.", value: `${toSafeNumber(google.taxaConversao).toFixed(2)}%` });
+    if (metricsConfig.showGoogleRoas) additionalMetrics.push({ label: "ROAS", value: `${toSafeNumber(google.roas).toFixed(2)}x` });
+    if (metricsConfig.showGoogleRoasValor) additionalMetrics.push({ label: "ROAS (R$)", value: formatCurrency(google.roasValor) });
+    if (metricsConfig.showGoogleCustoConversao) additionalMetrics.push({ label: "Custo/Conv.", value: formatCurrency(google.custoConversao) });
+    if (metricsConfig.showGoogleAlcance) additionalMetrics.push({ label: "Alcance", value: formatNumber(google.alcance) });
+    if (metricsConfig.showGoogleFrequencia) additionalMetrics.push({ label: "Frequência", value: toSafeNumber(google.frequencia).toFixed(2) });
+    if (metricsConfig.showGoogleVisualizacoesVideo) additionalMetrics.push({ label: "Views Vídeo", value: formatNumber(google.visualizacoesVideo) });
+    if (metricsConfig.showGoogleTaxaVisualizacao) additionalMetrics.push({ label: "Taxa View", value: `${toSafeNumber(google.taxaVisualizacao).toFixed(2)}%` });
+    if (metricsConfig.showGoogleInteracoes) additionalMetrics.push({ label: "Interações", value: formatNumber(google.interacoes) });
+    if (metricsConfig.showGoogleTaxaInteracao) additionalMetrics.push({ label: "Taxa Inter.", value: `${toSafeNumber(google.taxaInteracao).toFixed(2)}%` });
+    if (metricsConfig.showGoogleCompras) additionalMetrics.push({ label: "Compras", value: formatNumber(google.compras) });
+    if (metricsConfig.showGoogleVisitasProduto) additionalMetrics.push({ label: "Visitas Produto", value: formatNumber(google.visitasProduto) });
+    if (metricsConfig.showGoogleAdicoesCarrinho) additionalMetrics.push({ label: "Add Carrinho", value: formatNumber(google.adicoesCarrinho) });
+    if (metricsConfig.showGoogleVendas) additionalMetrics.push({ label: "Vendas", value: formatNumber(google.vendas) });
+    if (metricsConfig.showGoogleCustoPorVisita) additionalMetrics.push({ label: "Custo/Visita", value: formatCurrency(google.custoPorVisita) });
+    if (metricsConfig.showGoogleCustoPorAdicaoCarrinho) additionalMetrics.push({ label: "Custo/Add Carrinho", value: formatCurrency(google.custoPorAdicaoCarrinho) });
+    if (metricsConfig.showGoogleCustoPorVenda) additionalMetrics.push({ label: "Custo/Venda", value: formatCurrency(google.custoPorVenda) });
 
     return (
         <div className="mb-6 sm:mb-8 p-4 sm:p-10 rounded-2xl sm:rounded-[2.5rem] bg-gradient-to-br from-black/60 to-black/30 border border-[#ffb500]/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-md relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#ffb500]/5 rounded-full blur-[100px] -mr-32 -mt-32"></div>
 
-            <div className="flex items-center mb-8 relative">
-                <div className="flex items-center gap-4">
-                    <div className="p-3 bg-gradient-to-br from-[#ffb500]/20 to-transparent rounded-2xl border border-[#ffb500]/20 shadow-[0_0_15px_rgba(255,181,0,0.1)]">
+            <div className="flex items-center mb-6 sm:mb-8 relative">
+                <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="p-2.5 sm:p-3 bg-gradient-to-br from-[#ffb500]/20 to-transparent rounded-xl sm:rounded-2xl border border-[#ffb500]/20 shadow-[0_0_15px_rgba(255,181,0,0.1)]">
                         <GoogleLogo className="w-7 h-7" />
                     </div>
-                    <div>
-                        <h3 className="text-xl font-black text-white tracking-[0.2em] uppercase">Google Ads</h3>
-                    </div>
+                    <h3 className="text-lg sm:text-xl font-black text-white tracking-[0.15em] sm:tracking-[0.2em] uppercase">Google Ads</h3>
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 relative">
-                {primaryMetrics.map((m) => (
-                    <div key={m.label} className="min-w-0 min-h-[110px] sm:min-h-[144px] p-3 sm:p-6 rounded-xl sm:rounded-3xl bg-white/[0.02] border border-white/[0.05] hover:border-[#ffb500]/30 transition-all duration-500 group/item">
-                        <p
-                            className={`block w-full font-black text-white mb-2 tracking-tight whitespace-normal break-all leading-[1.3] tabular-nums group-hover:text-[#ffb500] transition-colors ${
-                                m.label === "Investido"
-                                    ? getPrimaryMetricValueClass(String(m.value), true)
-                                    : getPrimaryMetricValueClass(String(m.value))
-                            }`}
-                            title={String(m.value)}
+            {/* Primary Metrics */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-3 sm:mb-4 relative">
+                {primaryMetrics.map((m) => {
+                    const str = String(m.value);
+                    return (
+                        <div
+                            key={m.label}
+                            className="min-w-0 flex flex-col justify-between p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-[#ffb500]/30 transition-all duration-500 overflow-hidden"
+                            style={{ minHeight: "clamp(90px, 12vw, 130px)" }}
                         >
-                            {m.value}
-                        </p>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] opacity-50">{m.icon}</span>
-                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">{m.label}</p>
+                            <p
+                                className={`font-black text-white tracking-tight leading-[1.2] tabular-nums overflow-hidden ${
+                                    (m as any).isCurrency ? getPrimarySize(str.length, true) : getPrimarySize(str.length)
+                                }`}
+                                style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
+                                title={str}
+                            >
+                                {m.value}
+                            </p>
+                            <div className="flex items-center gap-1.5 mt-auto pt-2">
+                                <span className="text-[9px] sm:text-[10px] opacity-40 flex-shrink-0">{m.icon}</span>
+                                <p className="text-[8px] sm:text-[9px] font-black text-gray-500 uppercase tracking-[0.12em] sm:tracking-[0.15em] truncate">{m.label}</p>
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
+            {/* Additional Metrics */}
             {additionalMetrics.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 relative">
-                    {additionalMetrics.map((metric) => (
-                        <div key={metric.label} className="min-w-0 min-h-[80px] sm:min-h-[108px] p-3 sm:p-5 rounded-xl bg-white/[0.01] border border-white/[0.03] hover:bg-white/[0.04] transition-all duration-300">
-                            <p
-                                className={`${getAdditionalMetricValueClass(String(metric.value))} block w-full font-bold text-[#ffb500] mb-1 tracking-tight whitespace-normal break-all leading-[1.25] tabular-nums`}
-                                title={String(metric.value)}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 relative">
+                    {additionalMetrics.map((metric) => {
+                        const str = String(metric.value);
+                        return (
+                            <div
+                                key={metric.label}
+                                className="min-w-0 flex flex-col justify-between p-3 sm:p-4 rounded-xl bg-white/[0.01] border border-white/[0.03] hover:bg-white/[0.04] transition-all duration-300 overflow-hidden"
+                                style={{ minHeight: "clamp(70px, 9vw, 100px)" }}
                             >
-                                {metric.value}
-                            </p>
-                            <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.15em]">{metric.label}</p>
-                        </div>
-                    ))}
+                                <p
+                                    className={`${getSecondarySize(str.length)} font-bold text-[#ffb500] tracking-tight leading-[1.2] tabular-nums overflow-hidden`}
+                                    style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
+                                    title={str}
+                                >
+                                    {str}
+                                </p>
+                                <p className="text-[7px] sm:text-[8px] font-black text-gray-500 uppercase tracking-[0.1em] sm:tracking-[0.12em] truncate mt-auto pt-1.5">{metric.label}</p>
+                            </div>
+                        );
+                    })}
                 </div>
             )}
         </div>
