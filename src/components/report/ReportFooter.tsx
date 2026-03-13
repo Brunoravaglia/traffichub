@@ -24,6 +24,7 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
     };
 
     const hasValidation = reportData.validationId || reportData.validationPassword;
+    const isPremium = Boolean((cliente?.agencias as any)?.id);
 
     return (
         <div className="mt-12">
@@ -63,18 +64,18 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
                         <span className="text-[9px] font-black text-white/50 uppercase tracking-[0.2em]">Validação do Relatório</span>
                     </div>
 
-                    {/* Fields */}
+                    {/* Fields row */}
                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 mb-4">
                         {reportData.validationId && (
                             <div className="flex-1 min-w-0">
                                 <p className="text-[7px] font-bold text-white/30 uppercase tracking-[0.15em] mb-1">ID</p>
-                                <div className="flex items-center gap-1.5">
-                                    <code className="text-[9px] text-[#ffb500] font-mono font-bold tracking-wider truncate">{reportData.validationId}</code>
+                                <div className="flex items-start gap-1.5">
+                                    <code className="text-[8px] text-[#ffb500] font-mono font-bold tracking-wider break-all leading-relaxed">{reportData.validationId}</code>
                                     {!isExporting && (
                                         <button
                                             type="button"
                                             onClick={() => handleCopy(reportData.validationId)}
-                                            className="opacity-40 hover:opacity-100 transition-opacity flex-shrink-0"
+                                            className="opacity-40 hover:opacity-100 transition-opacity flex-shrink-0 mt-0.5"
                                             title="Copiar"
                                         >
                                             <Copy className="h-3 w-3 text-white" />
@@ -103,37 +104,29 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
                         )}
                     </div>
 
-                    {/* Validation link */}
-                    <div className="flex items-center gap-2 pt-3 border-t border-white/[0.04]">
-                        <ExternalLink className="w-3 h-3 text-white/30 flex-shrink-0" />
+                    {/* Validation button */}
+                    <div className="pt-3 border-t border-white/[0.04]">
                         <a
                             href={validationUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[9px] text-white/40 hover:text-[#ffb500] font-medium transition-colors break-all"
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#ffb500]/10 border border-[#ffb500]/20 text-[#ffb500] hover:bg-[#ffb500]/20 transition-colors text-[10px] font-bold tracking-wide"
                         >
-                            {validationUrl}
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            Verificar Autenticidade
                         </a>
-                        {!isExporting && (
-                            <button
-                                type="button"
-                                onClick={() => handleCopy(validationUrl)}
-                                className="opacity-30 hover:opacity-100 transition-opacity flex-shrink-0 ml-auto"
-                                title="Copiar link"
-                            >
-                                <Copy className="h-3 w-3 text-white" />
-                            </button>
-                        )}
                     </div>
                 </div>
             )}
 
-            {/* VURP branding */}
-            <div className="mt-6 flex items-center justify-center gap-2 opacity-30">
-                <div className="h-px w-8 bg-white/20" />
-                <p className="text-[7px] text-white font-bold tracking-[0.4em] uppercase">VURP</p>
-                <div className="h-px w-8 bg-white/20" />
-            </div>
+            {/* VURP branding — only for basic clients (no agency) */}
+            {!isPremium && (
+                <div className="mt-6 flex items-center justify-center gap-2 opacity-30">
+                    <div className="h-px w-8 bg-white/20" />
+                    <p className="text-[7px] text-white font-bold tracking-[0.4em] uppercase">VURP</p>
+                    <div className="h-px w-8 bg-white/20" />
+                </div>
+            )}
         </div>
     );
 };
