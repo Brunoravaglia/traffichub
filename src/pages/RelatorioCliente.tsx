@@ -3475,10 +3475,10 @@ const RelatorioCliente = () => {
                   <div className="mb-6 sm:mb-8 p-4 sm:p-6 rounded-2xl bg-white/[0.03] border border-white/10 shadow-inner">
                     <h2 className="text-sm font-bold mb-4 text-[#ffb500] tracking-widest uppercase">OBJETIVOS</h2>
                     <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
-                      {reportData.objetivos.filter(Boolean).map((obj, i) => (
-                        <li key={obj} className="flex items-start gap-3 text-gray-300 text-sm font-medium">
-                          <div className="w-1.5 h-1.5 rounded-full bg-[#ffb500] mt-1.5 flex-shrink-0" />
-                          <span className="leading-tight">{obj}</span>
+                      {reportData.objetivos.filter(Boolean).map((obj: string, i: number) => (
+                        <li key={obj} className="flex items-center gap-3 text-gray-300 text-sm font-medium">
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#ffb500] flex-shrink-0" />
+                          <span className="leading-snug">{obj}</span>
                         </li>
                       ))}
                     </ul>

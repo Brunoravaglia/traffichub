@@ -10,6 +10,9 @@ interface ReportHeaderProps {
 }
 
 export const ReportHeader = ({ cliente, periodoInicio, periodoFim, isExporting = false }: ReportHeaderProps) => {
+    const monthName = format(periodoInicio, "MMMM", { locale: ptBR });
+    const year = format(periodoInicio, "yyyy");
+
     return (
         <div className="p-4 sm:p-10 pb-4 sm:pb-6 bg-gradient-to-b from-black/40 to-transparent overflow-hidden w-full">
             <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between mb-6 sm:mb-8 text-center sm:text-left gap-5 sm:gap-0">
@@ -46,10 +49,22 @@ export const ReportHeader = ({ cliente, periodoInicio, periodoFim, isExporting =
                         </p>
                     </div>
                 </div>
-                <div className="flex flex-col items-center sm:items-end sm:text-right justify-center gap-1">
-                    <p className="text-xs sm:text-sm text-[#ffb500] uppercase font-black tracking-[0.2em] bg-[#ffb500]/10 px-4 py-1.5 rounded-md border border-[#ffb500]/20">
-                        {format(periodoInicio, "MMMM yyyy", { locale: ptBR })}
-                    </p>
+
+                {/* Date badge — premium stacked design */}
+                <div className="flex-shrink-0">
+                    <div className="relative">
+                        {!isExporting && (
+                            <div className="absolute -inset-1 bg-gradient-to-br from-[#ffb500]/20 to-[#cc9200]/10 rounded-xl blur-sm" />
+                        )}
+                        <div className="relative bg-gradient-to-br from-[#ffb500] to-[#cc9200] rounded-xl px-4 sm:px-5 py-2 sm:py-2.5 text-center shadow-lg">
+                            <p className="text-[9px] sm:text-[10px] font-black text-black/60 uppercase tracking-[0.3em] leading-none mb-0.5">
+                                {monthName}
+                            </p>
+                            <p className="text-lg sm:text-xl font-black text-black leading-none tracking-tight">
+                                {year}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
