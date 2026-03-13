@@ -3450,7 +3450,7 @@ const RelatorioCliente = () => {
             <div
               ref={pdfRef}
               className={cn(
-                "w-full text-zinc-100 bg-[#1e293b] shadow-2xl transition-all duration-300",
+                "w-full text-zinc-100 bg-[#1e293b] shadow-2xl transition-all duration-300 overflow-hidden",
                 reportData.isGeneratingPDF ? "rounded-none shadow-none" : "max-w-[850px] rounded-2xl"
               )}
               style={{
