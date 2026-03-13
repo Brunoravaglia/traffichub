@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Copy } from "lucide-react";
+import { Copy, ExternalLink, ShieldCheck } from "lucide-react";
 
 interface ReportFooterProps {
     reportData: any;
@@ -19,83 +19,83 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
         try {
             await navigator.clipboard.writeText(value);
         } catch {
-            // no-op: keep silent to avoid breaking PDF/preview flows
+            // silent
         }
     };
 
-    const fieldClass =
-        "h-7 min-w-0 sm:min-w-[250px] w-full max-w-full rounded border border-[#ffb500]/20 bg-[#ffb500]/5 px-2.5 flex items-center text-[9px] text-[#ffb500] font-mono font-black tracking-[0.08em] select-text";
+    const hasValidation = reportData.validationId || reportData.validationPassword;
 
     return (
-        <div className="mt-10 pt-8 border-t border-white/10">
-            {/* Client info + Date */}
-            <div className="flex items-center justify-between mb-6 opacity-80">
+        <div className="mt-12">
+            {/* Divider */}
+            <div className="h-px bg-gradient-to-r from-transparent via-[#ffb500]/30 to-transparent mb-8" />
+
+            {/* Client row */}
+            <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
                     {cliente?.logo_url || (cliente?.agencias as any)?.logo_url ? (
-                        <div className="w-9 h-9 rounded-lg overflow-hidden flex items-center justify-center bg-black/40 p-1 border border-[#ffb500]/20">
+                        <div className="h-8 rounded-md overflow-hidden flex items-center justify-center bg-black/40 px-1.5 py-1 border border-white/10">
                             <img
                                 src={cliente.logo_url || (cliente?.agencias as any)?.logo_url}
                                 alt={cliente.nome}
-                                className="max-w-full max-h-full object-contain"
+                                className="h-full w-auto object-contain"
                                 crossOrigin="anonymous"
                             />
                         </div>
                     ) : (
-                        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#ffb500] to-[#cc9200] flex items-center justify-center">
-                            <span className="text-lg font-black text-black">{cliente?.nome?.charAt(0)}</span>
+                        <div className="w-8 h-8 rounded-md bg-gradient-to-br from-[#ffb500] to-[#cc9200] flex items-center justify-center">
+                            <span className="text-sm font-black text-black">{cliente?.nome?.charAt(0)}</span>
                         </div>
                     )}
-                    <p className="text-[10px] font-black text-[#ffb500] tracking-[0.15em] uppercase">{cliente?.nome}</p>
+                    <span className="text-[10px] font-black text-white/70 tracking-[0.15em] uppercase">{cliente?.nome}</span>
                 </div>
-                <div className="text-right">
-                    <p className="text-[8px] font-black text-gray-600 uppercase tracking-[0.2em] mb-0.5">Emitido em</p>
-                    <p className="text-[10px] text-white font-bold tracking-wider">
-                        {format(new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
-                    </p>
-                </div>
+                <span className="text-[10px] text-white/40 font-medium">
+                    {format(new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                </span>
             </div>
 
-            {/* Validation Footer */}
-            {(reportData.validationId || reportData.validationPassword) && (
-                <div className="pt-5 border-t border-white/[0.05]">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-4">
+            {/* Validation card */}
+            {hasValidation && (
+                <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 sm:p-5">
+                    {/* Title row */}
+                    <div className="flex items-center gap-2 mb-4">
+                        <ShieldCheck className="w-3.5 h-3.5 text-[#ffb500] flex-shrink-0" />
+                        <span className="text-[9px] font-black text-white/50 uppercase tracking-[0.2em]">Validação do Relatório</span>
+                    </div>
+
+                    {/* Fields */}
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 mb-4">
                         {reportData.validationId && (
-                            <div className="space-y-1 flex-1 min-w-0">
-                                <p className="text-[8px] font-black text-gray-500 uppercase tracking-[0.2em]">ID de Validação</p>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[7px] font-bold text-white/30 uppercase tracking-[0.15em] mb-1">ID</p>
                                 <div className="flex items-center gap-1.5">
-                                    <div className={fieldClass}>
-                                        <span className="truncate">{reportData.validationId}</span>
-                                    </div>
+                                    <code className="text-[9px] text-[#ffb500] font-mono font-bold tracking-wider truncate">{reportData.validationId}</code>
                                     {!isExporting && (
                                         <button
                                             type="button"
                                             onClick={() => handleCopy(reportData.validationId)}
-                                            className="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded border border-[#ffb500]/20 bg-[#ffb500]/5 text-[#ffb500] hover:bg-[#ffb500]/10 transition-colors"
-                                            aria-label="Copiar ID"
-                                            title="Copiar ID"
+                                            className="opacity-40 hover:opacity-100 transition-opacity flex-shrink-0"
+                                            title="Copiar"
                                         >
-                                            <Copy className="h-3 w-3" />
+                                            <Copy className="h-3 w-3 text-white" />
                                         </button>
                                     )}
                                 </div>
                             </div>
                         )}
                         {reportData.validationPassword && (
-                            <div className="space-y-1 flex-shrink-0">
-                                <p className="text-[8px] font-black text-gray-500 uppercase tracking-[0.2em]">Chave de Acesso</p>
+                            <div className="flex-shrink-0">
+                                <p className="text-[7px] font-bold text-white/30 uppercase tracking-[0.15em] mb-1">Senha</p>
                                 <div className="flex items-center gap-1.5">
-                                    <div className="h-7 w-[100px] rounded border border-[#ffb500]/20 bg-[#ffb500]/5 px-2.5 flex items-center text-[9px] text-[#ffb500] font-mono font-black tracking-[0.08em]">
-                                        <span>{reportData.validationPassword}</span>
-                                    </div>
+                                    <code className="text-[9px] text-[#ffb500] font-mono font-bold tracking-widest">{reportData.validationPassword}</code>
                                     {!isExporting && (
                                         <button
                                             type="button"
                                             onClick={() => handleCopy(reportData.validationPassword)}
-                                            className="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded border border-[#ffb500]/20 bg-[#ffb500]/5 text-[#ffb500] hover:bg-[#ffb500]/10 transition-colors"
-                                            aria-label="Copiar Chave"
-                                            title="Copiar Chave"
+                                            className="opacity-40 hover:opacity-100 transition-opacity flex-shrink-0"
+                                            title="Copiar"
                                         >
-                                            <Copy className="h-3 w-3" />
+                                            <Copy className="h-3 w-3 text-white" />
                                         </button>
                                     )}
                                 </div>
@@ -103,14 +103,14 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
                         )}
                     </div>
 
-                    {/* Validation URL — clickable link */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                        <p className="text-[8px] font-black text-gray-500 uppercase tracking-[0.2em] flex-shrink-0">Verificar autenticidade:</p>
+                    {/* Validation link */}
+                    <div className="flex items-center gap-2 pt-3 border-t border-white/[0.04]">
+                        <ExternalLink className="w-3 h-3 text-white/30 flex-shrink-0" />
                         <a
                             href={validationUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[9px] text-[#ffb500] font-bold hover:text-[#ffd700] transition-colors underline underline-offset-2 break-all"
+                            className="text-[9px] text-white/40 hover:text-[#ffb500] font-medium transition-colors break-all"
                         >
                             {validationUrl}
                         </a>
@@ -118,19 +118,21 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
                             <button
                                 type="button"
                                 onClick={() => handleCopy(validationUrl)}
-                                className="inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded border border-[#ffb500]/20 bg-[#ffb500]/5 text-[#ffb500] hover:bg-[#ffb500]/10 transition-colors"
-                                aria-label="Copiar link"
+                                className="opacity-30 hover:opacity-100 transition-opacity flex-shrink-0 ml-auto"
                                 title="Copiar link"
                             >
-                                <Copy className="h-3 w-3" />
+                                <Copy className="h-3 w-3 text-white" />
                             </button>
                         )}
                     </div>
                 </div>
             )}
 
-            <div className="mt-6 text-center border-t border-white/[0.02] pt-3">
-                <p className="text-[7px] text-gray-600 font-bold tracking-[0.3em] uppercase">Relatório gerado por VURP</p>
+            {/* VURP branding */}
+            <div className="mt-6 flex items-center justify-center gap-2 opacity-30">
+                <div className="h-px w-8 bg-white/20" />
+                <p className="text-[7px] text-white font-bold tracking-[0.4em] uppercase">VURP</p>
+                <div className="h-px w-8 bg-white/20" />
             </div>
         </div>
     );
