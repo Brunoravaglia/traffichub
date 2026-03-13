@@ -15,18 +15,18 @@ export const ReportHeader = ({ cliente, periodoInicio, periodoFim, isExporting =
             <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between mb-6 sm:mb-8 text-center sm:text-left gap-5 sm:gap-0">
                 <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
                     {cliente?.logo_url || (cliente?.agencias as any)?.logo_url ? (
-                        <div className="p-1 bg-gradient-to-br from-[#ffb500] to-[#cc9200] rounded-2xl shadow-[0_0_20px_rgba(255,181,0,0.2)]">
-                            <div className="w-[160px] h-20 sm:w-[200px] sm:h-24 rounded-xl overflow-hidden flex items-center justify-center bg-black/90">
+                        <div className="p-1 bg-gradient-to-br from-[#ffb500] to-[#cc9200] rounded-2xl shadow-[0_0_20px_rgba(255,181,0,0.2)] flex-shrink-0">
+                            <div className="rounded-xl overflow-hidden flex items-center justify-center bg-black/90 p-2">
                                 <img
                                     src={cliente.logo_url || (cliente?.agencias as any)?.logo_url}
                                     alt={cliente.nome}
-                                    className="max-w-full max-h-full object-contain p-2"
+                                    className="h-14 sm:h-20 w-auto object-contain"
                                     crossOrigin="anonymous"
                                 />
                             </div>
                         </div>
                     ) : (
-                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-[#ffb500] to-[#cc9200] flex items-center justify-center shadow-xl">
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-[#ffb500] to-[#cc9200] flex items-center justify-center shadow-xl flex-shrink-0">
                             <span className="text-3xl sm:text-4xl font-bold text-black tracking-widest">{cliente?.nome?.charAt(0)}</span>
                         </div>
                     )}
@@ -56,12 +56,12 @@ export const ReportHeader = ({ cliente, periodoInicio, periodoFim, isExporting =
             <div className="flex justify-center mb-8">
                 <div className="relative">
                     <div className="absolute -inset-1 bg-gradient-to-r from-[#ffb500]/15 to-[#cc9200]/15 rounded-full blur opacity-30"></div>
-                    <div className="relative px-5 sm:px-8 py-2 rounded-full bg-black/40 border border-[#ffb500]/20 backdrop-blur-sm">
-                        <p className="text-[10px] sm:text-xs text-gray-300 tracking-[0.15em] sm:tracking-[0.2em] font-bold uppercase flex items-center gap-2">
-                            <span className={cn("w-1 h-1 rounded-full bg-[#ffb500]", !isExporting && "animate-pulse")}></span>
+                    <div className="relative px-5 sm:px-8 py-2 rounded-full bg-black/40 border border-[#ffb500]/20 backdrop-blur-sm flex items-center justify-center">
+                        <span className={cn("w-1.5 h-1.5 rounded-full bg-[#ffb500] flex-shrink-0", !isExporting && "animate-pulse")}></span>
+                        <p className="text-[10px] sm:text-xs text-gray-300 tracking-[0.15em] sm:tracking-[0.2em] font-bold uppercase mx-3">
                             {format(periodoInicio, "dd/MM")} — {format(periodoFim, "dd/MM/yyyy")}
-                            <span className={cn("w-1 h-1 rounded-full bg-[#ffb500]", !isExporting && "animate-pulse")}></span>
                         </p>
+                        <span className={cn("w-1.5 h-1.5 rounded-full bg-[#ffb500] flex-shrink-0", !isExporting && "animate-pulse")}></span>
                     </div>
                 </div>
             </div>

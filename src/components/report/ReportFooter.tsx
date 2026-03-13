@@ -23,11 +23,12 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
         }
     };
 
-    const readonlyFieldClass =
-        "h-7 min-w-0 sm:min-w-[250px] w-full max-w-full rounded border border-[#ffb500]/20 bg-[#ffb500]/5 px-2.5 text-[9px] leading-[1.2] text-[#ffb500] font-mono font-black tracking-[0.08em] select-text";
+    const fieldClass =
+        "h-7 min-w-0 sm:min-w-[250px] w-full max-w-full rounded border border-[#ffb500]/20 bg-[#ffb500]/5 px-2.5 flex items-center text-[9px] text-[#ffb500] font-mono font-black tracking-[0.08em] select-text";
 
     return (
         <div className="mt-10 pt-8 border-t border-white/10">
+            {/* Client info + Date */}
             <div className="flex items-center justify-between mb-6 opacity-80">
                 <div className="flex items-center gap-3">
                     {cliente?.logo_url || (cliente?.agencias as any)?.logo_url ? (
@@ -56,26 +57,20 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
 
             {/* Validation Footer */}
             {(reportData.validationId || reportData.validationPassword) && (
-                <div className="pt-5 border-t border-white/[0.05] flex flex-col md:flex-row items-center justify-between gap-5">
-                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-6">
+                <div className="pt-5 border-t border-white/[0.05]">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-4">
                         {reportData.validationId && (
-                            <div className="space-y-1">
+                            <div className="space-y-1 flex-1 min-w-0">
                                 <p className="text-[8px] font-black text-gray-500 uppercase tracking-[0.2em]">ID de Validação</p>
                                 <div className="flex items-center gap-1.5">
-                                    <input
-                                        type="text"
-                                        readOnly
-                                        value={reportData.validationId}
-                                        onFocus={(e) => e.currentTarget.select()}
-                                        onClick={(e) => e.currentTarget.select()}
-                                        className={readonlyFieldClass}
-                                        aria-label="ID de Validação"
-                                    />
+                                    <div className={fieldClass}>
+                                        <span className="truncate">{reportData.validationId}</span>
+                                    </div>
                                     {!isExporting && (
                                         <button
                                             type="button"
                                             onClick={() => handleCopy(reportData.validationId)}
-                                            className="inline-flex h-7 w-7 items-center justify-center rounded border border-[#ffb500]/20 bg-[#ffb500]/5 text-[#ffb500] hover:bg-[#ffb500]/10 transition-colors"
+                                            className="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded border border-[#ffb500]/20 bg-[#ffb500]/5 text-[#ffb500] hover:bg-[#ffb500]/10 transition-colors"
                                             aria-label="Copiar ID"
                                             title="Copiar ID"
                                         >
@@ -86,23 +81,17 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
                             </div>
                         )}
                         {reportData.validationPassword && (
-                            <div className="space-y-1">
+                            <div className="space-y-1 flex-shrink-0">
                                 <p className="text-[8px] font-black text-gray-500 uppercase tracking-[0.2em]">Chave de Acesso</p>
                                 <div className="flex items-center gap-1.5">
-                                    <input
-                                        type="text"
-                                        readOnly
-                                        value={reportData.validationPassword}
-                                        onFocus={(e) => e.currentTarget.select()}
-                                        onClick={(e) => e.currentTarget.select()}
-                                        className="h-7 w-[120px] rounded border border-[#ffb500]/20 bg-[#ffb500]/5 px-2.5 text-[9px] leading-[1.2] text-[#ffb500] font-mono font-black tracking-[0.08em] select-text"
-                                        aria-label="Chave de Acesso"
-                                    />
+                                    <div className="h-7 w-[100px] rounded border border-[#ffb500]/20 bg-[#ffb500]/5 px-2.5 flex items-center text-[9px] text-[#ffb500] font-mono font-black tracking-[0.08em]">
+                                        <span>{reportData.validationPassword}</span>
+                                    </div>
                                     {!isExporting && (
                                         <button
                                             type="button"
                                             onClick={() => handleCopy(reportData.validationPassword)}
-                                            className="inline-flex h-7 w-7 items-center justify-center rounded border border-[#ffb500]/20 bg-[#ffb500]/5 text-[#ffb500] hover:bg-[#ffb500]/10 transition-colors"
+                                            className="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded border border-[#ffb500]/20 bg-[#ffb500]/5 text-[#ffb500] hover:bg-[#ffb500]/10 transition-colors"
                                             aria-label="Copiar Chave"
                                             title="Copiar Chave"
                                         >
@@ -114,37 +103,27 @@ export const ReportFooter = ({ reportData, cliente }: ReportFooterProps) => {
                         )}
                     </div>
 
-                    <div className="flex flex-col items-center md:items-end gap-1.5">
-                        <p className="text-[8px] font-black text-[#ffb500] uppercase tracking-[0.2em]">Verificar autenticidade:</p>
-                        <input
-                            type="text"
-                            readOnly
-                            value={validationUrl}
-                            onFocus={(e) => e.currentTarget.select()}
-                            onClick={(e) => e.currentTarget.select()}
-                            className="h-7 w-full max-w-[340px] rounded border border-white/15 bg-white/[0.03] px-2.5 text-[9px] leading-[1.2] text-gray-300 font-bold select-text"
-                            aria-label="Link de verificação"
-                        />
+                    {/* Validation URL — clickable link */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                        <p className="text-[8px] font-black text-gray-500 uppercase tracking-[0.2em] flex-shrink-0">Verificar autenticidade:</p>
+                        <a
+                            href={validationUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[9px] text-[#ffb500] font-bold hover:text-[#ffd700] transition-colors underline underline-offset-2 break-all"
+                        >
+                            {validationUrl}
+                        </a>
                         {!isExporting && (
-                            <div className="flex items-center gap-2">
-                                <a
-                                    href={validationUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-[9px] text-gray-400 font-bold hover:text-[#ffb500] transition-colors"
-                                >
-                                    Abrir link
-                                </a>
-                                <button
-                                    type="button"
-                                    onClick={() => handleCopy(validationUrl)}
-                                    className="inline-flex h-6 w-6 items-center justify-center rounded border border-[#ffb500]/20 bg-[#ffb500]/5 text-[#ffb500] hover:bg-[#ffb500]/10 transition-colors"
-                                    aria-label="Copiar link"
-                                    title="Copiar link"
-                                >
-                                    <Copy className="h-3 w-3" />
-                                </button>
-                            </div>
+                            <button
+                                type="button"
+                                onClick={() => handleCopy(validationUrl)}
+                                className="inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded border border-[#ffb500]/20 bg-[#ffb500]/5 text-[#ffb500] hover:bg-[#ffb500]/10 transition-colors"
+                                aria-label="Copiar link"
+                                title="Copiar link"
+                            >
+                                <Copy className="h-3 w-3" />
+                            </button>
                         )}
                     </div>
                 </div>
