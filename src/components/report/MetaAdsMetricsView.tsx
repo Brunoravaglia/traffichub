@@ -11,6 +11,8 @@ const toSafeNumber = (value: unknown, fallback = 0) => {
     return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+const toSingleLineText = (value: string | number) => String(value).replace(/\s/g, "\u00A0");
+
 const getMetricValueSizeClass = (value: string | number, isPrimary: boolean) => {
     const length = String(value).trim().length;
 
@@ -83,8 +85,12 @@ export const MetaAdsMetricsView = ({ meta, metricsConfig }: MetaAdsMetricsViewPr
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-3 sm:mb-4 relative">
                 {primaryMetrics.map((m) => (
                     <div key={m.label} className="min-w-0 p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-[#ffb500]/30 transition-all duration-500 overflow-hidden">
-                        <p className={`${getMetricValueSizeClass(m.value, true)} font-black text-white mb-3 sm:mb-4 tracking-tight leading-tight tabular-nums whitespace-nowrap overflow-hidden`} title={String(m.value)}>
-                            {m.value}
+                        <p
+                            className={`${getMetricValueSizeClass(m.value, true)} font-black text-white mb-3 sm:mb-4 tracking-tight leading-tight tabular-nums overflow-hidden`}
+                            style={{ whiteSpace: "nowrap", wordBreak: "keep-all", overflowWrap: "normal" }}
+                            title={String(m.value)}
+                        >
+                            {toSingleLineText(m.value)}
                         </p>
                         <div className="flex items-center gap-1.5">
                             <span className="text-[9px] sm:text-[10px] opacity-40 flex-shrink-0">{m.icon}</span>
@@ -99,8 +105,12 @@ export const MetaAdsMetricsView = ({ meta, metricsConfig }: MetaAdsMetricsViewPr
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 relative">
                     {additionalMetrics.map((metric) => (
                         <div key={metric.label} className="min-w-0 p-3 sm:p-4 rounded-xl bg-white/[0.01] border border-white/[0.03] hover:bg-white/[0.04] transition-all duration-300 overflow-hidden">
-                            <p className={`${getMetricValueSizeClass(metric.value, false)} font-bold text-[#ffb500] mb-2 tracking-tight leading-tight tabular-nums whitespace-nowrap overflow-hidden`} title={String(metric.value)}>
-                                {metric.value}
+                            <p
+                                className={`${getMetricValueSizeClass(metric.value, false)} font-bold text-[#ffb500] mb-2 tracking-tight leading-tight tabular-nums overflow-hidden`}
+                                style={{ whiteSpace: "nowrap", wordBreak: "keep-all", overflowWrap: "normal" }}
+                                title={String(metric.value)}
+                            >
+                                {toSingleLineText(metric.value)}
                             </p>
                             <p className="text-[7px] sm:text-[9px] font-black text-gray-500 uppercase tracking-[0.1em] sm:tracking-[0.12em] leading-tight">{metric.label}</p>
                         </div>
