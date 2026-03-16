@@ -1341,7 +1341,7 @@ const RelatorioCliente = () => {
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <div className="w-6 h-6 bg-blue-500/20 rounded flex items-center justify-center">
-                      <span className="text-blue-500 text-xs font-bold">G</span>
+                      <GoogleLogo className="w-4 h-4" />
                     </div>
                     Tráfego Google Ads
                   </CardTitle>
@@ -1909,8 +1909,8 @@ const RelatorioCliente = () => {
               <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <div className="w-6 h-6 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded flex items-center justify-center">
-                      <span className="text-purple-500 text-xs font-bold">M</span>
+                    <div className="w-6 h-6 bg-[#1877F2]/20 rounded flex items-center justify-center border border-[#1877F2]/30">
+                      <MetaLogo className="w-4 h-4" />
                     </div>
                     Tráfego Meta Ads
                   </CardTitle>
@@ -2699,8 +2699,8 @@ const RelatorioCliente = () => {
               <Card className="lg:col-span-12 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <div className="w-6 h-6 bg-[#0A66C2]/20 rounded flex items-center justify-center">
-                      <span className="text-[#0A66C2] text-xs font-bold">in</span>
+                    <div className="w-6 h-6 bg-[#0A66C2]/20 rounded flex items-center justify-center border border-[#0A66C2]/30">
+                      <LinkedInLogo className="w-4 h-4" />
                     </div>
                     Tráfego LinkedIn Ads
                   </CardTitle>
@@ -2804,7 +2804,7 @@ const RelatorioCliente = () => {
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <div className="w-6 h-6 bg-black/50 rounded flex items-center justify-center border border-white/20">
-                      <span className="text-white text-xs font-bold">TT</span>
+                      <TikTokLogo className="w-4 h-4 text-white" />
                     </div>
                     Tráfego TikTok Ads
                   </CardTitle>
