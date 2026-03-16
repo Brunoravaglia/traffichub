@@ -23,6 +23,22 @@ interface PlatformMetricsViewProps {
 const toDisplay = (value: string | number, isCurrency?: boolean) =>
   isCurrency ? formatCurrency(Number(value) || 0) : typeof value === "number" ? formatNumber(value) : value;
 
+const getMetricValueSizeClass = (value: string | number, isPrimary: boolean) => {
+  const length = String(value).trim().length;
+
+  if (isPrimary) {
+    if (length >= 14) return "text-sm sm:text-base";
+    if (length >= 11) return "text-base sm:text-lg";
+    if (length >= 9) return "text-lg sm:text-xl";
+    return "text-xl sm:text-2xl";
+  }
+
+  if (length >= 14) return "text-xs sm:text-sm";
+  if (length >= 11) return "text-sm sm:text-base";
+  if (length >= 9) return "text-sm sm:text-base";
+  return "text-base sm:text-lg";
+};
+
 export function PlatformMetricsView({
   title,
   logo,
@@ -48,7 +64,7 @@ export function PlatformMetricsView({
           const display = toDisplay(metric.value, metric.isCurrency);
           return (
             <div key={metric.label} className="min-w-0 p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-[#ffb500]/30 transition-all duration-500 overflow-hidden">
-              <p className="text-xl sm:text-2xl font-black text-white mb-3 sm:mb-4 tracking-tight leading-tight tabular-nums break-words" title={String(display)}>
+              <p className={`${getMetricValueSizeClass(display, true)} font-black text-white mb-3 sm:mb-4 tracking-tight leading-tight tabular-nums whitespace-nowrap overflow-hidden`} title={String(display)}>
                 {display}
               </p>
               <div className="flex items-center gap-1.5">
@@ -63,11 +79,11 @@ export function PlatformMetricsView({
       {/* Additional Metrics */}
       {additionalMetrics.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 relative">
-          {additionalMetrics.map((metric) => (
-            <div key={metric.label} className="min-w-0 p-3 sm:p-4 rounded-xl bg-white/[0.01] border border-white/[0.03] hover:bg-white/[0.04] transition-all duration-300 overflow-hidden">
-              <p className="text-base sm:text-lg font-bold text-[#ffb500] mb-2 tracking-tight leading-tight tabular-nums break-words" title={String(metric.value)}>
-                {metric.value}
-              </p>
+                  {additionalMetrics.map((metric) => (
+                    <div key={metric.label} className="min-w-0 p-3 sm:p-4 rounded-xl bg-white/[0.01] border border-white/[0.03] hover:bg-white/[0.04] transition-all duration-300 overflow-hidden">
+                      <p className={`${getMetricValueSizeClass(metric.value, false)} font-bold text-[#ffb500] mb-2 tracking-tight leading-tight tabular-nums whitespace-nowrap overflow-hidden`} title={String(metric.value)}>
+                        {metric.value}
+                      </p>
               <p className="text-[7px] sm:text-[9px] font-black text-gray-500 uppercase tracking-[0.1em] sm:tracking-[0.12em] leading-tight">{metric.label}</p>
             </div>
           ))}
