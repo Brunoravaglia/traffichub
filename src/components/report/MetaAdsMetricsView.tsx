@@ -17,14 +17,16 @@ const getMetricValueSizeClass = (value: string | number, isPrimary: boolean) => 
     const length = String(value).trim().length;
 
     if (isPrimary) {
-        if (length >= 14) return "text-sm sm:text-base";
-        if (length >= 11) return "text-base sm:text-lg";
-        if (length >= 9) return "text-lg sm:text-xl";
+        if (length >= 15) return "text-xs sm:text-sm";
+        if (length >= 12) return "text-sm sm:text-base";
+        if (length >= 10) return "text-base sm:text-lg";
+        if (length >= 8) return "text-lg sm:text-xl";
         return "text-xl sm:text-2xl";
     }
 
-    if (length >= 14) return "text-xs sm:text-sm";
-    if (length >= 11) return "text-sm sm:text-base";
+    if (length >= 15) return "text-[11px] sm:text-xs";
+    if (length >= 12) return "text-xs sm:text-sm";
+    if (length >= 10) return "text-sm sm:text-base";
     if (length >= 9) return "text-sm sm:text-base";
     return "text-base sm:text-lg";
 };
@@ -86,7 +88,7 @@ export const MetaAdsMetricsView = ({ meta, metricsConfig }: MetaAdsMetricsViewPr
                 {primaryMetrics.map((m) => (
                     <div key={m.label} className="min-w-0 p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-[#ffb500]/30 transition-all duration-500 overflow-hidden">
                         <p
-                            className={`${getMetricValueSizeClass(m.value, true)} font-black text-white mb-3 sm:mb-4 tracking-tight leading-tight tabular-nums overflow-hidden`}
+                            className={`${getMetricValueSizeClass(m.value, true)} font-black text-white mb-3 sm:mb-4 tracking-tight leading-tight tabular-nums`}
                             style={{ whiteSpace: "nowrap", wordBreak: "keep-all", overflowWrap: "normal" }}
                             title={String(m.value)}
                         >
@@ -106,7 +108,7 @@ export const MetaAdsMetricsView = ({ meta, metricsConfig }: MetaAdsMetricsViewPr
                     {additionalMetrics.map((metric) => (
                         <div key={metric.label} className="min-w-0 p-3 sm:p-4 rounded-xl bg-white/[0.01] border border-white/[0.03] hover:bg-white/[0.04] transition-all duration-300 overflow-hidden">
                             <p
-                                className={`${getMetricValueSizeClass(metric.value, false)} font-bold text-[#ffb500] mb-2 tracking-tight leading-tight tabular-nums overflow-hidden`}
+                                className={`${getMetricValueSizeClass(metric.value, false)} font-bold text-[#ffb500] mb-2 tracking-tight leading-tight tabular-nums`}
                                 style={{ whiteSpace: "nowrap", wordBreak: "keep-all", overflowWrap: "normal" }}
                                 title={String(metric.value)}
                             >
