@@ -64,6 +64,16 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
   const saveIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const oauthSyncInProgressRef = useRef(false);
 
+  const normalizeAgencySlugInput = (value: string) =>
+    value
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/^https?:\/\/(www\.)?/i, "")
+      .replace(/^app\./i, "")
+      .replace(/\/.*$/i, "");
+
   // Function to save session duration to database
   const saveSessionDuration = useCallback(async (isLogout = false) => {
     const currentSessionId = sessionStorage.getItem("vcd_session_id");
@@ -159,11 +169,13 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       // Check if agency was manually selected and stored
       const storedAgencySlug = sessionStorage.getItem("vurp_agency_slug");
       if (storedAgencySlug) {
+        const normalizedStoredSlug = normalizeAgencySlugInput(storedAgencySlug);
+        if (!normalizedStoredSlug) return;
         supabase
           .from("agencias")
           .select("*")
-          .eq("slug", storedAgencySlug)
-          .single()
+          .eq("slug", normalizedStoredSlug)
+          .maybeSingle()
           .then(({ data }) => {
             if (data) setAgencia(data as unknown as Agencia);
           });
@@ -481,19 +493,50 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const setAgenciaBySlug = async (slug: string): Promise<{ success: boolean; agency?: Agencia; error?: string }> => {
-    const { data, error } = await supabase
-      .from("agencias")
-      .select("*")
-      .eq("slug", slug.toLowerCase())
-      .single();
-
-    if (error || !data) {
+    const normalizedInput = normalizeAgencySlugInput(slug);
+    if (!normalizedInput) {
       return { success: false, error: "Agência não encontrada" };
     }
 
-    setAgencia(data as unknown as Agencia);
-    sessionStorage.setItem("vurp_agency_slug", (data as unknown as Agencia).slug);
-    return { success: true, agency: data as unknown as Agencia };
+    const candidates = Array.from(
+      new Set([
+        normalizedInput,
+        normalizedInput.replace(/\s+/g, "-"),
+        normalizedInput.replace(/^agencia[-_\s]*/i, ""),
+      ])
+    ).filter(Boolean);
+
+    for (const candidate of candidates) {
+      const { data } = await supabase
+        .from("agencias")
+        .select("*")
+        .eq("slug", candidate)
+        .maybeSingle();
+
+      if (data) {
+        const agency = data as unknown as Agencia;
+        setAgencia(agency);
+        sessionStorage.setItem("vurp_agency_slug", agency.slug);
+        return { success: true, agency };
+      }
+    }
+
+    // Fallback: helps when user enters partial slug.
+    const { data: fallbackData } = await supabase
+      .from("agencias")
+      .select("*")
+      .ilike("slug", `%${normalizedInput.replace(/\s+/g, "-")}%`)
+      .limit(1)
+      .maybeSingle();
+
+    if (!fallbackData) {
+      return { success: false, error: "Agência não encontrada" };
+    }
+
+    const agency = fallbackData as unknown as Agencia;
+    setAgencia(agency);
+    sessionStorage.setItem("vurp_agency_slug", agency.slug);
+    return { success: true, agency };
   };
 
   const logout = async () => {
