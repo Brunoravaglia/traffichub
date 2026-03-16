@@ -11,15 +11,12 @@ export const GoogleLogo = ({ className }: { className?: string }) => (
 
 export const MetaLogo = ({ className }: { className?: string }) => (
     <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Meta logo">
-        <defs>
-            <linearGradient id="meta-gradient" x1="2" y1="22" x2="22" y2="2" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#0EA5FF" />
-                <stop offset="1" stopColor="#0866FF" />
-            </linearGradient>
-        </defs>
         <path
-            d="M3.4 14.7c0-4.1 1.8-7 4.4-7 2.1 0 3.5 1.5 5.3 4.7l.9 1.5.9-1.5c1.8-3.2 3.2-4.7 5.3-4.7 2.6 0 4.4 2.9 4.4 7 0 3.7-1.9 6.6-4.8 6.6-2.3 0-3.9-1.3-5.9-4.7l-.1-.2-.1.2c-2 3.4-3.6 4.7-5.9 4.7-2.9 0-4.8-2.9-4.8-6.6z"
-            fill="url(#meta-gradient)"
+            d="M3.5 14.8c0-3.3 1.5-5.6 3.8-5.6 1.9 0 3.2 1.2 5.1 4.3l.6 1 .6-1c1.9-3.1 3.2-4.3 5.1-4.3 2.3 0 3.8 2.3 3.8 5.6 0 3-1.5 5.2-3.9 5.2-2 0-3.4-1.1-5.6-4.8-2.2 3.7-3.6 4.8-5.6 4.8-2.4 0-3.9-2.2-3.9-5.2z"
+            stroke="#1877F2"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
         />
     </svg>
 );
