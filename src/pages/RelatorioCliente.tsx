@@ -280,6 +280,21 @@ const RelatorioCliente = () => {
     }
   }, [existingReport]);
 
+  // Guarantee footer validator credentials are always present in preview/export.
+  useEffect(() => {
+    if (reportData.validationId && reportData.validationPassword) return;
+
+    setReportData((prev) => {
+      if (prev.validationId && prev.validationPassword) return prev;
+      return {
+        ...prev,
+        validationId: prev.validationId || generateValidationId(),
+        validationPassword: prev.validationPassword || generateValidationPassword(),
+        validationTime: prev.validationTime || format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+      };
+    });
+  }, [reportData.validationId, reportData.validationPassword, reportData.validationTime]);
+
   // applyMetricsFromTemplate is now handled by applyMetricsFromRegistry from @/lib/report-metrics-registry
 
   // Fetch client data
