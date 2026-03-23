@@ -4062,7 +4062,7 @@ const RelatorioCliente = () => {
                     reportData.google.diasParaRecarga > 0 ||
                     reportData.meta.saldoRestante > 0 ||
                     reportData.meta.diasParaRecarga > 0) && (
-                    <div className="mb-8 p-6 rounded-2xl bg-white/[0.03] border border-white/10 shadow-inner">
+                    <div style={{ order: 9998 }} className="mb-8 p-6 rounded-2xl bg-white/[0.03] border border-white/10 shadow-inner">
                       <h3 className="text-sm font-bold mb-6 text-[#ffb500] tracking-widest uppercase">SALDO RESTANTE</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {(reportData.google.saldoRestante > 0 || reportData.google.diasParaRecarga > 0) && (
@@ -4116,10 +4116,12 @@ const RelatorioCliente = () => {
                         )}
                       </div>
                     </div>
-                  )}
+                )}
 
                 {/* Footer */}
-                <ReportFooter reportData={reportData} cliente={cliente} />
+                <div style={{ order: 9999 }}>
+                  <ReportFooter reportData={reportData} cliente={cliente} />
+                </div>
               </div>
             </div>
           </div>
