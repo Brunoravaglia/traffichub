@@ -72,11 +72,21 @@ export const ReportHeader = ({ cliente, periodoInicio, periodoFim, isExporting =
                 <div className="relative">
                     <div className="absolute -inset-1 bg-gradient-to-r from-[#ffb500]/15 to-[#cc9200]/15 rounded-full blur opacity-30"></div>
                     <div className="relative h-8 sm:h-9 px-5 sm:px-8 rounded-full bg-black/40 border border-[#ffb500]/20 backdrop-blur-sm inline-flex items-center gap-3">
-                        <span className={cn("w-1.5 h-1.5 rounded-full bg-[#ffb500] flex-shrink-0", !isExporting && "animate-pulse")} />
+                        <span
+                            className={cn(
+                                "block w-1.5 h-1.5 rounded-full bg-[#ffb500] flex-shrink-0 self-center",
+                                !isExporting && "animate-pulse"
+                            )}
+                        />
                         <span className="text-[10px] sm:text-xs text-gray-300 tracking-[0.15em] sm:tracking-[0.2em] font-bold uppercase">
                             {format(periodoInicio, "dd/MM")} — {format(periodoFim, "dd/MM/yyyy")}
                         </span>
-                        <span className={cn("w-1.5 h-1.5 rounded-full bg-[#ffb500] flex-shrink-0", !isExporting && "animate-pulse")} />
+                        <span
+                            className={cn(
+                                "block w-1.5 h-1.5 rounded-full bg-[#ffb500] flex-shrink-0 self-center",
+                                !isExporting && "animate-pulse"
+                            )}
+                        />
                     </div>
                 </div>
             </div>
