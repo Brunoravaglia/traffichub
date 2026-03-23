@@ -133,6 +133,25 @@ export interface SectionsConfig {
     showStrategicInsights: boolean;
 }
 
+export type ReportSectionOrderItem =
+    | "objetivos"
+    | "googleAds"
+    | "metaAds"
+    | "linkedinAds"
+    | "tiktokAds"
+    | "shopeeAds"
+    | "criativosGoogle"
+    | "criativosMeta"
+    | "criativosLinkedin"
+    | "criativosTiktok"
+    | "criativosShopee"
+    | "rankingCriativos"
+    | "paineisGoogle"
+    | "paineisMeta"
+    | "customSections"
+    | "resumo"
+    | "saldoRestante";
+
 // ─── Platform data shapes ──────────────────────────────────────────────────
 export interface GoogleData {
     cliques: number;
@@ -262,6 +281,7 @@ export interface ReportData {
     sectionsConfig: SectionsConfig;
     paineisAnuncio: AdPanelImage[];
     customSections: CustomSection[];
+    sectionOrder: ReportSectionOrderItem[];
     validationId?: string;
     validationPassword?: string;
     validationTime?: string;
@@ -371,6 +391,26 @@ export const DEFAULT_SECTIONS_CONFIG: SectionsConfig = {
     showStrategicInsights: true,
 };
 
+export const DEFAULT_SECTION_ORDER: ReportSectionOrderItem[] = [
+    "objetivos",
+    "googleAds",
+    "metaAds",
+    "linkedinAds",
+    "tiktokAds",
+    "shopeeAds",
+    "criativosGoogle",
+    "criativosMeta",
+    "criativosLinkedin",
+    "criativosTiktok",
+    "criativosShopee",
+    "rankingCriativos",
+    "paineisGoogle",
+    "paineisMeta",
+    "customSections",
+    "resumo",
+    "saldoRestante",
+];
+
 export const defaultReportData: ReportData = {
     objetivos: [
         "Aumentar a visibilidade e reconhecimento da marca",
@@ -411,6 +451,7 @@ export const defaultReportData: ReportData = {
     sectionsConfig: { ...DEFAULT_SECTIONS_CONFIG },
     paineisAnuncio: [],
     customSections: [],
+    sectionOrder: [...DEFAULT_SECTION_ORDER],
 };
 
 // ─── Normalization helpers ─────────────────────────────────────────────────
@@ -572,6 +613,27 @@ export const normalizeCustomSections = (value: unknown): CustomSection[] => {
         .filter((section): section is CustomSection => !!section);
 };
 
+export const normalizeSectionOrder = (value: unknown): ReportSectionOrderItem[] => {
+    if (!Array.isArray(value)) {
+        return [...DEFAULT_SECTION_ORDER];
+    }
+
+    const allowed = new Set<ReportSectionOrderItem>(DEFAULT_SECTION_ORDER);
+    const unique: ReportSectionOrderItem[] = [];
+    for (const item of value) {
+        if (typeof item !== "string") continue;
+        if (!allowed.has(item as ReportSectionOrderItem)) continue;
+        if (unique.includes(item as ReportSectionOrderItem)) continue;
+        unique.push(item as ReportSectionOrderItem);
+    }
+
+    for (const fallbackItem of DEFAULT_SECTION_ORDER) {
+        if (!unique.includes(fallbackItem)) unique.push(fallbackItem);
+    }
+
+    return unique;
+};
+
 export const normalizeReportPayload = (value: unknown): ReportData => {
     let rawValue = value;
     if (typeof rawValue === "string") {
@@ -613,6 +675,7 @@ export const normalizeReportPayload = (value: unknown): ReportData => {
         sectionsConfig: normalizeBooleanRecord(DEFAULT_SECTIONS_CONFIG as any, data.sectionsConfig) as SectionsConfig,
         paineisAnuncio: normalizeAdPanels(data.paineisAnuncio),
         customSections: normalizeCustomSections(data.customSections),
+        sectionOrder: normalizeSectionOrder(data.sectionOrder),
         validationId: typeof data.validationId === "string" && data.validationId.trim() ? data.validationId : undefined,
         validationPassword:
             typeof data.validationPassword === "string" && data.validationPassword.trim()

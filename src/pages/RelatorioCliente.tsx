@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type DragEvent } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -46,6 +46,7 @@ import {
   BarChart3,
   Sparkles,
   FileText,
+  GripVertical,
   Trophy,
 } from "lucide-react";
 import VCDLogo from "@/components/VCDLogo";
@@ -77,11 +78,34 @@ import {
   generateValidationPassword,
   toFiniteNumber,
   DEFAULT_SECTIONS_CONFIG,
+  DEFAULT_SECTION_ORDER,
+  normalizeSectionOrder,
+  type ReportSectionOrderItem,
 } from "@/lib/report-types";
 import { applyMetricsFromRegistry, metricsConfigToFullTemplate, type TemplateMetric } from "@/lib/report-metrics-registry";
 
 // Types, defaults, and normalization are now imported from @/lib/report-types
 // Metrics registry functions imported from @/lib/report-metrics-registry
+
+const SECTION_ORDER_LABELS: Record<ReportSectionOrderItem, string> = {
+  objetivos: "Objetivos",
+  googleAds: "Google Ads",
+  metaAds: "Meta Ads",
+  linkedinAds: "LinkedIn Ads",
+  tiktokAds: "TikTok Ads",
+  shopeeAds: "Shopee Ads",
+  criativosGoogle: "Criativos Google",
+  criativosMeta: "Criativos Meta",
+  criativosLinkedin: "Criativos LinkedIn",
+  criativosTiktok: "Criativos TikTok",
+  criativosShopee: "Criativos Shopee",
+  rankingCriativos: "Ranking de Criativos",
+  paineisGoogle: "Painéis Google",
+  paineisMeta: "Painéis Meta",
+  customSections: "Seções Personalizadas",
+  resumo: "Resumo",
+  saldoRestante: "Saldo Restante",
+};
 
 const RelatorioCliente = () => {
   const { id: clienteId } = useParams();
@@ -109,6 +133,7 @@ const RelatorioCliente = () => {
   const [currentPlatform, setCurrentPlatform] = useState<"google" | "meta">("google");
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [draggingSectionId, setDraggingSectionId] = useState<ReportSectionOrderItem | null>(null);
 
   // Save as template dialog state
   const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
@@ -146,6 +171,7 @@ const RelatorioCliente = () => {
         is_global: data.is_global,
         metrics: Array.isArray(parsedLayout.metrics) ? parsedLayout.metrics : legacyMetrics,
         sections: parsedLayout.sections || {},
+        sectionOrder: parsedLayout.sectionOrder,
       };
     },
     enabled: !!templateIdFromUrl && !!gestor?.id,
@@ -174,6 +200,7 @@ const RelatorioCliente = () => {
       setSelectedTemplateId(undefined);
       setReportData({
         ...defaultReportData,
+        sectionOrder: [...DEFAULT_SECTION_ORDER],
         sectionsConfig: {
           ...defaultReportData.sectionsConfig,
           showLinkedinAds: false,
@@ -208,6 +235,7 @@ const RelatorioCliente = () => {
         showCustomSections: templateSections.showCustomSections ?? false,
         showStrategicInsights: templateSections.showStrategicInsights ?? true,
       },
+      sectionOrder: normalizeSectionOrder(template?.sectionOrder ?? prev.sectionOrder),
       metricsConfig: applyMetricsFromRegistry(
         Array.isArray(template?.metrics) ? template.metrics : [],
         defaultReportData.metricsConfig,
@@ -481,6 +509,7 @@ const RelatorioCliente = () => {
         creativeScaleMeta: normalizedReport.creativeScaleMeta,
         metricsConfig: normalizedReport.metricsConfig,
         sectionsConfig: normalizedReport.sectionsConfig,
+        sectionOrder: normalizedReport.sectionOrder,
         paineisAnuncio: normalizedReport.paineisAnuncio,
         customSections: normalizedReport.customSections,
         validationId,
@@ -823,6 +852,7 @@ const RelatorioCliente = () => {
       const layoutData = JSON.parse(JSON.stringify({
         metrics,
         sections: reportData.sectionsConfig,
+        sectionOrder: reportData.sectionOrder,
       }));
 
       const { error } = await supabase
@@ -859,6 +889,81 @@ const RelatorioCliente = () => {
   // Format number
   const formatNumber = (value: number) =>
     new Intl.NumberFormat("pt-BR").format(value);
+
+  const isSectionVisibleInReport = (sectionId: ReportSectionOrderItem) => {
+    switch (sectionId) {
+      case "objetivos":
+        return reportData.sectionsConfig.showObjetivos;
+      case "googleAds":
+        return reportData.sectionsConfig.showGoogleAds;
+      case "metaAds":
+        return reportData.sectionsConfig.showMetaAds;
+      case "linkedinAds":
+        return reportData.sectionsConfig.showLinkedinAds;
+      case "tiktokAds":
+        return reportData.sectionsConfig.showTiktokAds;
+      case "shopeeAds":
+        return reportData.sectionsConfig.showShopeeAds;
+      case "criativosGoogle":
+        return reportData.sectionsConfig.showCriativosGoogle;
+      case "criativosMeta":
+        return reportData.sectionsConfig.showCriativosMeta;
+      case "criativosLinkedin":
+        return reportData.sectionsConfig.showCriativosLinkedin;
+      case "criativosTiktok":
+        return reportData.sectionsConfig.showCriativosTiktok;
+      case "criativosShopee":
+        return reportData.sectionsConfig.showCriativosShopee;
+      case "rankingCriativos":
+        return reportData.showRanking;
+      case "paineisGoogle":
+      case "paineisMeta":
+        return reportData.sectionsConfig.showPaineisAnuncio;
+      case "customSections":
+        return reportData.sectionsConfig.showCustomSections;
+      case "resumo":
+        return reportData.sectionsConfig.showResumo;
+      case "saldoRestante":
+        return reportData.sectionsConfig.showSaldoRestante;
+      default:
+        return false;
+    }
+  };
+
+  const getSectionOrderIndex = (sectionId: ReportSectionOrderItem) => {
+    const currentOrder = normalizeSectionOrder(reportData.sectionOrder);
+    return currentOrder.indexOf(sectionId);
+  };
+
+  const moveSectionOrderItem = (sourceId: ReportSectionOrderItem, targetId: ReportSectionOrderItem) => {
+    if (sourceId === targetId) return;
+
+    setReportData((prev) => {
+      const currentOrder = normalizeSectionOrder(prev.sectionOrder);
+      const sourceIndex = currentOrder.indexOf(sourceId);
+      const targetIndex = currentOrder.indexOf(targetId);
+      if (sourceIndex === -1 || targetIndex === -1) return prev;
+
+      const nextOrder = [...currentOrder];
+      const [moved] = nextOrder.splice(sourceIndex, 1);
+      nextOrder.splice(targetIndex, 0, moved);
+      return { ...prev, sectionOrder: nextOrder };
+    });
+  };
+
+  const handleSectionDragStart = (event: DragEvent<HTMLDivElement>, sectionId: ReportSectionOrderItem) => {
+    setDraggingSectionId(sectionId);
+    event.dataTransfer.setData("text/plain", sectionId);
+    event.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleSectionDrop = (event: DragEvent<HTMLDivElement>, targetId: ReportSectionOrderItem) => {
+    event.preventDefault();
+    const draggedId = (event.dataTransfer.getData("text/plain") || draggingSectionId) as ReportSectionOrderItem | null;
+    if (!draggedId) return;
+    moveSectionOrderItem(draggedId, targetId);
+    setDraggingSectionId(null);
+  };
 
   const clientInitials = (cliente?.nome || "CL").slice(0, 2).toUpperCase();
 
@@ -1223,6 +1328,51 @@ const RelatorioCliente = () => {
                     <Plus className="w-4 h-4 mr-2" />
                     Adicionar Objetivo
                   </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="mt-4 border-border/40 shadow-sm overflow-hidden bg-card/50 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <GripVertical className="w-5 h-5 text-primary" />
+                    Ordem das Seções (Drag & Drop)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {normalizeSectionOrder(reportData.sectionOrder).map((sectionId) => {
+                    const isVisible = isSectionVisibleInReport(sectionId);
+                    return (
+                      <div
+                        key={sectionId}
+                        draggable
+                        onDragStart={(event) => handleSectionDragStart(event, sectionId)}
+                        onDragOver={(event) => event.preventDefault()}
+                        onDrop={(event) => handleSectionDrop(event, sectionId)}
+                        onDragEnd={() => setDraggingSectionId(null)}
+                        className={cn(
+                          "flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 cursor-grab active:cursor-grabbing transition-colors",
+                          draggingSectionId === sectionId && "opacity-60 border-primary/40",
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <GripVertical className="w-4 h-4 text-muted-foreground" />
+                          <span className={cn("text-sm font-medium", !isVisible && "text-muted-foreground")}>
+                            {SECTION_ORDER_LABELS[sectionId]}
+                          </span>
+                        </div>
+                        <span
+                          className={cn(
+                            "text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full border",
+                            isVisible
+                              ? "text-emerald-400 border-emerald-500/40 bg-emerald-500/10"
+                              : "text-muted-foreground border-white/20 bg-white/[0.03]"
+                          )}
+                        >
+                          {isVisible ? "ativo" : "oculto"}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </CardContent>
               </Card>
             </div>
@@ -3469,406 +3619,438 @@ const RelatorioCliente = () => {
                 isExporting={Boolean(reportData.isGeneratingPDF)}
               />
 
-              <div className="p-2 sm:p-8 pt-0">
+              <div className="p-2 sm:p-8 pt-0 flex flex-col">
                 {/* Objectives */}
                 {reportData.sectionsConfig.showObjetivos && reportData.objetivos.filter(Boolean).length > 0 && (
-                  <div className="mb-6 sm:mb-8 p-4 sm:p-6 rounded-2xl bg-white/[0.03] border border-white/10 shadow-inner">
-                    <h2 className="text-sm font-bold mb-4 text-[#ffb500] tracking-widest uppercase">OBJETIVOS</h2>
-                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
-                      {reportData.objetivos.filter(Boolean).map((obj: string, i: number) => (
-                        <li key={obj} className="flex items-center gap-3 text-gray-300 text-sm font-medium">
-                          <div className="w-1.5 h-1.5 rounded-full bg-[#ffb500] flex-shrink-0" />
-                          <span className="leading-snug">{obj}</span>
-                        </li>
-                      ))}
-                    </ul>
+                  <div style={{ order: getSectionOrderIndex("objetivos") }}>
+                    <div className="mb-6 sm:mb-8 p-4 sm:p-6 rounded-2xl bg-white/[0.03] border border-white/10 shadow-inner">
+                      <h2 className="text-sm font-bold mb-4 text-[#ffb500] tracking-widest uppercase">OBJETIVOS</h2>
+                      <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                        {reportData.objetivos.filter(Boolean).map((obj: string, i: number) => (
+                          <li key={obj} className="flex items-center gap-3 text-gray-300 text-sm font-medium">
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#ffb500] flex-shrink-0" />
+                            <span className="leading-snug">{obj}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
                 )}
 
                 {/* Google Ads Section */}
                 {reportData.sectionsConfig.showGoogleAds && (
-                  <GoogleAdsMetricsView
-                    google={reportData.google}
-                    metricsConfig={reportData.metricsConfig}
-                  />
+                  <div style={{ order: getSectionOrderIndex("googleAds") }}>
+                    <GoogleAdsMetricsView
+                      google={reportData.google}
+                      metricsConfig={reportData.metricsConfig}
+                    />
+                  </div>
                 )}
 
                 {/* Meta Ads Section */}
                 {reportData.sectionsConfig.showMetaAds && (
-                  <MetaAdsMetricsView
-                    meta={reportData.meta}
-                    metricsConfig={reportData.metricsConfig}
-                  />
+                  <div style={{ order: getSectionOrderIndex("metaAds") }}>
+                    <MetaAdsMetricsView
+                      meta={reportData.meta}
+                      metricsConfig={reportData.metricsConfig}
+                    />
+                  </div>
                 )}
 
                 {reportData.sectionsConfig.showLinkedinAds && (
-                  <PlatformMetricsView
-                    title="LinkedIn Ads"
-                    logo={<LinkedInLogo className="w-7 h-7" />}
-                    primaryMetrics={[
-                      { label: "Impressões", value: reportData.linkedin.impressoes, icon: "👁️" },
-                      { label: "Cliques", value: reportData.linkedin.cliques, icon: "🖱️" },
-                      { label: "Leads", value: reportData.linkedin.leads, icon: "👤" },
-                      { label: "Investido", value: reportData.linkedin.investido, icon: "💰", isCurrency: true },
-                    ]}
-                    additionalMetrics={[
-                      ...(reportData.metricsConfig.showLinkedinConversoes ? [{ label: "Conversões", value: formatNumber(reportData.linkedin.conversoes) }] : []),
-                      ...(reportData.metricsConfig.showLinkedinAlcance ? [{ label: "Alcance", value: formatNumber(reportData.linkedin.alcance) }] : []),
-                      ...(reportData.metricsConfig.showLinkedinCpm ? [{ label: "CPM", value: formatCurrency(reportData.linkedin.cpm) }] : []),
-                      ...(reportData.metricsConfig.showLinkedinCpc ? [{ label: "CPC", value: formatCurrency(reportData.linkedin.cpc) }] : []),
-                      ...(reportData.metricsConfig.showLinkedinCtr ? [{ label: "CTR (%)", value: `${Number(reportData.linkedin.ctr || 0).toFixed(2)}%` }] : []),
-                      ...(reportData.metricsConfig.showLinkedinCpl ? [{ label: "CPL", value: formatCurrency(reportData.linkedin.cpl) }] : []),
-                    ]}
-                  />
+                  <div style={{ order: getSectionOrderIndex("linkedinAds") }}>
+                    <PlatformMetricsView
+                      title="LinkedIn Ads"
+                      logo={<LinkedInLogo className="w-7 h-7" />}
+                      primaryMetrics={[
+                        { label: "Impressões", value: reportData.linkedin.impressoes, icon: "👁️" },
+                        { label: "Cliques", value: reportData.linkedin.cliques, icon: "🖱️" },
+                        { label: "Leads", value: reportData.linkedin.leads, icon: "👤" },
+                        { label: "Investido", value: reportData.linkedin.investido, icon: "💰", isCurrency: true },
+                      ]}
+                      additionalMetrics={[
+                        ...(reportData.metricsConfig.showLinkedinConversoes ? [{ label: "Conversões", value: formatNumber(reportData.linkedin.conversoes) }] : []),
+                        ...(reportData.metricsConfig.showLinkedinAlcance ? [{ label: "Alcance", value: formatNumber(reportData.linkedin.alcance) }] : []),
+                        ...(reportData.metricsConfig.showLinkedinCpm ? [{ label: "CPM", value: formatCurrency(reportData.linkedin.cpm) }] : []),
+                        ...(reportData.metricsConfig.showLinkedinCpc ? [{ label: "CPC", value: formatCurrency(reportData.linkedin.cpc) }] : []),
+                        ...(reportData.metricsConfig.showLinkedinCtr ? [{ label: "CTR (%)", value: `${Number(reportData.linkedin.ctr || 0).toFixed(2)}%` }] : []),
+                        ...(reportData.metricsConfig.showLinkedinCpl ? [{ label: "CPL", value: formatCurrency(reportData.linkedin.cpl) }] : []),
+                      ]}
+                    />
+                  </div>
                 )}
 
                 {reportData.sectionsConfig.showTiktokAds && (
-                  <PlatformMetricsView
-                    title="TikTok Ads"
-                    logo={<TikTokLogo className="w-7 h-7 text-white" />}
-                    primaryMetrics={[
-                      { label: "Impressões", value: reportData.tiktok.impressoes, icon: "👁️" },
-                      { label: "Cliques", value: reportData.tiktok.cliques, icon: "🖱️" },
-                      { label: "Leads", value: reportData.tiktok.leads, icon: "👤" },
-                      { label: "Investido", value: reportData.tiktok.investido, icon: "💰", isCurrency: true },
-                    ]}
-                    additionalMetrics={[
-                      ...(reportData.metricsConfig.showTiktokConversoes ? [{ label: "Conversões", value: formatNumber(reportData.tiktok.conversoes) }] : []),
-                      ...(reportData.metricsConfig.showTiktokViews ? [{ label: "Views Vídeo", value: formatNumber(reportData.tiktok.visualizacoesVideo) }] : []),
-                      ...(reportData.metricsConfig.showTiktokCpm ? [{ label: "CPM", value: formatCurrency(reportData.tiktok.cpm) }] : []),
-                      ...(reportData.metricsConfig.showTiktokCpc ? [{ label: "CPC", value: formatCurrency(reportData.tiktok.cpc) }] : []),
-                      ...(reportData.metricsConfig.showTiktokCtr ? [{ label: "CTR (%)", value: `${Number(reportData.tiktok.ctr || 0).toFixed(2)}%` }] : []),
-                      ...(reportData.metricsConfig.showTiktokCpl ? [{ label: "CPL", value: formatCurrency(reportData.tiktok.cpl) }] : []),
-                    ]}
-                  />
+                  <div style={{ order: getSectionOrderIndex("tiktokAds") }}>
+                    <PlatformMetricsView
+                      title="TikTok Ads"
+                      logo={<TikTokLogo className="w-7 h-7 text-white" />}
+                      primaryMetrics={[
+                        { label: "Impressões", value: reportData.tiktok.impressoes, icon: "👁️" },
+                        { label: "Cliques", value: reportData.tiktok.cliques, icon: "🖱️" },
+                        { label: "Leads", value: reportData.tiktok.leads, icon: "👤" },
+                        { label: "Investido", value: reportData.tiktok.investido, icon: "💰", isCurrency: true },
+                      ]}
+                      additionalMetrics={[
+                        ...(reportData.metricsConfig.showTiktokConversoes ? [{ label: "Conversões", value: formatNumber(reportData.tiktok.conversoes) }] : []),
+                        ...(reportData.metricsConfig.showTiktokViews ? [{ label: "Views Vídeo", value: formatNumber(reportData.tiktok.visualizacoesVideo) }] : []),
+                        ...(reportData.metricsConfig.showTiktokCpm ? [{ label: "CPM", value: formatCurrency(reportData.tiktok.cpm) }] : []),
+                        ...(reportData.metricsConfig.showTiktokCpc ? [{ label: "CPC", value: formatCurrency(reportData.tiktok.cpc) }] : []),
+                        ...(reportData.metricsConfig.showTiktokCtr ? [{ label: "CTR (%)", value: `${Number(reportData.tiktok.ctr || 0).toFixed(2)}%` }] : []),
+                        ...(reportData.metricsConfig.showTiktokCpl ? [{ label: "CPL", value: formatCurrency(reportData.tiktok.cpl) }] : []),
+                      ]}
+                    />
+                  </div>
                 )}
 
                 {reportData.sectionsConfig.showShopeeAds && (
-                  <PlatformMetricsView
-                    title="Shopee Ads"
-                    logo={<ShopeeLogo className="w-7 h-7" />}
-                    primaryMetrics={[
-                      { label: "Impressões", value: reportData.shopee.impressoes, icon: "👁️" },
-                      { label: "Cliques", value: reportData.shopee.cliques, icon: "🖱️" },
-                      { label: "Pedidos", value: reportData.shopee.pedidos, icon: "🛍️" },
-                      { label: "Investido", value: reportData.shopee.investido, icon: "💰", isCurrency: true },
-                    ]}
-                    additionalMetrics={[
-                      ...(reportData.metricsConfig.showShopeeGmv ? [{ label: "GMV", value: formatCurrency(reportData.shopee.gmv) }] : []),
-                      ...(reportData.metricsConfig.showShopeeCpm ? [{ label: "CPM", value: formatCurrency(reportData.shopee.cpm) }] : []),
-                      ...(reportData.metricsConfig.showShopeeCpc ? [{ label: "CPC", value: formatCurrency(reportData.shopee.cpc) }] : []),
-                      ...(reportData.metricsConfig.showShopeeCtr ? [{ label: "CTR (%)", value: `${Number(reportData.shopee.ctr || 0).toFixed(2)}%` }] : []),
-                      ...(reportData.metricsConfig.showShopeeCpa ? [{ label: "CPA", value: formatCurrency(reportData.shopee.cpa) }] : []),
-                      ...(reportData.metricsConfig.showShopeeRoas ? [{ label: "ROAS", value: `${Number(reportData.shopee.roas || 0).toFixed(2)}x` }] : []),
-                    ]}
-                  />
+                  <div style={{ order: getSectionOrderIndex("shopeeAds") }}>
+                    <PlatformMetricsView
+                      title="Shopee Ads"
+                      logo={<ShopeeLogo className="w-7 h-7" />}
+                      primaryMetrics={[
+                        { label: "Impressões", value: reportData.shopee.impressoes, icon: "👁️" },
+                        { label: "Cliques", value: reportData.shopee.cliques, icon: "🖱️" },
+                        { label: "Pedidos", value: reportData.shopee.pedidos, icon: "🛍️" },
+                        { label: "Investido", value: reportData.shopee.investido, icon: "💰", isCurrency: true },
+                      ]}
+                      additionalMetrics={[
+                        ...(reportData.metricsConfig.showShopeeGmv ? [{ label: "GMV", value: formatCurrency(reportData.shopee.gmv) }] : []),
+                        ...(reportData.metricsConfig.showShopeeCpm ? [{ label: "CPM", value: formatCurrency(reportData.shopee.cpm) }] : []),
+                        ...(reportData.metricsConfig.showShopeeCpc ? [{ label: "CPC", value: formatCurrency(reportData.shopee.cpc) }] : []),
+                        ...(reportData.metricsConfig.showShopeeCtr ? [{ label: "CTR (%)", value: `${Number(reportData.shopee.ctr || 0).toFixed(2)}%` }] : []),
+                        ...(reportData.metricsConfig.showShopeeCpa ? [{ label: "CPA", value: formatCurrency(reportData.shopee.cpa) }] : []),
+                        ...(reportData.metricsConfig.showShopeeRoas ? [{ label: "ROAS", value: `${Number(reportData.shopee.roas || 0).toFixed(2)}x` }] : []),
+                      ]}
+                    />
+                  </div>
                 )}
 
                 {/* Google Creatives */}
                 {reportData.sectionsConfig.showCriativosGoogle && reportData.criativos.filter(c => c.platform === "google").length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-bold mb-4 text-blue-400 tracking-widest uppercase">
-                      CRIATIVOS GOOGLE
-                    </h3>
-                    <div className="flex flex-wrap gap-3 justify-center">
-                      {reportData.criativos.filter(c => c.platform === "google").slice(0, 5).map((creative) => {
-                        const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
-                        const creativeWidth = Math.round(140 * (reportData.creativeScaleGoogle / 100));
-                        return (
-                          <div
-                            key={creative.id}
-                            className="rounded-lg overflow-hidden border border-blue-500/30"
-                            style={{
-                              ...(aspectCss ? { aspectRatio: aspectCss } : {}),
-                              width: `${creativeWidth}px`,
-                              maxWidth: "46%",
-                            }}
-                          >
-                            <img
-                              src={creative.url}
-                              alt={creative.name}
-                              className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
-                              crossOrigin="anonymous"
-                            />
-                          </div>
-                        );
-                      })}
+                  <div style={{ order: getSectionOrderIndex("criativosGoogle") }}>
+                    <div className="mb-6">
+                      <h3 className="text-lg font-bold mb-4 text-blue-400 tracking-widest uppercase">
+                        CRIATIVOS GOOGLE
+                      </h3>
+                      <div className="flex flex-wrap gap-3 justify-center">
+                        {reportData.criativos.filter(c => c.platform === "google").slice(0, 5).map((creative) => {
+                          const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
+                          const creativeWidth = Math.round(140 * (reportData.creativeScaleGoogle / 100));
+                          return (
+                            <div
+                              key={creative.id}
+                              className="rounded-lg overflow-hidden border border-blue-500/30"
+                              style={{
+                                ...(aspectCss ? { aspectRatio: aspectCss } : {}),
+                                width: `${creativeWidth}px`,
+                                maxWidth: "46%",
+                              }}
+                            >
+                              <img
+                                src={creative.url}
+                                alt={creative.name}
+                                className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
+                                crossOrigin="anonymous"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {/* Meta Creatives */}
                 {reportData.sectionsConfig.showCriativosMeta && reportData.criativos.filter(c => c.platform === "meta").length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-bold mb-4 text-purple-400 tracking-widest uppercase" style={{ color: '#c084fc' }}>
-                      CRIATIVOS META
-                    </h3>
-                    <div className="flex flex-wrap gap-3 justify-center">
-                      {reportData.criativos.filter(c => c.platform === "meta").slice(0, 5).map((creative) => {
-                        const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
-                        const creativeWidth = Math.round(140 * (reportData.creativeScaleMeta / 100));
-                        return (
-                          <div
-                            key={creative.id}
-                            className="rounded-lg overflow-hidden border border-purple-500/30"
-                            style={{
-                              ...(aspectCss ? { aspectRatio: aspectCss } : {}),
-                              width: `${creativeWidth}px`,
-                              maxWidth: "46%",
-                            }}
-                          >
-                            <img
-                              src={creative.url}
-                              alt={creative.name}
-                              className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
-                              crossOrigin="anonymous"
-                            />
-                          </div>
-                        );
-                      })}
+                  <div style={{ order: getSectionOrderIndex("criativosMeta") }}>
+                    <div className="mb-6">
+                      <h3 className="text-lg font-bold mb-4 text-purple-400 tracking-widest uppercase" style={{ color: '#c084fc' }}>
+                        CRIATIVOS META
+                      </h3>
+                      <div className="flex flex-wrap gap-3 justify-center">
+                        {reportData.criativos.filter(c => c.platform === "meta").slice(0, 5).map((creative) => {
+                          const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
+                          const creativeWidth = Math.round(140 * (reportData.creativeScaleMeta / 100));
+                          return (
+                            <div
+                              key={creative.id}
+                              className="rounded-lg overflow-hidden border border-purple-500/30"
+                              style={{
+                                ...(aspectCss ? { aspectRatio: aspectCss } : {}),
+                                width: `${creativeWidth}px`,
+                                maxWidth: "46%",
+                              }}
+                            >
+                              <img
+                                src={creative.url}
+                                alt={creative.name}
+                                className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
+                                crossOrigin="anonymous"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {/* LinkedIn Creatives */}
                 {reportData.sectionsConfig.showCriativosLinkedin && reportData.criativos.filter(c => c.platform === "linkedin").length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-bold mb-4 tracking-widest uppercase text-sky-400">
-                      CRIATIVOS LINKEDIN
-                    </h3>
-                    <div className="flex flex-wrap gap-3 justify-center">
-                      {reportData.criativos.filter(c => c.platform === "linkedin").slice(0, 5).map((creative) => {
-                        const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
-                        const creativeWidth = Math.round(140 * (reportData.creativeScaleMeta / 100));
-                        return (
-                          <div
-                            key={creative.id}
-                            className="rounded-lg overflow-hidden border border-sky-500/30"
-                            style={{
-                              ...(aspectCss ? { aspectRatio: aspectCss } : {}),
-                              width: `${creativeWidth}px`,
-                              maxWidth: "46%",
-                            }}
-                          >
-                            <img
-                              src={creative.url}
-                              alt={creative.name}
-                              className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
-                              crossOrigin="anonymous"
-                            />
-                          </div>
-                        );
-                      })}
+                  <div style={{ order: getSectionOrderIndex("criativosLinkedin") }}>
+                    <div className="mb-6">
+                      <h3 className="text-lg font-bold mb-4 tracking-widest uppercase text-sky-400">
+                        CRIATIVOS LINKEDIN
+                      </h3>
+                      <div className="flex flex-wrap gap-3 justify-center">
+                        {reportData.criativos.filter(c => c.platform === "linkedin").slice(0, 5).map((creative) => {
+                          const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
+                          const creativeWidth = Math.round(140 * (reportData.creativeScaleMeta / 100));
+                          return (
+                            <div
+                              key={creative.id}
+                              className="rounded-lg overflow-hidden border border-sky-500/30"
+                              style={{
+                                ...(aspectCss ? { aspectRatio: aspectCss } : {}),
+                                width: `${creativeWidth}px`,
+                                maxWidth: "46%",
+                              }}
+                            >
+                              <img
+                                src={creative.url}
+                                alt={creative.name}
+                                className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
+                                crossOrigin="anonymous"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {/* TikTok Creatives */}
                 {reportData.sectionsConfig.showCriativosTiktok && reportData.criativos.filter(c => c.platform === "tiktok").length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-bold mb-4 tracking-widest uppercase text-pink-400">
-                      CRIATIVOS TIKTOK
-                    </h3>
-                    <div className="flex flex-wrap gap-3 justify-center">
-                      {reportData.criativos.filter(c => c.platform === "tiktok").slice(0, 5).map((creative) => {
-                        const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
-                        const creativeWidth = Math.round(140 * (reportData.creativeScaleMeta / 100));
-                        return (
-                          <div
-                            key={creative.id}
-                            className="rounded-lg overflow-hidden border border-pink-500/30"
-                            style={{
-                              ...(aspectCss ? { aspectRatio: aspectCss } : {}),
-                              width: `${creativeWidth}px`,
-                              maxWidth: "46%",
-                            }}
-                          >
-                            <img
-                              src={creative.url}
-                              alt={creative.name}
-                              className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
-                              crossOrigin="anonymous"
-                            />
-                          </div>
-                        );
-                      })}
+                  <div style={{ order: getSectionOrderIndex("criativosTiktok") }}>
+                    <div className="mb-6">
+                      <h3 className="text-lg font-bold mb-4 tracking-widest uppercase text-pink-400">
+                        CRIATIVOS TIKTOK
+                      </h3>
+                      <div className="flex flex-wrap gap-3 justify-center">
+                        {reportData.criativos.filter(c => c.platform === "tiktok").slice(0, 5).map((creative) => {
+                          const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
+                          const creativeWidth = Math.round(140 * (reportData.creativeScaleMeta / 100));
+                          return (
+                            <div
+                              key={creative.id}
+                              className="rounded-lg overflow-hidden border border-pink-500/30"
+                              style={{
+                                ...(aspectCss ? { aspectRatio: aspectCss } : {}),
+                                width: `${creativeWidth}px`,
+                                maxWidth: "46%",
+                              }}
+                            >
+                              <img
+                                src={creative.url}
+                                alt={creative.name}
+                                className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
+                                crossOrigin="anonymous"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {/* Shopee Creatives */}
                 {reportData.sectionsConfig.showCriativosShopee && reportData.criativos.filter(c => c.platform === "shopee").length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-bold mb-4 tracking-widest uppercase text-orange-400">
-                      CRIATIVOS SHOPEE
-                    </h3>
-                    <div className="flex flex-wrap gap-3 justify-center">
-                      {reportData.criativos.filter(c => c.platform === "shopee").slice(0, 5).map((creative) => {
-                        const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
-                        const creativeWidth = Math.round(140 * (reportData.creativeScaleMeta / 100));
-                        return (
-                          <div
-                            key={creative.id}
-                            className="rounded-lg overflow-hidden border border-orange-500/30"
-                            style={{
-                              ...(aspectCss ? { aspectRatio: aspectCss } : {}),
-                              width: `${creativeWidth}px`,
-                              maxWidth: "46%",
-                            }}
-                          >
-                            <img
-                              src={creative.url}
-                              alt={creative.name}
-                              className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
-                              crossOrigin="anonymous"
-                            />
-                          </div>
-                        );
-                      })}
+                  <div style={{ order: getSectionOrderIndex("criativosShopee") }}>
+                    <div className="mb-6">
+                      <h3 className="text-lg font-bold mb-4 tracking-widest uppercase text-orange-400">
+                        CRIATIVOS SHOPEE
+                      </h3>
+                      <div className="flex flex-wrap gap-3 justify-center">
+                        {reportData.criativos.filter(c => c.platform === "shopee").slice(0, 5).map((creative) => {
+                          const aspectCss = aspectRatioOptionToCss(creative.aspectRatio);
+                          const creativeWidth = Math.round(140 * (reportData.creativeScaleMeta / 100));
+                          return (
+                            <div
+                              key={creative.id}
+                              className="rounded-lg overflow-hidden border border-orange-500/30"
+                              style={{
+                                ...(aspectCss ? { aspectRatio: aspectCss } : {}),
+                                width: `${creativeWidth}px`,
+                                maxWidth: "46%",
+                              }}
+                            >
+                              <img
+                                src={creative.url}
+                                alt={creative.name}
+                                className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
+                                crossOrigin="anonymous"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {/* Ranking Section */}
                 {reportData.showRanking && reportData.criativosRanking.length > 0 && (
-                  <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-yellow-900/30 to-yellow-900/10 border border-yellow-500/30">
-                    <h3 className="text-lg font-bold mb-4 text-yellow-400 tracking-widest uppercase">
-                      <Trophy className="w-5 h-5 inline-block mr-1" /> RANKING DE CRIATIVOS
-                    </h3>
-                    <div className="flex flex-wrap gap-4 justify-center">
-                      {reportData.criativosRanking.sort((a, b) => a.position - b.position).map((ranking) => {
-                        const aspectCss = aspectRatioOptionToCss(ranking.aspectRatio);
-                        return (
-                          <div key={ranking.id} className="text-center max-w-[160px]">
-                            <div className={cn(
-                              "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2",
-                              ranking.position === 1 ? "bg-yellow-500 text-black" :
-                                ranking.position === 2 ? "bg-gray-400 text-black" :
-                                  "bg-amber-700 text-white"
-                            )}>
-                              {ranking.position}
+                  <div style={{ order: getSectionOrderIndex("rankingCriativos") }}>
+                    <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-yellow-900/30 to-yellow-900/10 border border-yellow-500/30">
+                      <h3 className="text-lg font-bold mb-4 text-yellow-400 tracking-widest uppercase">
+                        <Trophy className="w-5 h-5 inline-block mr-1" /> RANKING DE CRIATIVOS
+                      </h3>
+                      <div className="flex flex-wrap gap-4 justify-center">
+                        {reportData.criativosRanking.sort((a, b) => a.position - b.position).map((ranking) => {
+                          const aspectCss = aspectRatioOptionToCss(ranking.aspectRatio);
+                          return (
+                            <div key={ranking.id} className="text-center max-w-[160px]">
+                              <div className={cn(
+                                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2",
+                                ranking.position === 1 ? "bg-yellow-500 text-black" :
+                                  ranking.position === 2 ? "bg-gray-400 text-black" :
+                                    "bg-amber-700 text-white"
+                              )}>
+                                {ranking.position}
+                              </div>
+                              <div
+                                className="rounded-lg overflow-hidden border border-white/10 mb-2"
+                                style={aspectCss ? { aspectRatio: aspectCss } : undefined}
+                              >
+                                <img
+                                  src={ranking.url}
+                                  alt={`TOP ${ranking.position}`}
+                                  className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
+                                  crossOrigin="anonymous"
+                                />
+                              </div>
+                              <p className="text-sm font-semibold text-white">{ranking.result || "-"}</p>
                             </div>
-                            <div
-                              className="rounded-lg overflow-hidden border border-white/10 mb-2"
-                              style={aspectCss ? { aspectRatio: aspectCss } : undefined}
-                            >
-                              <img
-                                src={ranking.url}
-                                alt={`TOP ${ranking.position}`}
-                                className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
-                                crossOrigin="anonymous"
-                              />
-                            </div>
-                            <p className="text-sm font-semibold text-white">{ranking.result || "-"}</p>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {/* Ad Panels Google */}
                 {reportData.sectionsConfig.showPaineisAnuncio && reportData.paineisAnuncio.filter(p => p.platform === "google").length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-bold mb-4 text-blue-400 tracking-widest uppercase">
-                      PAINÉIS GOOGLE ADS
-                    </h3>
-                    <div className="flex flex-wrap gap-3 justify-center">
-                      {reportData.paineisAnuncio.filter(p => p.platform === "google").map((panel) => {
-                        const aspectCss = aspectRatioOptionToCss(panel.aspectRatio);
-                        return (
-                          <div
-                            key={panel.id}
-                            className="rounded-lg overflow-hidden border border-blue-500/30 max-w-[200px]"
-                            style={aspectCss ? { aspectRatio: aspectCss } : undefined}
-                          >
-                            <img
-                              src={panel.url}
-                              alt={panel.name}
-                              className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
-                              crossOrigin="anonymous"
-                            />
-                          </div>
-                        );
-                      })}
+                  <div style={{ order: getSectionOrderIndex("paineisGoogle") }}>
+                    <div className="mb-6">
+                      <h3 className="text-lg font-bold mb-4 text-blue-400 tracking-widest uppercase">
+                        PAINÉIS GOOGLE ADS
+                      </h3>
+                      <div className="flex flex-wrap gap-3 justify-center">
+                        {reportData.paineisAnuncio.filter(p => p.platform === "google").map((panel) => {
+                          const aspectCss = aspectRatioOptionToCss(panel.aspectRatio);
+                          return (
+                            <div
+                              key={panel.id}
+                              className="rounded-lg overflow-hidden border border-blue-500/30 max-w-[200px]"
+                              style={aspectCss ? { aspectRatio: aspectCss } : undefined}
+                            >
+                              <img
+                                src={panel.url}
+                                alt={panel.name}
+                                className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
+                                crossOrigin="anonymous"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {/* Ad Panels Meta */}
                 {reportData.sectionsConfig.showPaineisAnuncio && reportData.paineisAnuncio.filter(p => p.platform === "meta").length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-bold mb-4 text-purple-400 tracking-widest uppercase">
-                      PAINÉIS META ADS
-                    </h3>
-                    <div className="flex flex-wrap gap-3 justify-center">
-                      {reportData.paineisAnuncio.filter(p => p.platform === "meta").map((panel) => {
-                        const aspectCss = aspectRatioOptionToCss(panel.aspectRatio);
-                        return (
-                          <div
-                            key={panel.id}
-                            className="rounded-lg overflow-hidden border border-purple-500/30 max-w-[200px]"
-                            style={aspectCss ? { aspectRatio: aspectCss } : undefined}
-                          >
-                            <img
-                              src={panel.url}
-                              alt={panel.name}
-                              className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
-                              crossOrigin="anonymous"
-                            />
-                          </div>
-                        );
-                      })}
+                  <div style={{ order: getSectionOrderIndex("paineisMeta") }}>
+                    <div className="mb-6">
+                      <h3 className="text-lg font-bold mb-4 text-purple-400 tracking-widest uppercase">
+                        PAINÉIS META ADS
+                      </h3>
+                      <div className="flex flex-wrap gap-3 justify-center">
+                        {reportData.paineisAnuncio.filter(p => p.platform === "meta").map((panel) => {
+                          const aspectCss = aspectRatioOptionToCss(panel.aspectRatio);
+                          return (
+                            <div
+                              key={panel.id}
+                              className="rounded-lg overflow-hidden border border-purple-500/30 max-w-[200px]"
+                              style={aspectCss ? { aspectRatio: aspectCss } : undefined}
+                            >
+                              <img
+                                src={panel.url}
+                                alt={panel.name}
+                                className={cn("w-full object-contain", aspectCss ? "h-full" : "h-auto")}
+                                crossOrigin="anonymous"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {/* Custom Sections */}
                 {reportData.sectionsConfig.showCustomSections && reportData.customSections.length > 0 && (
-                  <>
-                    {reportData.customSections.filter(s => s.images.length > 0).map((section) => (
-                      <div key={section.id} className="mb-6">
-                        <h3 className="text-lg font-bold mb-4 text-[#ffb500] tracking-widest uppercase">
-                          {section.title}
-                        </h3>
-                        <div className="flex flex-wrap gap-3 justify-center">
-                          {section.images.map((image) => (
-                            <div
-                              key={image.id}
-                              className="rounded-lg overflow-hidden border border-white/20"
-                              style={{
-                                width: image.width ? `${image.width}px` : '200px',
-                                height: reportData.isGeneratingPDF
-                                  ? 'auto'
-                                  : image.height
-                                    ? `${image.height}px`
-                                    : 'auto'
-                              }}
-                            >
-                              <img
-                                src={image.url}
-                                alt={image.name}
-                                className={cn(
-                                  "block w-full object-contain",
-                                  reportData.isGeneratingPDF ? "h-auto" : "h-full"
-                                )}
-                                crossOrigin="anonymous"
-                              />
-                            </div>
-                          ))}
+                  <div style={{ order: getSectionOrderIndex("customSections") }}>
+                    <>
+                      {reportData.customSections.filter(s => s.images.length > 0).map((section) => (
+                        <div key={section.id} className="mb-6">
+                          <h3 className="text-lg font-bold mb-4 text-[#ffb500] tracking-widest uppercase">
+                            {section.title}
+                          </h3>
+                          <div className="flex flex-wrap gap-3 justify-center">
+                            {section.images.map((image) => (
+                              <div
+                                key={image.id}
+                                className="rounded-lg overflow-hidden border border-white/20"
+                                style={{
+                                  width: image.width ? `${image.width}px` : '200px',
+                                  height: reportData.isGeneratingPDF
+                                    ? 'auto'
+                                    : image.height
+                                      ? `${image.height}px`
+                                      : 'auto'
+                                }}
+                              >
+                                <img
+                                  src={image.url}
+                                  alt={image.name}
+                                  className={cn(
+                                    "block w-full object-contain",
+                                    reportData.isGeneratingPDF ? "h-auto" : "h-full"
+                                  )}
+                                  crossOrigin="anonymous"
+                                />
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </>
+                      ))}
+                    </>
+                  </div>
                 )}
 
                 {/* Summary */}
                 {reportData.sectionsConfig.showResumo && reportData.resumo && (
-                  <div className="mb-8 p-6 rounded-2xl bg-white/[0.03] border border-white/10 shadow-lg">
-                    <h3 className="text-sm font-bold mb-4 text-[#ffb500] tracking-widest uppercase">
-                      Resumo geral dos resultados
-                    </h3>
-                    <p className="text-gray-300 leading-relaxed text-[13px] font-medium italic">{reportData.resumo}</p>
+                  <div style={{ order: getSectionOrderIndex("resumo") }}>
+                    <div className="mb-8 p-6 rounded-2xl bg-white/[0.03] border border-white/10 shadow-lg">
+                      <h3 className="text-sm font-bold mb-4 text-[#ffb500] tracking-widest uppercase">
+                        Resumo geral dos resultados
+                      </h3>
+                      <p className="text-gray-300 leading-relaxed text-[13px] font-medium italic">{reportData.resumo}</p>
+                    </div>
                   </div>
                 )}
 
@@ -3878,7 +4060,7 @@ const RelatorioCliente = () => {
                     reportData.google.diasParaRecarga > 0 ||
                     reportData.meta.saldoRestante > 0 ||
                     reportData.meta.diasParaRecarga > 0) && (
-                    <div className="mb-8 p-6 rounded-2xl bg-white/[0.03] border border-white/10 shadow-inner">
+                    <div style={{ order: getSectionOrderIndex("saldoRestante") }} className="mb-8 p-6 rounded-2xl bg-white/[0.03] border border-white/10 shadow-inner">
                       <h3 className="text-sm font-bold mb-6 text-[#ffb500] tracking-widest uppercase">SALDO RESTANTE</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {(reportData.google.saldoRestante > 0 || reportData.google.diasParaRecarga > 0) && (
