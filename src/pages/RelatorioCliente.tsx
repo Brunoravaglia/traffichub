@@ -1339,7 +1339,9 @@ const RelatorioCliente = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {normalizeSectionOrder(reportData.sectionOrder).map((sectionId) => {
+                  {normalizeSectionOrder(reportData.sectionOrder)
+                    .filter((sectionId) => sectionId !== "saldoRestante")
+                    .map((sectionId) => {
                     const isVisible = isSectionVisibleInReport(sectionId);
                     return (
                       <div
@@ -3436,12 +3438,12 @@ const RelatorioCliente = () => {
                         <div key={position} className="space-y-2">
                           <Label className="flex items-center gap-2">
                             <span className={cn(
-                              "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
+                              "w-6 h-6 rounded-full grid place-items-center text-xs font-bold leading-none",
                               position === 1 ? "bg-yellow-500 text-black" :
                                 position === 2 ? "bg-gray-400 text-black" :
                                   "bg-amber-700 text-white"
                             )}>
-                              {position}
+                              <span className="inline-block leading-none translate-y-[0.5px]">{position}</span>
                             </span>
                             TOP {position}
                           </Label>
@@ -3914,12 +3916,12 @@ const RelatorioCliente = () => {
                           return (
                             <div key={ranking.id} className="text-center max-w-[160px]">
                               <div className={cn(
-                                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2",
+                                "w-8 h-8 rounded-full grid place-items-center text-sm font-bold leading-none mx-auto mb-2",
                                 ranking.position === 1 ? "bg-yellow-500 text-black" :
                                   ranking.position === 2 ? "bg-gray-400 text-black" :
                                     "bg-amber-700 text-white"
                               )}>
-                                {ranking.position}
+                                <span className="inline-block leading-none translate-y-[0.5px]">{ranking.position}</span>
                               </div>
                               <div
                                 className="rounded-lg overflow-hidden border border-white/10 mb-2"
@@ -4060,7 +4062,7 @@ const RelatorioCliente = () => {
                     reportData.google.diasParaRecarga > 0 ||
                     reportData.meta.saldoRestante > 0 ||
                     reportData.meta.diasParaRecarga > 0) && (
-                    <div style={{ order: getSectionOrderIndex("saldoRestante") }} className="mb-8 p-6 rounded-2xl bg-white/[0.03] border border-white/10 shadow-inner">
+                    <div className="mb-8 p-6 rounded-2xl bg-white/[0.03] border border-white/10 shadow-inner">
                       <h3 className="text-sm font-bold mb-6 text-[#ffb500] tracking-widest uppercase">SALDO RESTANTE</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {(reportData.google.saldoRestante > 0 || reportData.google.diasParaRecarga > 0) && (
