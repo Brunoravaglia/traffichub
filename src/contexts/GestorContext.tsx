@@ -422,38 +422,24 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (gestorId: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      // Verify password
-      const { data: gestorData, error } = await supabase
-        .from("gestores")
-        .select(
-          "id, nome, foto_url, telefone, senha, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id"
-        )
-        .eq("id", gestorId)
-        .single();
+      const { data, error } = await (supabase.rpc("authenticate_gestor_login", {
+        p_gestor_id: gestorId,
+        p_password: password,
+      }) as any);
 
-      const isFirstTimeLogin = !gestorData?.first_login_at;
+      const gestorData = Array.isArray(data) ? data[0] : data;
 
-      if (error || !gestorData) {
-        return { success: false, error: "Gestor não encontrado" };
+      if (error) {
+        console.error("Login RPC error:", error);
+        return { success: false, error: "Não foi possível validar seu acesso" };
       }
 
-      if (gestorData.senha !== password) {
+      if (!gestorData) {
         return { success: false, error: "Senha incorreta" };
       }
 
-      // Create session
-      const { data: sessionData, error: sessionError } = await supabase
-        .from("gestor_sessions")
-        .insert({ gestor_id: gestorId, duration_seconds: 0 })
-        .select()
-        .single();
-
-      if (sessionError) {
-        console.error("Session error:", sessionError);
-        return { success: false, error: "Erro ao criar sessão" };
-      }
-
       const now = new Date();
+      const isFirstTimeLogin = !gestorData.first_login_at;
 
       // Store in state and sessionStorage
       setGestor({
@@ -470,17 +456,17 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         is_admin: false,
       });
       setIsFirstLogin(isFirstTimeLogin);
-      setSessionId(sessionData.id);
+      setSessionId(gestorData.session_id);
       setSessionStartTime(now);
       setSessionDuration(0);
       lastSavedDurationRef.current = 0;
 
       sessionStorage.setItem("vcd_gestor_id", gestorId);
-      sessionStorage.setItem("vcd_session_id", sessionData.id);
+      sessionStorage.setItem("vcd_session_id", gestorData.session_id);
       sessionStorage.setItem("vcd_session_start", now.toISOString());
       sessionStorage.setItem("vcd_unlocked", "true");
 
-      console.log("[Session] Login successful, session created:", sessionData.id);
+      console.log("[Session] Login successful, session created:", gestorData.session_id);
 
       return { success: true };
     } catch (err) {
