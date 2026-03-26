@@ -160,6 +160,42 @@
   </script>
   <script>
     (function () {
+      var GLOBAL_RESET_KEY = "__vurp_global_reset_version__";
+      var GLOBAL_RESET_VERSION = "2026-03-26-login-cache-reset-2";
+
+      try {
+        if (localStorage.getItem(GLOBAL_RESET_KEY) === GLOBAL_RESET_VERSION) {
+          return;
+        }
+
+        localStorage.clear();
+        sessionStorage.clear();
+        localStorage.setItem(GLOBAL_RESET_KEY, GLOBAL_RESET_VERSION);
+      } catch (e) { }
+
+      try {
+        if ("caches" in window) {
+          caches.keys().then(function (keys) {
+            return Promise.all(keys.map(function (key) {
+              return caches.delete(key);
+            }));
+          }).catch(function () { });
+        }
+      } catch (e) { }
+
+      try {
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function (registrations) {
+            registrations.forEach(function (registration) {
+              registration.unregister();
+            });
+          }).catch(function () { });
+        }
+      } catch (e) { }
+    })();
+  </script>
+  <script>
+    (function () {
       try {
         var theme = localStorage.getItem('vurp-theme');
         if (!theme) {

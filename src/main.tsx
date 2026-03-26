@@ -18,7 +18,7 @@ const CHUNK_ERROR_PATTERNS = [
 const CHUNK_RELOAD_KEY = "__vurp_chunk_reload_state__";
 const MAX_RELOADS_PER_PATH = 2;
 const CHUNK_RELOAD_WINDOW_MS = 30_000;
-const GLOBAL_RESET_VERSION = "2026-03-16-force-logout-reset-1";
+const GLOBAL_RESET_VERSION = "2026-03-26-login-cache-reset-2";
 const GLOBAL_RESET_KEY = "__vurp_global_reset_version__";
 
 const getErrorMessage = (value: unknown): string => {
@@ -67,10 +67,10 @@ const clearChunkReloadState = () => {
   }
 };
 
-const applyGlobalResetIfNeeded = (): boolean => {
+const applyGlobalResetIfNeeded = () => {
   try {
     const alreadyApplied = localStorage.getItem(GLOBAL_RESET_KEY) === GLOBAL_RESET_VERSION;
-    if (alreadyApplied) return false;
+    if (alreadyApplied) return;
 
     localStorage.clear();
     sessionStorage.clear();
@@ -94,13 +94,6 @@ const applyGlobalResetIfNeeded = (): boolean => {
       // no-op
     });
   }
-
-  if (window.location.pathname !== "/") {
-    window.location.replace("/");
-    return true;
-  }
-
-  return false;
 };
 
 const reloadOnceForChunkError = () => {
@@ -144,14 +137,12 @@ window.addEventListener("unhandledrejection", (event) => {
   }
 });
 
-const isRedirectingAfterReset = applyGlobalResetIfNeeded();
+applyGlobalResetIfNeeded();
 
-if (!isRedirectingAfterReset) {
-  createRoot(document.getElementById("root")!).render(
-    <HelmetProvider>
-      <App />
-      <Analytics />
-      <SpeedInsights />
-    </HelmetProvider>
-  );
-}
+createRoot(document.getElementById("root")!).render(
+  <HelmetProvider>
+    <App />
+    <Analytics />
+    <SpeedInsights />
+  </HelmetProvider>
+);
