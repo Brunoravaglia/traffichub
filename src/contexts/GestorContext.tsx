@@ -235,19 +235,8 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
           console.log("[Session] Successfully created gestor record");
         }
 
-        // SECURITY HOTFIX:
-        // if this is a Google-created account and somehow has agency linked,
-        // remove the link to avoid accidental cross-tenant access.
-        if (existingGestor?.senha === "google-oauth" && existingGestor?.agencia_id) {
-          const { error: clearAgencyError } = await supabase
-            .from("gestores")
-            .update({ agencia_id: null })
-            .eq("id", sessionUser.id);
-
-          if (clearAgencyError) {
-            console.error("[Session] Failed to clear OAuth agency link:", clearAgencyError);
-          }
-        }
+        // Keep admin-assigned agency memberships for OAuth users.
+        // New OAuth users are still created with agencia_id = null above.
 
         const { data: finalGestor, error: finalFetchError } = await supabase
           .from("gestores")

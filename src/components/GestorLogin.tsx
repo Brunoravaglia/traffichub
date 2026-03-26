@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, ArrowRight, Home, ChevronRight, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,14 @@ interface GestorOption {
   nome: string;
   foto_url: string | null;
 }
+
+const VCD_EMERGENCY_PROFILES: GestorOption[] = [
+  { id: "8d035c6a-57c0-457c-a96c-0bc91e7fcd37", nome: "Bruno Ravaglia", foto_url: null },
+  { id: "521176fd-ba02-4a31-aa5c-6861d8a966b2", nome: "Thiago Pitaluga", foto_url: null },
+  { id: "f94ba31c-6bb5-4dcf-ad61-448ede7cf3d2", nome: "Guilherme Sebastiani", foto_url: null },
+  { id: "4a852ab2-e6aa-4a33-96e0-7643540f64ac", nome: "João Vitor", foto_url: null },
+  { id: "04a2e032-a92b-4a70-976c-bcdb8df8ed92", nome: "Silvio Arena", foto_url: null },
+];
 
 const GestorLogin = () => {
   const { login, agencia, setAgenciaBySlug } = useGestor();
@@ -56,17 +64,25 @@ const GestorLogin = () => {
   // Fetch gestores only when agency is selected
   useEffect(() => {
     const fetchGestores = async () => {
-      if (!agencia) return;
+      if (!agencia) {
+        setGestores([]);
+        setSelectedGestorId("");
+        return;
+      }
 
       setIsFetching(true);
-      const { data, error } = await (supabase
-        .from("gestores")
-        .select("id, nome, foto_url")
-        .eq("agencia_id", agencia.id)
-        .order("nome") as any);
+      const { data, error } = await (supabase.rpc("get_agency_login_profiles", {
+        p_agencia_id: agencia.id,
+      }) as any);
 
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         setGestores(data);
+      } else {
+        if (agencia.slug === "vcd") {
+          setGestores(VCD_EMERGENCY_PROFILES);
+        } else {
+          setGestores([]);
+        }
       }
       setIsFetching(false);
     };
@@ -121,6 +137,15 @@ const GestorLogin = () => {
   };
 
   const selectedGestor = gestores.find((g) => g.id === selectedGestorId);
+  const gestoresUniqueByName = useMemo(() => {
+    const seen = new Set<string>();
+    return gestores.filter((g) => {
+      const key = g.nome.trim().toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [gestores]);
 
   return (
     <div className="min-h-screen bg-[#03070d] flex items-center justify-center p-4 relative overflow-hidden">
@@ -276,7 +301,7 @@ const GestorLogin = () => {
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="bg-zinc-900 border-white/10 text-white rounded-xl shadow-2xl backdrop-blur-xl">
-                          {gestores.map((gestor) => (
+                          {gestoresUniqueByName.map((gestor) => (
                             <SelectItem
                               key={gestor.id}
                               value={gestor.id}
@@ -295,6 +320,29 @@ const GestorLogin = () => {
                           ))}
                         </SelectContent>
                       </Select>
+                      {!isFetching && gestores.length === 0 && (
+                        <p className="text-xs text-zinc-400 mt-2">
+                          Nenhum perfil encontrado para esta agência.
+                        </p>
+                      )}
+                      {!isFetching && gestoresUniqueByName.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {gestoresUniqueByName.map((gestor) => (
+                            <button
+                              key={`quick-${gestor.id}`}
+                              type="button"
+                              onClick={() => setSelectedGestorId(gestor.id)}
+                              className={`px-3 py-1.5 rounded-lg text-xs border transition-colors ${
+                                selectedGestorId === gestor.id
+                                  ? "bg-emerald-500/20 border-emerald-400/60 text-emerald-200"
+                                  : "bg-white/5 border-white/10 text-zinc-300 hover:bg-white/10"
+                              }`}
+                            >
+                              {gestor.nome}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Password Input */}
