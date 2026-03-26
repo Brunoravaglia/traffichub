@@ -255,7 +255,7 @@ const SignUp = () => {
 
                     <p className="text-center text-sm text-muted-foreground mt-6">
                         Já tem uma conta?{" "}
-                        <Link to="/login" className="text-primary font-medium hover:underline">Entrar</Link>
+                        <Link to="/login?resetAgency=1" className="text-primary font-medium hover:underline">Entrar</Link>
                     </p>
                 </motion.div>
             </div>
@@ -264,4 +264,3 @@ const SignUp = () => {
 };
 
 export default SignUp;
-

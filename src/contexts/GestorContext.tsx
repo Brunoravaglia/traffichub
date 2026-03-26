@@ -41,6 +41,7 @@ interface GestorContextType {
   refreshGestor: () => Promise<void>;
   markWelcomeSeen: () => Promise<void>;
   setAgenciaBySlug: (slug: string) => Promise<{ success: boolean; agency?: Agencia; error?: string }>;
+  clearAgencySelection: () => void;
 }
 
 const GestorContext = createContext<GestorContextType | undefined>(undefined);
@@ -177,7 +178,14 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
           .eq("slug", normalizedStoredSlug)
           .maybeSingle()
           .then(({ data }) => {
-            if (data) setAgencia(data as unknown as Agencia);
+            const currentStoredAgencySlug = sessionStorage.getItem("vurp_agency_slug");
+            if (
+              data &&
+              currentStoredAgencySlug &&
+              normalizeAgencySlugInput(currentStoredAgencySlug) === normalizedStoredSlug
+            ) {
+              setAgencia(data as unknown as Agencia);
+            }
           });
       }
     }
@@ -528,6 +536,11 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
     return { success: true, agency };
   };
 
+  const clearAgencySelection = useCallback(() => {
+    setAgencia(null);
+    sessionStorage.removeItem("vurp_agency_slug");
+  }, []);
+
   const logout = async () => {
     // Save final duration with logout timestamp
     await saveSessionDuration(true);
@@ -612,6 +625,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         refreshGestor,
         markWelcomeSeen,
         setAgenciaBySlug,
+        clearAgencySelection,
       }}
     >
       {children}

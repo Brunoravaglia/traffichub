@@ -57,7 +57,7 @@ const ForgotPassword = () => {
                         <p className="text-xs text-muted-foreground mb-6">
                             Verifique também sua caixa de spam. O link expira em 24 horas.
                         </p>
-                        <Link to="/login">
+                        <Link to="/login?resetAgency=1">
                             <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
                                 <ArrowLeft className="w-4 h-4 mr-2" />
                                 Voltar ao login
@@ -103,7 +103,7 @@ const ForgotPassword = () => {
                         </form>
 
                         <div className="mt-6 text-center">
-                            <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">
+                            <Link to="/login?resetAgency=1" className="text-sm text-muted-foreground hover:text-foreground">
                                 <ArrowLeft className="w-3 h-3 inline mr-1" />
                                 Voltar ao login
                             </Link>

@@ -182,7 +182,7 @@ const PricingSection = () => {
                             )}
 
                             {/* CTA */}
-                            <Link to="/login" className="mt-auto">
+                            <Link to="/login?resetAgency=1" className="mt-auto">
                                 <Button
                                     className={`w-full h-12 font-semibold text-base transition-all duration-300 ${plan.popular
                                         ? "bg-primary hover:bg-primary/90 text-primary-foreground vcd-button-glow hover:scale-[1.02]"

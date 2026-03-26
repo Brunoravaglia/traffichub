@@ -112,7 +112,7 @@ const HomeNavbar = () => {
                         >
                             {theme === "dark" ? <Sun className="h-4 w-4 lg:h-5 lg:w-5" /> : <Moon className="h-4 w-4 lg:h-5 lg:w-5" />}
                         </button>
-                        <Link to="/login">
+                        <Link to="/login?resetAgency=1">
                             <Button variant="ghost" className="h-9 px-4 text-[14px] text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/70">
                                 Entrar
                             </Button>
@@ -180,7 +180,7 @@ const HomeNavbar = () => {
                                         {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                                         {theme === "dark" ? "Modo Claro" : "Modo Escuro"}
                                     </button>
-                                    <Link to="/login" className="block" onClick={() => setMobileOpen(false)}>
+                                    <Link to="/login?resetAgency=1" className="block" onClick={() => setMobileOpen(false)}>
                                         <Button variant="ghost" className="h-10 w-full justify-start rounded-xl border border-border/40 text-[15px] text-muted-foreground hover:bg-card">
                                             Entrar
                                         </Button>

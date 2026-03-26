@@ -135,7 +135,7 @@ const FooterSection = () => {
                             <Link to="/terms" className="hover:text-primary transition-colors">Termos</Link>
                             <Link to="/privacy" className="hover:text-primary transition-colors">Privacidade</Link>
                             <Link to="/lgpd" className="hover:text-primary transition-colors">LGPD</Link>
-                            <Link to="/login" className="hover:text-primary transition-colors">Login</Link>
+                            <Link to="/login?resetAgency=1" className="hover:text-primary transition-colors">Login</Link>
                         </div>
                     </div>
                 </div>
