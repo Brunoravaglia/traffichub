@@ -1,7 +1,17 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  clearLegacyAuthStorage,
+  readLegacyAuthJson,
+  readLegacyAuthValue,
+  removeLegacyAuthValue,
+  writeLegacyAuthJson,
+  writeLegacyAuthValue,
+} from "@/lib/legacySessionStorage";
 
 const SAVE_INTERVAL = 30000; // Save every 30 seconds
+const GESTOR_PROFILE_KEY = "vcd_gestor_profile";
+const AGENCY_PROFILE_KEY = "vurp_agency_profile";
 
 interface Agencia {
   id: string;
@@ -43,6 +53,20 @@ interface GestorContextType {
   setAgenciaBySlug: (slug: string) => Promise<{ success: boolean; agency?: Agencia; error?: string }>;
 }
 
+type AuthenticateGestorLoginRow = {
+  session_id: string;
+  id: string;
+  nome: string;
+  foto_url: string | null;
+  telefone: string | null;
+  onboarding_completo: boolean;
+  foto_preenchida: boolean;
+  dados_completos: boolean;
+  first_login_at: string | null;
+  welcome_modal_dismissed: boolean | null;
+  agencia_id: string | null;
+};
+
 const GestorContext = createContext<GestorContextType | undefined>(undefined);
 
 export const useGestor = () => {
@@ -74,10 +98,22 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       .replace(/^app\./i, "")
       .replace(/\/.*$/i, "");
 
+  const readStoredJson = <T,>(key: string): T | null => {
+    return readLegacyAuthJson<T>(key as typeof GESTOR_PROFILE_KEY | typeof AGENCY_PROFILE_KEY);
+  };
+
+  const persistGestorProfile = (value: Gestor) => {
+    writeLegacyAuthJson(GESTOR_PROFILE_KEY, value);
+  };
+
+  const persistAgencyProfile = (value: Agencia) => {
+    writeLegacyAuthJson(AGENCY_PROFILE_KEY, value);
+  };
+
   // Function to save session duration to database
   const saveSessionDuration = useCallback(async (isLogout = false) => {
-    const currentSessionId = sessionStorage.getItem("vcd_session_id");
-    const currentSessionStart = sessionStorage.getItem("vcd_session_start");
+    const currentSessionId = readLegacyAuthValue("vcd_session_id");
+    const currentSessionStart = readLegacyAuthValue("vcd_session_start");
 
     if (!currentSessionId || !currentSessionStart) return;
 
@@ -114,13 +150,24 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
 
   // Load from sessionStorage on mount
   useEffect(() => {
-    const storedGestorId = sessionStorage.getItem("vcd_gestor_id");
-    const storedSessionId = sessionStorage.getItem("vcd_session_id");
-    const storedSessionStart = sessionStorage.getItem("vcd_session_start");
+    const storedGestorId = readLegacyAuthValue("vcd_gestor_id");
+    const storedSessionId = readLegacyAuthValue("vcd_session_id");
+    const storedSessionStart = readLegacyAuthValue("vcd_session_start");
+    const storedGestorProfile = readStoredJson<Gestor>(GESTOR_PROFILE_KEY);
+    const storedAgencyProfile = readStoredJson<Agencia>(AGENCY_PROFILE_KEY);
 
     if (storedGestorId && storedSessionId && storedSessionStart) {
       setSessionId(storedSessionId);
       setSessionStartTime(new Date(storedSessionStart));
+
+      if (storedGestorProfile?.id === storedGestorId) {
+        setGestor(storedGestorProfile);
+        setIsFirstLogin(!storedGestorProfile.first_login_at);
+      }
+
+      if (storedAgencyProfile) {
+        setAgencia(storedAgencyProfile);
+      }
 
       // Fetch gestor data
       supabase
@@ -133,8 +180,9 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         .then((result) => {
           const { data } = result as { data: Gestor | null };
           if (data) {
-            // @ts-ignore - Handle missing is_admin
-            setGestor({ ...data, is_admin: false });
+            const hydratedGestor = { ...data, is_admin: false };
+            setGestor(hydratedGestor);
+            persistGestorProfile(hydratedGestor);
             setIsFirstLogin(!data.first_login_at);
 
             // If gestor has agency, fetch agency data
@@ -145,7 +193,11 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
                 .eq("id", data.agencia_id)
                 .single()
                 .then(({ data: agencyData }) => {
-                  if (agencyData) setAgencia(agencyData as unknown as Agencia);
+                  if (agencyData) {
+                    const hydratedAgency = agencyData as unknown as Agencia;
+                    setAgencia(hydratedAgency);
+                    persistAgencyProfile(hydratedAgency);
+                  }
                 });
             }
           }
@@ -167,7 +219,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         });
     } else {
       // Check if agency was manually selected and stored
-      const storedAgencySlug = sessionStorage.getItem("vurp_agency_slug");
+      const storedAgencySlug = readLegacyAuthValue("vurp_agency_slug");
       if (storedAgencySlug) {
         const normalizedStoredSlug = normalizeAgencySlugInput(storedAgencySlug);
         if (!normalizedStoredSlug) return;
@@ -187,8 +239,8 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       oauthSyncInProgressRef.current = true;
 
       try {
-        const currentLocalGestor = sessionStorage.getItem("vcd_gestor_id");
-        if (currentLocalGestor === sessionUser.id && sessionStorage.getItem("vcd_session_id")) {
+        const currentLocalGestor = readLegacyAuthValue("vcd_gestor_id");
+        if (currentLocalGestor === sessionUser.id && readLegacyAuthValue("vcd_session_id")) {
           return;
         }
 
@@ -235,19 +287,8 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
           console.log("[Session] Successfully created gestor record");
         }
 
-        // SECURITY HOTFIX:
-        // if this is a Google-created account and somehow has agency linked,
-        // remove the link to avoid accidental cross-tenant access.
-        if (existingGestor?.senha === "google-oauth" && existingGestor?.agencia_id) {
-          const { error: clearAgencyError } = await supabase
-            .from("gestores")
-            .update({ agencia_id: null })
-            .eq("id", sessionUser.id);
-
-          if (clearAgencyError) {
-            console.error("[Session] Failed to clear OAuth agency link:", clearAgencyError);
-          }
-        }
+        // Keep admin-assigned agency memberships for OAuth users.
+        // New OAuth users are still created with agencia_id = null above.
 
         const { data: finalGestor, error: finalFetchError } = await supabase
           .from("gestores")
@@ -272,17 +313,18 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         }
 
         const now = new Date();
-        // @ts-ignore - Handle missing is_admin
-        setGestor({ ...finalGestor, is_admin: false });
+        const hydratedGestor = { ...finalGestor, is_admin: false };
+        setGestor(hydratedGestor);
+        persistGestorProfile(hydratedGestor);
         setIsFirstLogin(!finalGestor.first_login_at);
         setSessionId(sessionData.id);
         setSessionStartTime(now);
         setSessionDuration(0);
         lastSavedDurationRef.current = 0;
 
-        sessionStorage.setItem("vcd_gestor_id", finalGestor.id);
-        sessionStorage.setItem("vcd_session_id", sessionData.id);
-        sessionStorage.setItem("vcd_session_start", now.toISOString());
+        writeLegacyAuthValue("vcd_gestor_id", finalGestor.id);
+        writeLegacyAuthValue("vcd_session_id", sessionData.id);
+        writeLegacyAuthValue("vcd_session_start", now.toISOString());
         sessionStorage.setItem("vcd_unlocked", "true");
 
         if (finalGestor.agencia_id) {
@@ -291,7 +333,11 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
             .select("*")
             .eq("id", finalGestor.agencia_id)
             .single();
-          if (agencyData) setAgencia(agencyData as unknown as Agencia);
+          if (agencyData) {
+            const hydratedAgency = agencyData as unknown as Agencia;
+            setAgencia(hydratedAgency);
+            persistAgencyProfile(hydratedAgency);
+          }
         }
       } catch (err) {
         console.error("[Session] Error syncing Supabase Auth:", err);
@@ -310,10 +356,12 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         setSessionStartTime(null);
         setSessionDuration(0);
         setIsFirstLogin(false);
-        sessionStorage.removeItem("vcd_gestor_id");
-        sessionStorage.removeItem("vcd_session_id");
-        sessionStorage.removeItem("vcd_session_start");
+        removeLegacyAuthValue("vcd_gestor_id");
+        removeLegacyAuthValue("vcd_session_id");
+        removeLegacyAuthValue("vcd_session_start");
         sessionStorage.removeItem("vcd_unlocked");
+        removeLegacyAuthValue(GESTOR_PROFILE_KEY);
+        removeLegacyAuthValue(AGENCY_PROFILE_KEY);
       }
     });
 
@@ -403,8 +451,8 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
     if (!sessionId || !sessionStartTime) return;
 
     const handleBeforeUnload = () => {
-      const storedStart = sessionStorage.getItem("vcd_session_start");
-      const storedSessionId = sessionStorage.getItem("vcd_session_id");
+      const storedStart = readLegacyAuthValue("vcd_session_start");
+      const storedSessionId = readLegacyAuthValue("vcd_session_id");
 
       if (!storedStart || !storedSessionId) return;
 
@@ -425,36 +473,25 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (gestorId: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      // Verify password
-      const { data: gestorData, error } = await supabase
-        .from("gestores")
-        .select(
-          "id, nome, foto_url, telefone, senha, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id"
-        )
-        .eq("id", gestorId)
-        .single();
+      const { data, error } = await supabase.rpc("authenticate_gestor_login", {
+        p_gestor_id: gestorId,
+        p_password: password,
+      }) as {
+        data: AuthenticateGestorLoginRow[] | null;
+        error: { message?: string } | null;
+      };
 
-      const isFirstTimeLogin = !gestorData?.first_login_at;
-
-      if (error || !gestorData) {
-        return { success: false, error: "Gestor não encontrado" };
+      if (error) {
+        console.error("Login RPC error:", error);
+        return { success: false, error: "Erro ao fazer login" };
       }
 
-      if (gestorData.senha !== password) {
+      const gestorData = data?.[0];
+      if (!gestorData) {
         return { success: false, error: "Senha incorreta" };
       }
 
-      // Create session
-      const { data: sessionData, error: sessionError } = await supabase
-        .from("gestor_sessions")
-        .insert({ gestor_id: gestorId, duration_seconds: 0 })
-        .select()
-        .single();
-
-      if (sessionError) {
-        console.error("Session error:", sessionError);
-        return { success: false, error: "Erro ao criar sessão" };
-      }
+      const isFirstTimeLogin = !gestorData.first_login_at;
 
       const now = new Date();
 
@@ -472,18 +509,45 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         agencia_id: gestorData.agencia_id,
         is_admin: false,
       });
+      persistGestorProfile({
+        id: gestorData.id,
+        nome: gestorData.nome,
+        foto_url: gestorData.foto_url,
+        telefone: gestorData.telefone,
+        onboarding_completo: gestorData.onboarding_completo,
+        foto_preenchida: gestorData.foto_preenchida,
+        dados_completos: gestorData.dados_completos,
+        first_login_at: gestorData.first_login_at,
+        welcome_modal_dismissed: gestorData.welcome_modal_dismissed,
+        agencia_id: gestorData.agencia_id,
+        is_admin: false,
+      });
       setIsFirstLogin(isFirstTimeLogin);
-      setSessionId(sessionData.id);
+      setSessionId(gestorData.session_id);
       setSessionStartTime(now);
       setSessionDuration(0);
       lastSavedDurationRef.current = 0;
 
-      sessionStorage.setItem("vcd_gestor_id", gestorId);
-      sessionStorage.setItem("vcd_session_id", sessionData.id);
-      sessionStorage.setItem("vcd_session_start", now.toISOString());
+      writeLegacyAuthValue("vcd_gestor_id", gestorId);
+      writeLegacyAuthValue("vcd_session_id", gestorData.session_id);
+      writeLegacyAuthValue("vcd_session_start", now.toISOString());
       sessionStorage.setItem("vcd_unlocked", "true");
 
-      console.log("[Session] Login successful, session created:", sessionData.id);
+      if (gestorData.agencia_id) {
+        const { data: agencyData } = await supabase
+          .from("agencias")
+          .select("*")
+          .eq("id", gestorData.agencia_id)
+          .maybeSingle();
+
+        if (agencyData) {
+          const hydratedAgency = agencyData as unknown as Agencia;
+          setAgencia(hydratedAgency);
+          persistAgencyProfile(hydratedAgency);
+        }
+      }
+
+      console.log("[Session] Login successful, session created:", gestorData.session_id);
 
       return { success: true };
     } catch (err) {
@@ -516,7 +580,8 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       if (data) {
         const agency = data as unknown as Agencia;
         setAgencia(agency);
-        sessionStorage.setItem("vurp_agency_slug", agency.slug);
+        persistAgencyProfile(agency);
+        writeLegacyAuthValue("vurp_agency_slug", agency.slug);
         return { success: true, agency };
       }
     }
@@ -535,7 +600,8 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
 
     const agency = fallbackData as unknown as Agencia;
     setAgencia(agency);
-    sessionStorage.setItem("vurp_agency_slug", agency.slug);
+    persistAgencyProfile(agency);
+    writeLegacyAuthValue("vurp_agency_slug", agency.slug);
     return { success: true, agency };
   };
 
@@ -552,10 +618,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
     setIsFirstLogin(false);
     lastSavedDurationRef.current = 0;
 
-    sessionStorage.removeItem("vcd_gestor_id");
-    sessionStorage.removeItem("vurp_agency_slug");
-    sessionStorage.removeItem("vcd_session_id");
-    sessionStorage.removeItem("vcd_session_start");
+    clearLegacyAuthStorage();
     sessionStorage.removeItem("vcd_unlocked");
 
     console.log("[Session] Logout complete");
@@ -570,7 +633,9 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       .eq("id", gestor.id);
 
     setIsFirstLogin(false);
-    setGestor({ ...gestor, first_login_at: new Date().toISOString() });
+    const updatedGestor = { ...gestor, first_login_at: new Date().toISOString() };
+    setGestor(updatedGestor);
+    persistGestorProfile(updatedGestor);
   };
 
   const updatePassword = async (newPassword: string): Promise<{ success: boolean; error?: string }> => {
@@ -602,8 +667,9 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       .single();
 
     if (data) {
-      // @ts-ignore - Handle missing is_admin
-      setGestor({ ...data, is_admin: false });
+      const hydratedGestor = { ...data, is_admin: false };
+      setGestor(hydratedGestor);
+      persistGestorProfile(hydratedGestor);
     }
   }, [gestor]);
 

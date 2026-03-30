@@ -21,8 +21,8 @@ import {
 const ClientList = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { gestor: loggedGestor, isLoggedIn } = useGestor();
-  const agencyId = loggedGestor?.agencia_id ?? null;
+  const { gestor: loggedGestor, agencia, isLoggedIn } = useGestor();
+  const agencyId = loggedGestor?.agencia_id ?? agencia?.id ?? null;
   
   // Initialize filter with URL param or logged gestor's ID
   const urlGestor = searchParams.get("gestor");
@@ -49,6 +49,7 @@ const ClientList = () => {
   }, [selectedGestorId, setSearchParams]);
 
   const gestorFilter = selectedGestorId !== "all" ? selectedGestorId : null;
+  const isContextBootstrapping = isLoggedIn && !agencyId;
 
   // Fetch all gestores for the filter dropdown
   const { data: allGestores } = useQuery({
@@ -65,6 +66,17 @@ const ClientList = () => {
     },
     enabled: !!agencyId,
   });
+
+  useEffect(() => {
+    if (!loggedGestor?.id || !allGestores || selectedGestorId === "all") {
+      return;
+    }
+
+    const selectedExists = allGestores.some((gestor) => gestor.id === selectedGestorId);
+    if (!selectedExists) {
+      setSelectedGestorId(loggedGestor.id);
+    }
+  }, [allGestores, loggedGestor?.id, selectedGestorId]);
 
   const { data: gestorInfo } = useQuery({
     queryKey: ["gestor", gestorFilter, agencyId],
@@ -222,7 +234,7 @@ const ClientList = () => {
           </div>
         </motion.div>
 
-          {isLoading ? (
+          {isContextBootstrapping || isLoading ? (
             <div className="flex justify-center py-20">
               <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
             </div>

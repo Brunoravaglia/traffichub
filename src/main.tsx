@@ -18,7 +18,7 @@ const CHUNK_ERROR_PATTERNS = [
 const CHUNK_RELOAD_KEY = "__vurp_chunk_reload_state__";
 const MAX_RELOADS_PER_PATH = 2;
 const CHUNK_RELOAD_WINDOW_MS = 30_000;
-const GLOBAL_RESET_VERSION = "2026-03-16-force-logout-reset-1";
+const GLOBAL_RESET_VERSION = "2026-03-30-client-recovery-1";
 const GLOBAL_RESET_KEY = "__vurp_global_reset_version__";
 
 const getErrorMessage = (value: unknown): string => {
