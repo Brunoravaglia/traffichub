@@ -18,6 +18,7 @@ import { useGestor } from "@/contexts/GestorContext";
 import { useAchievements } from "@/hooks/useAchievements";
 import { useInactivityDetection } from "@/hooks/useInactivityDetection";
 import { supabase } from "@/integrations/supabase/client";
+import { readLegacyAuthValue } from "@/lib/legacySessionStorage";
 import { toast } from "sonner";
 import { useTheme } from "@/components/ThemeProvider";
 
@@ -36,7 +37,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const [isLocked, setIsLocked] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [bootstrapDelayDone, setBootstrapDelayDone] = useState(false);
-  const hasStoredGestor = typeof window !== "undefined" && !!sessionStorage.getItem("vcd_gestor_id");
+  const hasStoredGestor = typeof window !== "undefined" && !!readLegacyAuthValue("vcd_gestor_id");
   const isAuthBootstrapping = !isLoggedIn && hasStoredGestor && !bootstrapDelayDone;
 
   // Achievements hook
