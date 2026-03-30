@@ -183,6 +183,50 @@ export async function redirectToCustomerPortal(): Promise<void> {
   window.location.href = data.url;
 }
 
+export async function redirectToCreditCheckout(credits: number): Promise<void> {
+  const qty = Number(credits);
+  if (!Number.isInteger(qty) || qty <= 0) {
+    throw new Error("Quantidade de créditos inválida.");
+  }
+
+  const { data, error } = await supabase.functions.invoke("stripe-credit-checkout", {
+    body: {
+      credits: qty,
+    },
+  });
+
+  if (error) {
+    throw new Error(`Falha ao iniciar compra de créditos: ${error.message}`);
+  }
+
+  if (!data?.url) {
+    throw new Error("Checkout de créditos inválido: URL não retornada.");
+  }
+
+  window.location.href = data.url;
+}
+
+export async function getCreditWallet(): Promise<{
+  saldoCreditos: number;
+  totalComprados: number;
+  totalConsumidos: number;
+}> {
+  const { data, error } = await (supabase
+    .from("report_credit_wallets" as any)
+    .select("saldo_creditos, total_comprados, total_consumidos")
+    .maybeSingle() as any);
+
+  if (error) {
+    throw new Error(`Falha ao carregar carteira de créditos: ${error.message}`);
+  }
+
+  return {
+    saldoCreditos: data?.saldo_creditos ?? 0,
+    totalComprados: data?.total_comprados ?? 0,
+    totalConsumidos: data?.total_consumidos ?? 0,
+  };
+}
+
 export function formatPrice(amount: number): string {
   return amount.toLocaleString("pt-BR", {
     style: "currency",
