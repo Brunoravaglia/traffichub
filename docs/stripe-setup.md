@@ -1,59 +1,59 @@
-# Stripe + Supabase setup (Vurp)
+# Abacate Pay v1 + Supabase setup (Vurp)
 
-## 1) Na tela "Criar uma chave secret" da Stripe
-Escolha **"Fornecer esta chave para outro site"**.
+## Modelo atual
 
-## 2) Criar produtos e preços na Stripe
-Crie os preços recorrentes (mensal/anual) para:
-- Solo
-- Agência
-- Agência Pro
+O Vurp esta configurado para usar a API v1 do Abacate Pay com:
+- cobranca avulsa de plano mensal ou anual
+- compra avulsa de creditos
+- confirmacao por webhook
 
-Copie os `price_...` IDs.
+Nao ha assinatura recorrente automatica nesta integracao.
 
-## 3) Variáveis no Frontend (`.env`)
+## 1) Variaveis necessarias
+
 Configure:
-- `VITE_STRIPE_PUBLISHABLE_KEY`
-- `VITE_STRIPE_PRICE_SOLO_MONTHLY`
-- `VITE_STRIPE_PRICE_SOLO_YEARLY`
-- `VITE_STRIPE_PRICE_AGENCY_MONTHLY`
-- `VITE_STRIPE_PRICE_AGENCY_YEARLY`
-- `VITE_STRIPE_PRICE_PRO_MONTHLY`
-- `VITE_STRIPE_PRICE_PRO_YEARLY`
+- `ABACATEPAY_API_KEY`
+- `ABACATEPAY_WEBHOOK_SECRET`
+- `APP_URL`
 
-## 4) Secrets no Supabase (Edge Functions)
+Exemplo:
+
 ```bash
-supabase secrets set STRIPE_SECRET_KEY=sk_live_...
-supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...
-supabase secrets set STRIPE_PRICE_SOLO_MONTHLY=price_...
-supabase secrets set STRIPE_PRICE_SOLO_YEARLY=price_...
-supabase secrets set STRIPE_PRICE_AGENCY_MONTHLY=price_...
-supabase secrets set STRIPE_PRICE_AGENCY_YEARLY=price_...
-supabase secrets set STRIPE_PRICE_PRO_MONTHLY=price_...
-supabase secrets set STRIPE_PRICE_PRO_YEARLY=price_...
-supabase secrets set APP_URL=https://vurp.space
+supabase secrets set ABACATEPAY_API_KEY=abc_dev_...
+supabase secrets set ABACATEPAY_WEBHOOK_SECRET=...
+supabase secrets set APP_URL=https://vurp.vercel.app
 ```
 
-## 5) Deploy das Edge Functions
+## 2) Deploy das Edge Functions
+
 ```bash
 supabase functions deploy stripe-checkout
-supabase functions deploy stripe-customer-portal
+supabase functions deploy stripe-credit-checkout
 supabase functions deploy stripe-webhook
 ```
 
-## 6) Webhook na Stripe
-No Dashboard Stripe, adicione endpoint:
-`https://<SEU-PROJETO>.supabase.co/functions/v1/stripe-webhook`
+Nota:
+- os nomes das functions continuam legados para evitar quebrar o app
+- internamente elas ja usam Abacate Pay
 
-Eventos recomendados:
-- `checkout.session.completed`
-- `customer.subscription.created`
-- `customer.subscription.updated`
-- `customer.subscription.deleted`
-- `invoice.payment_failed`
+## 3) Webhook no Abacate Pay
 
-## 7) Banco de dados
+Adicione endpoint:
+
+`https://wunfuxyhnxyykzzqtcgu.supabase.co/functions/v1/stripe-webhook`
+
+Use o secret/HMAC configurado em `ABACATEPAY_WEBHOOK_SECRET`.
+
+## 4) Banco
+
 Aplique a migration:
-- `supabase/migrations/20260222123000_stripe_subscription_integration.sql`
 
-Ela adiciona colunas Stripe em `assinaturas` e índices únicos.
+- `supabase/migrations/20260330190000_abacatepay_subscription_fields.sql`
+
+## 5) Comportamento da cobranca
+
+- Plano mensal: gera um checkout avulso do ciclo mensal
+- Plano anual: gera um checkout avulso do ciclo anual
+- Creditos: gera um checkout avulso com quantidade variavel
+
+Se quiser recorrencia automatica no futuro, sera preciso migrar para a API v2 da Abacate Pay ou para outro gateway.

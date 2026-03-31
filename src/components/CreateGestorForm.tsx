@@ -18,6 +18,7 @@ const CreateGestorForm = () => {
   const navigate = useNavigate();
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
+  const [cpf, setCpf] = useState("");
   const [links, setLinks] = useState<GestorLink[]>([]);
   const [fotoFile, setFotoFile] = useState<File | null>(null);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
@@ -82,6 +83,7 @@ const CreateGestorForm = () => {
         .insert([{ 
           nome: nome.trim(),
           telefone: telefone.trim() || null,
+          cpf: cpf.trim() || null,
           links: validLinks as unknown as null,
         }])
         .select()
@@ -114,6 +116,7 @@ const CreateGestorForm = () => {
       toast.success("Gestor cadastrado com sucesso!");
       setNome("");
       setTelefone("");
+      setCpf("");
       setLinks([]);
       setFotoFile(null);
       setFotoPreview(null);
@@ -219,6 +222,18 @@ const CreateGestorForm = () => {
                     value={telefone}
                     onChange={(e) => setTelefone(e.target.value)}
                     placeholder="Ex: (11) 99999-9999"
+                    className="bg-background/50"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cpf">CPF para cobranca individual</Label>
+                  <Input
+                    id="cpf"
+                    type="text"
+                    value={cpf}
+                    onChange={(e) => setCpf(e.target.value)}
+                    placeholder="Ex: 12345678909"
                     className="bg-background/50"
                   />
                 </div>

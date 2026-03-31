@@ -25,6 +25,7 @@ const AgencySettings = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         nome: "",
+        cnpj: "",
         logo_url: "",
         logo_black_url: "",
         cor_primaria: "#10b981",
@@ -35,6 +36,7 @@ const AgencySettings = () => {
         if (agencia) {
             setFormData({
                 nome: agencia.nome || "",
+                cnpj: agencia.cnpj || "",
                 logo_url: agencia.logo_url || "",
                 logo_black_url: agencia.logo_black_url || "",
                 cor_primaria: agencia.cor_primaria || "#10b981",
@@ -53,6 +55,7 @@ const AgencySettings = () => {
                 .from("agencias")
                 .update({
                     nome: formData.nome,
+                    cnpj: formData.cnpj || null,
                     logo_url: formData.logo_url,
                     logo_black_url: formData.logo_black_url,
                     cor_primaria: formData.cor_primaria,
@@ -158,6 +161,16 @@ const AgencySettings = () => {
                                             value={formData.nome}
                                             onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                                             placeholder="Ex: Minha Agência Digital"
+                                            className="bg-secondary/50 border-border"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="agencyCnpj">CNPJ para cobranca da agência</Label>
+                                        <Input
+                                            id="agencyCnpj"
+                                            value={formData.cnpj}
+                                            onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
+                                            placeholder="Ex: 12345678000190"
                                             className="bg-secondary/50 border-border"
                                         />
                                     </div>

@@ -2,8 +2,12 @@ import { motion } from "framer-motion";
 import { CreditCard, Calendar, FileText, ExternalLink, AlertCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AppLayout from "@/components/AppLayout";
-import { formatPrice, redirectToCustomerPortal } from "@/lib/stripe";
+import { formatPrice, getCreditWallet, redirectToCreditCheckout } from "@/lib/billing";
 import { toast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useGestor } from "@/contexts/GestorContext";
 
 const invoices = [
     { date: "01/02/2026", amount: 97, status: "Pago", id: "INV-2026-0201" },
@@ -13,12 +17,25 @@ const invoices = [
 ];
 
 const BillingPage = () => {
-    const openPortal = async () => {
+    const [creditsToBuy, setCreditsToBuy] = useState(10);
+    const { gestor, agencia } = useGestor();
+    const missingBillingDocument = gestor?.agencia_id ? !agencia?.cnpj : !gestor?.cpf;
+    const missingPhone = !gestor?.telefone;
+
+    const { data: wallet, isLoading: walletLoading } = useQuery({
+        queryKey: ["credit-wallet"],
+        queryFn: getCreditWallet,
+    });
+
+    const buyCredits = async () => {
         try {
-            await redirectToCustomerPortal();
+            if (!Number.isInteger(creditsToBuy) || creditsToBuy <= 0) {
+                throw new Error("Informe uma quantidade válida de créditos.");
+            }
+            await redirectToCreditCheckout(creditsToBuy);
         } catch (err) {
             toast({
-                title: "Erro ao abrir portal Stripe",
+                title: "Erro ao comprar créditos",
                 description: err instanceof Error ? err.message : "Tente novamente em alguns instantes.",
                 variant: "destructive",
             });
@@ -36,6 +53,34 @@ const BillingPage = () => {
                 <h1 className="text-2xl font-bold text-foreground mb-1">Faturamento & Assinatura</h1>
                 <p className="text-sm text-muted-foreground">Gerencie seu plano, métodos de pagamento e faturas.</p>
             </motion.div>
+
+            {missingBillingDocument || missingPhone ? (
+                <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.12 }}
+                    className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5 space-y-3"
+                >
+                    <p className="text-sm font-medium text-foreground">Complete seus dados de cobranca antes de pagar</p>
+                    <p className="text-xs text-muted-foreground">
+                        {gestor?.agencia_id
+                            ? "Para contas de agência, informe telefone do gestor e CNPJ da agência."
+                            : "Para contas individuais, informe telefone e CPF do gestor."}
+                    </p>
+                    <div className="flex flex-wrap gap-3">
+                        {!gestor?.agencia_id ? (
+                            <Button asChild variant="outline">
+                                <Link to="/account">Atualizar minha conta</Link>
+                            </Button>
+                        ) : null}
+                        {gestor?.agencia_id ? (
+                            <Button asChild variant="outline">
+                                <Link to="/agencia/configuracoes">Atualizar dados da agência</Link>
+                            </Button>
+                        ) : null}
+                    </div>
+                </motion.div>
+            ) : null}
 
             {/* Current Plan */}
             <motion.div
@@ -59,15 +104,14 @@ const BillingPage = () => {
                         <div className="text-3xl font-extrabold vcd-gradient-text">{formatPrice(97)}</div>
                         <span className="text-xs text-muted-foreground">/mês</span>
                     </div>
-                </div>
+                    </div>
 
                 <div className="flex flex-wrap gap-3 mt-6">
-                    <Button
-                        onClick={openPortal}
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
-                    >
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        Gerenciar no Stripe
+                    <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium">
+                        <Link to="/support">
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Falar com suporte
+                        </Link>
                     </Button>
                     <a href="/account/plan">
                         <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
@@ -75,6 +119,51 @@ const BillingPage = () => {
                         </Button>
                     </a>
                 </div>
+            </motion.div>
+
+            {/* Credits Wallet */}
+            <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6 space-y-4"
+            >
+                <div className="flex items-center justify-between gap-4">
+                    <div>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Créditos de Relatório</p>
+                        <h2 className="text-xl font-bold text-foreground">
+                            {walletLoading ? "Carregando..." : `${wallet?.saldoCreditos ?? 0} créditos`}
+                        </h2>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Usuário Free: 3 relatórios grátis, depois 1 crédito por relatório.
+                        </p>
+                    </div>
+                    <div className="text-right text-xs text-muted-foreground">
+                        <p>Total comprado: <span className="text-foreground">{wallet?.totalComprados ?? 0}</span></p>
+                        <p>Total consumido: <span className="text-foreground">{wallet?.totalConsumidos ?? 0}</span></p>
+                    </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
+                    <div className="flex-1">
+                        <label className="text-xs text-muted-foreground mb-1 block">Quantidade para comprar</label>
+                        <input
+                            type="number"
+                            min={1}
+                            step={1}
+                            value={creditsToBuy}
+                            onChange={(e) => setCreditsToBuy(Math.max(1, Number(e.target.value) || 1))}
+                            className="w-full h-11 rounded-xl border border-border/60 bg-card/40 px-3 text-sm text-foreground"
+                        />
+                    </div>
+                    <Button onClick={buyCredits} className="bg-emerald-600 hover:bg-emerald-500 text-white">
+                        Comprar créditos ({formatPrice(creditsToBuy)})
+                    </Button>
+                </div>
+
+                <p className="text-[11px] text-muted-foreground">
+                    Cada crédito custa {formatPrice(1)} e libera 1 novo relatório.
+                </p>
             </motion.div>
 
             {/* Usage */}
@@ -132,19 +221,19 @@ const BillingPage = () => {
                 <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
                         <CreditCard className="w-5 h-5 text-violet-400" />
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium text-foreground">Método de pagamento</p>
-                        <p className="text-xs text-muted-foreground">Visa terminando em •••• 4242</p>
-                    </div>
                 </div>
+                <div>
+                    <p className="text-sm font-medium text-foreground">Método de pagamento</p>
+                    <p className="text-xs text-muted-foreground">Gerenciado no checkout do Abacate Pay</p>
+                </div>
+            </div>
                 <Button
+                    asChild
                     variant="ghost"
                     size="sm"
-                    onClick={openPortal}
                     className="text-xs text-muted-foreground hover:text-foreground"
                 >
-                    Alterar
+                    <Link to="/support">Solicitar alteração</Link>
                 </Button>
             </motion.div>
 
@@ -189,7 +278,7 @@ const BillingPage = () => {
                 <div>
                     <p className="text-sm text-foreground font-medium">Quer cancelar?</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                        Você pode cancelar a qualquer momento pelo portal do Stripe. Seu acesso continua até o final do período pago.
+                        Você pode solicitar cancelamento a qualquer momento pelo suporte. Seu acesso continua até o final do período pago.
                         Sem multa ou fidelidade.
                     </p>
                     <button

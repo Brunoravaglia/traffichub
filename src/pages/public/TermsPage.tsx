@@ -21,12 +21,12 @@ const sections = [
     {
         title: "4. Planos e Pagamento",
         content:
-            "O Vurp oferece planos pagos com diferentes níveis de funcionalidade. Os preços estão disponíveis na página de preços. O pagamento é processado por meio de provedores terceiros (Stripe). Ao assinar um plano, você autoriza a cobrança recorrente conforme o ciclo escolhido (mensal ou anual). Alterações de plano entram em vigor imediatamente com ajuste proporcional.",
+            "O Vurp oferece planos pagos com diferentes níveis de funcionalidade. Os preços estão disponíveis na página de preços. O pagamento é processado por meio de provedores terceiros (Abacate Pay). Neste momento, a cobranca dos planos ocorre por checkout avulso conforme o ciclo escolhido pelo cliente (mensal ou anual), podendo exigir renovacao manual.",
     },
     {
         title: "5. Cancelamento e Reembolso",
         content:
-            "Você pode cancelar sua assinatura a qualquer momento através das configurações da sua conta. Após o cancelamento, seu acesso permanece ativo até o final do período já pago. Não oferecemos reembolso por períodos parciais, exceto quando exigido por lei. O período de teste gratuito de 7 dias pode ser cancelado sem qualquer cobrança.",
+            "Você pode solicitar interrupcao da renovacao manual a qualquer momento através dos canais de suporte. Após o cancelamento, seu acesso permanece ativo até o final do período já pago. Não oferecemos reembolso por períodos parciais, exceto quando exigido por lei. O período de teste gratuito de 7 dias pode ser cancelado sem qualquer cobrança.",
     },
     {
         title: "6. Uso Permitido",

@@ -368,7 +368,7 @@ Hoje, o Vurp é uma plataforma muito mais completa do que a primeira versão que
 - seções de criativos;
 - utilidades gratuitas para aquisição orgânica;
 - blog com estratégia e conteúdo SEO;
-- checkout interno com Stripe;
+- checkout via Abacate Pay;
 - analytics e speed insights para leitura de uso e performance.
 
 Essa combinação mostra que a plataforma saiu da fase de validação e entrou numa fase mais séria de produto operacional e comercial.

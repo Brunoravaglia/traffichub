@@ -11,7 +11,7 @@ const sections = [
     {
         title: "2. Dados Coletados",
         content:
-            "Coletamos os seguintes tipos de dados:\n\n• **Dados de cadastro:** nome completo, endereço de email, telefone e senha (criptografada)\n• **Dados de uso:** informações sobre como você utiliza a plataforma, páginas visitadas, funcionalidades usadas\n• **Dados de clientes:** informações dos clientes de tráfego que você cadastra no sistema (nome, plataformas, métricas)\n• **Dados de pagamento:** processados diretamente pelo Stripe; não armazenamos dados de cartão de crédito\n• **Dados técnicos:** endereço IP, tipo de navegador, sistema operacional, cookies de sessão",
+            "Coletamos os seguintes tipos de dados:\n\n• **Dados de cadastro:** nome completo, endereço de email, telefone e senha\n• **Dados de uso:** informações sobre como você utiliza a plataforma, páginas visitadas, funcionalidades usadas\n• **Dados de clientes:** informações dos clientes de tráfego que você cadastra no sistema (nome, plataformas, métricas)\n• **Dados de pagamento:** processados diretamente pelo Abacate Pay; não armazenamos dados completos de cartão de crédito\n• **Dados técnicos:** endereço IP, tipo de navegador, sistema operacional, cookies de sessão",
     },
     {
         title: "3. Finalidade do Tratamento",
@@ -26,7 +26,7 @@ const sections = [
     {
         title: "5. Compartilhamento de Dados",
         content:
-            "Seus dados pessoais podem ser compartilhados com:\n\n• **Stripe:** para processamento de pagamentos\n• **Supabase:** para armazenamento seguro de dados\n• **Autoridades competentes:** quando exigido por lei ou ordem judicial\n\nNão vendemos, alugamos ou compartilhamos seus dados com terceiros para fins de marketing.",
+            "Seus dados pessoais podem ser compartilhados com:\n\n• **Abacate Pay:** para processamento de pagamentos\n• **Supabase:** para armazenamento seguro de dados\n• **Autoridades competentes:** quando exigido por lei ou ordem judicial\n\nNão vendemos, alugamos ou compartilhamos seus dados com terceiros para fins de marketing.",
     },
     {
         title: "6. Cookies",
