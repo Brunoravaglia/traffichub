@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       agencias: {
         Row: {
+          cnpj: string | null
           created_at: string
           id: string
           logo_url: string | null
@@ -24,6 +25,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          cnpj?: string | null
           created_at?: string
           id?: string
           logo_url?: string | null
@@ -32,6 +34,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          cnpj?: string | null
           created_at?: string
           id?: string
           logo_url?: string | null
@@ -707,6 +710,7 @@ export type Database = {
         Row: {
           agencia_id: string | null
           created_at: string
+          cpf: string | null
           dados_completos: boolean
           first_login_at: string | null
           foto_preenchida: boolean
@@ -722,6 +726,7 @@ export type Database = {
         Insert: {
           agencia_id?: string | null
           created_at?: string
+          cpf?: string | null
           dados_completos?: boolean
           first_login_at?: string | null
           foto_preenchida?: boolean
@@ -737,6 +742,7 @@ export type Database = {
         Update: {
           agencia_id?: string | null
           created_at?: string
+          cpf?: string | null
           dados_completos?: boolean
           first_login_at?: string | null
           foto_preenchida?: boolean

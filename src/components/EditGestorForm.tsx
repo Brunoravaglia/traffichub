@@ -22,6 +22,7 @@ const EditGestorForm = ({ gestorId, onClose, onSuccess }: EditGestorFormProps) =
   const queryClient = useQueryClient();
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
+  const [cpf, setCpf] = useState("");
   const [links, setLinks] = useState<GestorLink[]>([]);
   const [fotoFile, setFotoFile] = useState<File | null>(null);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
@@ -45,6 +46,7 @@ const EditGestorForm = ({ gestorId, onClose, onSuccess }: EditGestorFormProps) =
     if (gestor) {
       setNome(gestor.nome || "");
       setTelefone(gestor.telefone || "");
+      setCpf(gestor.cpf || "");
       const gestorLinks = gestor.links as unknown as GestorLink[] | null;
       setLinks(gestorLinks || []);
       setExistingFotoUrl(gestor.foto_url || null);
@@ -134,6 +136,7 @@ const EditGestorForm = ({ gestorId, onClose, onSuccess }: EditGestorFormProps) =
         .update({
           nome,
           telefone: telefone || null,
+          cpf: cpf || null,
           foto_url: fotoUrl,
           links: validLinks as unknown as null,
           foto_preenchida: hasFoto,
@@ -262,6 +265,18 @@ const EditGestorForm = ({ gestorId, onClose, onSuccess }: EditGestorFormProps) =
           placeholder="Ex: (11) 99999-9999"
           value={telefone}
           onChange={(e) => setTelefone(e.target.value)}
+          className="h-12 bg-secondary border-border focus:border-primary"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-foreground">
+          CPF para cobranca individual
+        </label>
+        <Input
+          placeholder="Ex: 12345678909"
+          value={cpf}
+          onChange={(e) => setCpf(e.target.value)}
           className="h-12 bg-secondary border-border focus:border-primary"
         />
       </div>

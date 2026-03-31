@@ -1,12 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "";
-
-type CreateCheckoutSessionOptions = {
-  successPath?: string;
-  cancelPath?: string;
-  returnPath?: string;
-};
+export type BillingInterval = "monthly" | "yearly";
 
 export interface PlanInfo {
   id: string;
@@ -17,8 +11,6 @@ export interface PlanInfo {
   maxAccounts: number;
   maxManagers: number;
   features: string[];
-  stripePriceIdMonthly?: string;
-  stripePriceIdYearly?: string;
 }
 
 export const PLANS: PlanInfo[] = [
@@ -39,8 +31,6 @@ export const PLANS: PlanInfo[] = [
       "Calendário de entregas",
       "Gamificação e conquistas",
     ],
-    stripePriceIdMonthly: import.meta.env.VITE_STRIPE_PRICE_SOLO_MONTHLY,
-    stripePriceIdYearly: import.meta.env.VITE_STRIPE_PRICE_SOLO_YEARLY,
   },
   {
     id: "agency",
@@ -60,8 +50,6 @@ export const PLANS: PlanInfo[] = [
       "Previsão de saldo",
       "Modelos customizáveis",
     ],
-    stripePriceIdMonthly: import.meta.env.VITE_STRIPE_PRICE_AGENCY_MONTHLY,
-    stripePriceIdYearly: import.meta.env.VITE_STRIPE_PRICE_AGENCY_YEARLY,
   },
   {
     id: "agency-pro",
@@ -81,22 +69,17 @@ export const PLANS: PlanInfo[] = [
       "Dashboard de performance por gestor",
       "Suporte prioritário",
     ],
-    stripePriceIdMonthly: import.meta.env.VITE_STRIPE_PRICE_PRO_MONTHLY,
-    stripePriceIdYearly: import.meta.env.VITE_STRIPE_PRICE_PRO_YEARLY,
   },
 ];
 
-export async function redirectToCheckout(priceId: string): Promise<void> {
-  if (!priceId) {
-    throw new Error("Stripe priceId ausente. Configure os IDs no .env.");
-  }
-
+export async function redirectToSubscriptionCheckout(
+  planId: string,
+  interval: BillingInterval,
+): Promise<void> {
   const { data, error } = await supabase.functions.invoke("stripe-checkout", {
     body: {
-      action: "create",
-      priceId,
-      successPath: "/account/billing",
-      cancelPath: "/pricing",
+      planId,
+      interval,
     },
   });
 
@@ -106,78 +89,6 @@ export async function redirectToCheckout(priceId: string): Promise<void> {
 
   if (!data?.url) {
     throw new Error("Checkout inválido: URL não retornada.");
-  }
-
-  window.location.href = data.url;
-}
-
-export async function createEmbeddedCheckoutSession(
-  priceId: string,
-  options: CreateCheckoutSessionOptions = {},
-): Promise<{ clientSecret: string; sessionId: string }> {
-  if (!priceId) {
-    throw new Error("Stripe priceId ausente. Configure os IDs no .env.");
-  }
-
-  const { data, error } = await supabase.functions.invoke("stripe-checkout", {
-    body: {
-      action: "create_embedded",
-      priceId,
-      returnPath: options.returnPath || "/account/checkout",
-      successPath: options.successPath,
-      cancelPath: options.cancelPath,
-    },
-  });
-
-  if (error) {
-    throw new Error(`Falha ao iniciar checkout embutido: ${error.message}`);
-  }
-
-  if (!data?.clientSecret || !data?.sessionId) {
-    throw new Error("Checkout embutido inválido: clientSecret/sessionId não retornados.");
-  }
-
-  return { clientSecret: data.clientSecret as string, sessionId: data.sessionId as string };
-}
-
-export async function getCheckoutSessionStatus(checkoutSessionId: string): Promise<{
-  status: string | null;
-  paymentStatus: string | null;
-  subscriptionStatus: string | null;
-}> {
-  if (!checkoutSessionId) {
-    throw new Error("checkoutSessionId é obrigatório.");
-  }
-
-  const { data, error } = await supabase.functions.invoke("stripe-checkout", {
-    body: {
-      action: "session_status",
-      checkoutSessionId,
-    },
-  });
-
-  if (error) {
-    throw new Error(`Falha ao consultar status da sessão Stripe: ${error.message}`);
-  }
-
-  return {
-    status: data?.status ?? null,
-    paymentStatus: data?.paymentStatus ?? null,
-    subscriptionStatus: data?.subscriptionStatus ?? null,
-  };
-}
-
-export async function redirectToCustomerPortal(): Promise<void> {
-  const { data, error } = await supabase.functions.invoke("stripe-customer-portal", {
-    body: {},
-  });
-
-  if (error) {
-    throw new Error(`Falha ao abrir portal Stripe: ${error.message}`);
-  }
-
-  if (!data?.url) {
-    throw new Error("Portal inválido: URL não retornada.");
   }
 
   window.location.href = data.url;
@@ -212,9 +123,16 @@ export async function getCreditWallet(): Promise<{
   totalConsumidos: number;
 }> {
   const { data, error } = await (supabase
-    .from("report_credit_wallets" as any)
+    .from("report_credit_wallets" as never)
     .select("saldo_creditos, total_comprados, total_consumidos")
-    .maybeSingle() as any);
+    .maybeSingle() as Promise<{
+      data: {
+        saldo_creditos?: number | null;
+        total_comprados?: number | null;
+        total_consumidos?: number | null;
+      } | null;
+      error: { message: string } | null;
+    }>);
 
   if (error) {
     throw new Error(`Falha ao carregar carteira de créditos: ${error.message}`);

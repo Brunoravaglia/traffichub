@@ -4,6 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
+import { useEffect, useState } from "react";
+import { useGestor } from "@/contexts/GestorContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const accountLinks = [
     {
@@ -26,10 +30,58 @@ const accountLinks = [
 
 const AccountPage = () => {
     const navigate = useNavigate();
+    const { gestor, refreshGestor, logout } = useGestor();
+    const [email, setEmail] = useState("");
+    const [nome, setNome] = useState("");
+    const [telefone, setTelefone] = useState("");
+    const [cpf, setCpf] = useState("");
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        if (gestor) {
+            setNome(gestor.nome || "");
+            setTelefone(gestor.telefone || "");
+            setCpf(gestor.cpf || "");
+        }
+
+        supabase.auth.getUser().then(({ data }) => {
+            setEmail(data.user?.email || "");
+        });
+    }, [gestor]);
+
+    const handleSave = async () => {
+        if (!gestor) return;
+
+        setSaving(true);
+        const { error } = await supabase
+            .from("gestores")
+            .update({
+                nome: nome.trim(),
+                telefone: telefone.trim() || null,
+                cpf: cpf.trim() || null,
+            })
+            .eq("id", gestor.id);
+
+        setSaving(false);
+
+        if (error) {
+            toast({
+                title: "Erro ao salvar perfil",
+                description: error.message,
+                variant: "destructive",
+            });
+            return;
+        }
+
+        await refreshGestor();
+        toast({
+            title: "Perfil atualizado",
+            description: "Seus dados de cobranca foram salvos.",
+        });
+    };
 
     return (
         <div className="max-w-3xl mx-auto py-8 px-4 space-y-8">
-            {/* Header */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -39,7 +91,6 @@ const AccountPage = () => {
                 <p className="text-sm text-muted-foreground">Gerencie seu perfil, plano e configurações.</p>
             </motion.div>
 
-            {/* Profile Card */}
             <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -53,21 +104,34 @@ const AccountPage = () => {
                 <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                         <label className="text-xs text-muted-foreground mb-1 block">Nome</label>
-                        <Input defaultValue="Gestor Vurp" className="bg-card/60 border-border/50" />
+                        <Input value={nome} onChange={(e) => setNome(e.target.value)} className="bg-card/60 border-border/50" />
                     </div>
                     <div>
                         <label className="text-xs text-muted-foreground mb-1 block">Email</label>
-                        <Input defaultValue="gestor@agencia.com" disabled className="bg-card/40 border-border/30 text-muted-foreground" />
+                        <Input value={email} disabled className="bg-card/40 border-border/30 text-muted-foreground" />
                     </div>
+                    <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">Telefone</label>
+                        <Input value={telefone} onChange={(e) => setTelefone(e.target.value)} className="bg-card/60 border-border/50" />
+                    </div>
+                    {!gestor?.agencia_id ? (
+                        <div>
+                            <label className="text-xs text-muted-foreground mb-1 block">CPF para cobranca individual</label>
+                            <Input value={cpf} onChange={(e) => setCpf(e.target.value)} className="bg-card/60 border-border/50" />
+                        </div>
+                    ) : null}
                 </div>
                 <div className="flex justify-end mt-4">
-                    <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium">
-                        Salvar Alterações
+                    <Button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+                    >
+                        {saving ? "Salvando..." : "Salvar Alterações"}
                     </Button>
                 </div>
             </motion.div>
 
-            {/* Quick Links */}
             <div className="space-y-3">
                 {accountLinks.map((link, i) => (
                     <motion.div
@@ -93,7 +157,6 @@ const AccountPage = () => {
                 ))}
             </div>
 
-            {/* Danger zone */}
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -106,7 +169,14 @@ const AccountPage = () => {
                         <p className="text-sm text-foreground">Encerrar sessão</p>
                         <p className="text-xs text-muted-foreground">Sair da sua conta neste dispositivo</p>
                     </div>
-                    <Button variant="ghost" className="text-red-400 hover:text-red-300 hover:bg-red-500/10" onClick={() => navigate("/login")}>
+                    <Button
+                        variant="ghost"
+                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                        onClick={async () => {
+                            await logout();
+                            navigate("/login");
+                        }}
+                    >
                         <LogOut className="w-4 h-4 mr-2" />
                         Sair
                     </Button>
@@ -116,7 +186,6 @@ const AccountPage = () => {
     );
 };
 
-// Wrap with AppLayout for protected route
 const AccountPageWithLayout = () => (
     <AppLayout>
         <AccountPage />

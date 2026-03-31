@@ -17,6 +17,7 @@ interface Agencia {
   id: string;
   nome: string;
   slug: string;
+  cnpj: string | null;
   logo_url: string | null;
   logo_black_url: string | null;
   cor_primaria: string | null;
@@ -28,6 +29,7 @@ interface Gestor {
   nome: string;
   foto_url: string | null;
   telefone: string | null;
+  cpf: string | null;
   onboarding_completo: boolean;
   foto_preenchida: boolean;
   dados_completos: boolean;
@@ -60,6 +62,7 @@ type AuthenticateGestorLoginRow = {
   nome: string;
   foto_url: string | null;
   telefone: string | null;
+  cpf: string | null;
   onboarding_completo: boolean;
   foto_preenchida: boolean;
   dados_completos: boolean;
@@ -174,7 +177,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       supabase
         .from("gestores")
         .select(
-          "id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id"
+          "id, nome, foto_url, telefone, cpf, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id"
         )
         .eq("id", storedGestorId)
         .single()
@@ -271,6 +274,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
               nome: fullName,
               foto_url: avatarUrl,
               senha: "google-oauth",
+              cpf: null,
               dados_completos: false,
               foto_preenchida: !!avatarUrl,
               onboarding_completo: false,
@@ -502,6 +506,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         nome: gestorData.nome,
         foto_url: gestorData.foto_url,
         telefone: gestorData.telefone,
+        cpf: gestorData.cpf,
         onboarding_completo: gestorData.onboarding_completo,
         foto_preenchida: gestorData.foto_preenchida,
         dados_completos: gestorData.dados_completos,
@@ -515,6 +520,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         nome: gestorData.nome,
         foto_url: gestorData.foto_url,
         telefone: gestorData.telefone,
+        cpf: gestorData.cpf,
         onboarding_completo: gestorData.onboarding_completo,
         foto_preenchida: gestorData.foto_preenchida,
         dados_completos: gestorData.dados_completos,
@@ -667,8 +673,8 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
 
     const { data } = await supabase
       .from("gestores")
-      .select(
-        "id, nome, foto_url, telefone, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id"
+        .select(
+        "id, nome, foto_url, telefone, cpf, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id"
       )
       .eq("id", gestor.id)
       .single();

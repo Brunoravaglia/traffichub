@@ -8,26 +8,8 @@ const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
 const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 if (!abacateApiKey || !supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
-  throw new Error("Missing required environment variables for Abacate Pay checkout function.");
+  throw new Error("Missing required environment variables for Abacate Pay credit checkout function.");
 }
-
-const planCatalog: Record<string, { name: string; monthly: number; yearly: number }> = {
-  solo: {
-    name: "Plano Solo",
-    monthly: 2790,
-    yearly: 26784,
-  },
-  agency: {
-    name: "Plano Agencia",
-    monthly: 9700,
-    yearly: 93120,
-  },
-  "agency-pro": {
-    name: "Plano Agencia Pro",
-    monthly: 19700,
-    yearly: 189120,
-  },
-};
 
 type GestorRecord = {
   id: string;
@@ -109,25 +91,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { planId, interval } = await req.json();
+    const { credits } = await req.json();
+    const parsedCredits = Number(credits);
+    const creditsQty = Number.isInteger(parsedCredits) ? parsedCredits : 0;
 
-    if (typeof planId !== "string" || !["solo", "agency", "agency-pro"].includes(planId)) {
-      return new Response(JSON.stringify({ error: "planId inválido." }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (interval !== "monthly" && interval !== "yearly") {
-      return new Response(JSON.stringify({ error: "interval inválido." }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const plan = planCatalog[planId];
-    const amount = interval === "monthly" ? plan.monthly : plan.yearly;
-    const externalId = `plan:${gestor.id}:${planId}:${interval}:${Date.now()}`;
     const agencyDocument = gestor.agencia_id
       ? await adminClient.from("agencias").select("nome, cnpj").eq("id", gestor.agencia_id).maybeSingle()
       : null;
@@ -136,8 +103,8 @@ Deno.serve(async (req) => {
     if (!taxId) {
       return new Response(JSON.stringify({
         error: gestor.agencia_id
-          ? "Cadastre o CNPJ da agência antes de cobrar este plano."
-          : "Cadastre seu CPF na conta antes de iniciar o pagamento.",
+          ? "Cadastre o CNPJ da agência antes de comprar créditos."
+          : "Cadastre seu CPF na conta antes de comprar créditos.",
       }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -145,11 +112,20 @@ Deno.serve(async (req) => {
     }
 
     if (!gestor.telefone) {
-      return new Response(JSON.stringify({ error: "Cadastre um telefone antes de iniciar o pagamento." }), {
+      return new Response(JSON.stringify({ error: "Cadastre um telefone antes de comprar créditos." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    if (creditsQty <= 0 || creditsQty > 10000) {
+      return new Response(JSON.stringify({ error: "Quantidade de créditos inválida." }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const externalId = `credits:${gestor.id}:${creditsQty}:${Date.now()}`;
 
     const response = await fetch("https://api.abacatepay.com/v1/billing/create", {
       method: "POST",
@@ -162,58 +138,52 @@ Deno.serve(async (req) => {
         methods: ["PIX", "CARD"],
         products: [
           {
-            externalId: `vurp-${planId}-${interval}`,
-            name: `${plan.name} ${interval === "monthly" ? "Mensal" : "Anual"}`,
-            description: `Pagamento avulso do ${plan.name} no ciclo ${interval === "monthly" ? "mensal" : "anual"}`,
-            quantity: 1,
-            price: amount,
+            externalId: "vurp-report-credit",
+            name: "Credito de Relatorio Vurp",
+            description: "Credito avulso para geracao de relatorios",
+            quantity: creditsQty,
+            price: 100,
           },
         ],
-        returnUrl: `${appUrl}/pricing?abacate=cancel`,
-        completionUrl: `${appUrl}/account/billing?abacate=success`,
+        returnUrl: `${appUrl}/account/billing?credits=cancel`,
+        completionUrl: `${appUrl}/account/billing?credits=success`,
         customer: {
           name: gestor.agencia_id ? agencyDocument?.data?.nome ?? gestor.nome ?? "Agencia Vurp" : gestor.nome ?? "Gestor Vurp",
           cellphone: gestor.telefone,
           email: billingEmail,
           taxId,
         },
-        allowCoupons: true,
+        allowCoupons: false,
         externalId,
         metadata: {
           gestorId: gestor.id,
-          planId,
-          interval,
-          purchaseType: "plan",
+          creditsQty,
+          purchaseType: "report_credits",
         },
       }),
     });
 
     const payload = await response.json();
     if (!response.ok || !payload?.success || !payload?.data?.url) {
-      return new Response(JSON.stringify({ error: payload?.error ?? "Falha ao criar checkout no Abacate Pay." }), {
+      return new Response(JSON.stringify({ error: payload?.error ?? "Falha ao criar checkout de créditos no Abacate Pay." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    await adminClient.from("assinaturas").upsert(
+    return new Response(
+      JSON.stringify({
+        url: payload.data.url,
+        checkoutId: payload.data.id,
+      }),
       {
-        gestor_id: gestor.id,
-        plano_id: planId,
-        status: "pending",
-        abacate_checkout_id: payload.data.id ?? null,
-        updated_at: new Date().toISOString(),
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
-      { onConflict: "gestor_id" },
     );
-
-    return new Response(JSON.stringify({ url: payload.data.url, checkoutId: payload.data.id }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
   } catch (error) {
-    console.error("abacatepay-checkout error", error);
-    return new Response(JSON.stringify({ error: "Failed to create Abacate Pay checkout" }), {
+    console.error("abacatepay-credit-checkout error", error);
+    return new Response(JSON.stringify({ error: "Failed to create Abacate Pay credit checkout" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

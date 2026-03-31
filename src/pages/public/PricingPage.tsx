@@ -4,7 +4,7 @@ import { Check, Zap, Star, Crown, Calculator, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import PublicLayout from "@/components/home/PublicLayout";
-import { PLANS, formatPrice } from "@/lib/stripe";
+import { PLANS, formatPrice, redirectToSubscriptionCheckout } from "@/lib/billing";
 import SEOHead from "@/components/SEOHead";
 import { toast } from "@/hooks/use-toast";
 
@@ -162,17 +162,8 @@ const PricingPage = () => {
 
                                     <Button
                                         onClick={async () => {
-                                            const priceId = annual ? plan.stripePriceIdYearly : plan.stripePriceIdMonthly;
-                                            if (!priceId) {
-                                                toast({
-                                                    title: "Plano sem Price ID",
-                                                    description: "Configure os IDs de preço da Stripe no ambiente.",
-                                                    variant: "destructive",
-                                                });
-                                                return;
-                                            }
                                             try {
-                                                window.location.href = `/account/checkout?priceId=${encodeURIComponent(priceId)}`;
+                                                await redirectToSubscriptionCheckout(plan.id, annual ? "yearly" : "monthly");
                                             } catch (err) {
                                                 toast({
                                                     title: "Erro ao abrir checkout",

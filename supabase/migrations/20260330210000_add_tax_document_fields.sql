@@ -1,0 +1,5 @@
+ALTER TABLE public.gestores
+ADD COLUMN IF NOT EXISTS cpf TEXT;
+
+ALTER TABLE public.agencias
+ADD COLUMN IF NOT EXISTS cnpj TEXT;

@@ -19,10 +19,10 @@ const releases: ReleaseItem[] = [
         version: "v1.6.0",
         date: "Março 08, 2026",
         title: "Billing interno + Observabilidade + Base para escala comercial",
-        description: "Nova etapa de maturidade da plataforma com checkout interno da Stripe, instrumentação da Vercel e ajustes para operação comercial mais estável.",
+        description: "Nova etapa de maturidade da plataforma com checkout via Abacate Pay, instrumentação da Vercel e ajustes para operação comercial mais estável.",
         type: "feature",
         items: [
-            "Checkout interno com Stripe Embedded Checkout para contratação e upgrade de planos sem sair da plataforma.",
+            "Checkout via Abacate Pay para contratação e upgrade de planos com fluxo mais simples de cobrança.",
             "Nova rota dedicada de cobrança para assinatura com melhor continuidade entre pricing, conta e pagamento.",
             "Integração de Vercel Analytics para leitura real de tráfego e comportamento nas páginas públicas e no app.",
             "Integração de Vercel Speed Insights para acompanhar performance real em produção e reduzir gargalos de carregamento.",

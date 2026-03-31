@@ -24,7 +24,7 @@ const faqs: FAQ[] = [
     { category: "Planos", question: "Qual a diferença entre Agência e Agência Pro?", answer: "O plano Agência suporta até 3 gestores, enquanto o Pro suporta até 5 gestores e inclui monitoramento de tempo e controle de acessos da equipe." },
     { category: "Planos", question: "Existe desconto para plano anual?", answer: "Sim! No plano anual você economiza 20% comparado ao pagamento mensal. O desconto é aplicado automaticamente na página de preços." },
     // Pagamento
-    { category: "Pagamento", question: "Quais formas de pagamento são aceitas?", answer: "Aceitamos cartão de crédito (Visa, Mastercard, Elo, Amex), PIX e boleto bancário. Os pagamentos são processados de forma segura via Stripe." },
+    { category: "Pagamento", question: "Quais formas de pagamento são aceitas?", answer: "Aceitamos cartão de crédito e PIX. Os pagamentos são processados de forma segura via Abacate Pay." },
     { category: "Pagamento", question: "Como funciona o cancelamento?", answer: "Você pode cancelar a qualquer momento diretamente pelo painel de configurações da sua conta. Não há fidelidade ou multa por cancelamento. Seu acesso continua até o fim do período pago." },
     { category: "Pagamento", question: "Emitem nota fiscal?", answer: "Sim, emitimos nota fiscal para todos os planos. A nota é enviada automaticamente para o email cadastrado após a confirmação do pagamento." },
     // Técnico
