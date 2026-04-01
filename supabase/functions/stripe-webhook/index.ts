@@ -1,5 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
+import {
+  buildCreditsPurchasedEmail,
+  buildPlanActivatedEmail,
+  sendTransactionalEmail,
+} from "../_shared/email.ts";
 
 const abacateWebhookSecret = Deno.env.get("ABACATEPAY_WEBHOOK_SECRET");
 const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -75,7 +80,7 @@ async function addCredits(gestorId: string, creditsQty: number, checkoutId: stri
     .limit(1);
 
   if (existingTx && existingTx.length > 0) {
-    return;
+    return false;
   }
 
   await adminClient.rpc("add_report_credits", {
@@ -88,6 +93,28 @@ async function addCredits(gestorId: string, creditsQty: number, checkoutId: stri
       abacatepay_checkout_id: checkoutId,
     },
   });
+
+  return true;
+}
+
+async function getGestorContact(gestorId: string) {
+  const [{ data: gestor }, authResult] = await Promise.all([
+    adminClient.from("gestores").select("id, nome, agencia_id").eq("id", gestorId).maybeSingle(),
+    adminClient.auth.admin.getUserById(gestorId),
+  ]);
+
+  if (!gestor || authResult.error || !authResult.data.user?.email) {
+    return null;
+  }
+
+  const agencyName = gestor.agencia_id
+    ? await adminClient.from("agencias").select("nome").eq("id", gestor.agencia_id).maybeSingle()
+    : null;
+
+  return {
+    email: authResult.data.user.email,
+    name: agencyName?.data?.nome ?? gestor.nome ?? "Gestor Vurp",
+  };
 }
 
 Deno.serve(async (req) => {
@@ -126,6 +153,12 @@ Deno.serve(async (req) => {
     }
 
     if (parsed.kind === "plan") {
+      const { data: existingSubscription } = await adminClient
+        .from("assinaturas")
+        .select("status, abacate_checkout_id")
+        .eq("gestor_id", parsed.gestorId)
+        .maybeSingle();
+
       const status = data.status?.toUpperCase() === "PAID" || event === "billing.paid"
         ? "active"
         : "pending";
@@ -140,11 +173,50 @@ Deno.serve(async (req) => {
         },
         { onConflict: "gestor_id" },
       );
+
+      const shouldSendPlanEmail = status === "active" &&
+        (existingSubscription?.status !== "active" || existingSubscription?.abacate_checkout_id !== data.id);
+
+      if (shouldSendPlanEmail) {
+        const contact = await getGestorContact(parsed.gestorId);
+        if (contact) {
+          const intervalLabel = parsed.interval === "yearly" ? "anual" : "mensal";
+          const planNameMap: Record<string, string> = {
+            solo: "Solo",
+            agency: "Agencia",
+            "agency-pro": "Agencia Pro",
+          };
+          const email = buildPlanActivatedEmail(contact.name, planNameMap[parsed.planId] ?? parsed.planId, intervalLabel);
+          await sendTransactionalEmail({
+            to: contact.email,
+            subject: email.subject,
+            html: email.html,
+            tags: [
+              { name: "flow", value: "plan_activated" },
+              { name: "plan", value: parsed.planId },
+            ],
+          });
+        }
+      }
     }
 
     if (parsed.kind === "credits" && Number.isInteger(parsed.creditsQty) && parsed.creditsQty > 0) {
       if (event === "checkout.paid" || data.status?.toUpperCase() === "PAID") {
-        await addCredits(parsed.gestorId, parsed.creditsQty, data.id);
+        const creditsAdded = await addCredits(parsed.gestorId, parsed.creditsQty, data.id);
+        if (creditsAdded) {
+          const contact = await getGestorContact(parsed.gestorId);
+          if (contact) {
+            const email = buildCreditsPurchasedEmail(contact.name, parsed.creditsQty);
+            await sendTransactionalEmail({
+              to: contact.email,
+              subject: email.subject,
+              html: email.html,
+              tags: [
+                { name: "flow", value: "credits_purchase" },
+              ],
+            });
+          }
+        }
       }
     }
 

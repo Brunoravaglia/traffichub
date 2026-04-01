@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import PublicLayout from "@/components/home/PublicLayout";
 import { Link } from "react-router-dom";
 import SEOHead from "@/components/SEOHead";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const topics = [
     "Dúvida sobre planos",
@@ -32,12 +34,28 @@ const SupportPage = () => {
     const [topic, setTopic] = useState("");
     const [message, setMessage] = useState("");
     const [sent, setSent] = useState(false);
+    const [sending, setSending] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: integrate with email service/Supabase
-        console.log("Support form:", { name, email, topic, message });
+        setSending(true);
+
+        const { error } = await supabase.functions.invoke("support-contact", {
+            body: { name, email, topic, message },
+        });
+
+        setSending(false);
+
+        if (error) {
+            toast.error(error.message || "Nao foi possivel enviar sua mensagem.");
+            return;
+        }
+
         setSent(true);
+        setName("");
+        setEmail("");
+        setTopic("");
+        setMessage("");
     };
 
     return (
@@ -141,9 +159,9 @@ const SupportPage = () => {
                                         />
                                     </div>
 
-                                    <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
+                                    <Button type="submit" disabled={sending} className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
                                         <Send className="w-4 h-4 mr-2" />
-                                        Enviar Mensagem
+                                        {sending ? "Enviando..." : "Enviar Mensagem"}
                                     </Button>
                                 </form>
                             )}

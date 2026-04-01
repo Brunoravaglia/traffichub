@@ -15,13 +15,19 @@ Configure:
 - `ABACATEPAY_API_KEY`
 - `ABACATEPAY_WEBHOOK_SECRET`
 - `APP_URL`
+- `RESEND_API_KEY`
+- `RESEND_FROM_EMAIL`
+- `SUPPORT_INBOX_EMAIL`
 
 Exemplo:
 
 ```bash
 supabase secrets set ABACATEPAY_API_KEY=abc_dev_...
 supabase secrets set ABACATEPAY_WEBHOOK_SECRET=...
-supabase secrets set APP_URL=https://vurp.vercel.app
+supabase secrets set APP_URL=https://vurp.space
+supabase secrets set RESEND_API_KEY=re_...
+supabase secrets set RESEND_FROM_EMAIL="Vurp <noreply@vurp.space>"
+supabase secrets set SUPPORT_INBOX_EMAIL=suporte@vurp.com.br
 ```
 
 ## 2) Deploy das Edge Functions
@@ -30,11 +36,14 @@ supabase secrets set APP_URL=https://vurp.vercel.app
 supabase functions deploy stripe-checkout
 supabase functions deploy stripe-credit-checkout
 supabase functions deploy stripe-webhook
+supabase functions deploy signup-with-rate-limit
+supabase functions deploy support-contact
 ```
 
 Nota:
 - os nomes das functions continuam legados para evitar quebrar o app
 - internamente elas ja usam Abacate Pay
+- emails transacionais sao enviados via Resend no cadastro, pagamento aprovado, compra de creditos e suporte
 
 ## 3) Webhook no Abacate Pay
 
