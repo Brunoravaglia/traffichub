@@ -1,27 +1,3 @@
-ALTER TABLE public.gestores
-ADD COLUMN IF NOT EXISTS account_type TEXT;
-
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1
-    FROM pg_constraint
-    WHERE conname = 'gestores_account_type_check'
-  ) THEN
-    ALTER TABLE public.gestores
-    ADD CONSTRAINT gestores_account_type_check
-    CHECK (account_type IS NULL OR account_type IN ('solo', 'agency_owner', 'agency_member'));
-  END IF;
-END $$;
-
-UPDATE public.gestores
-SET account_type = CASE
-  WHEN agencia_id IS NOT NULL THEN 'agency_owner'
-  ELSE 'solo'
-END
-WHERE account_type IS NULL
-  AND created_at < timezone('utc', now()) - interval '5 minutes';
-
 DROP FUNCTION IF EXISTS public.authenticate_gestor_login(UUID, TEXT);
 
 CREATE FUNCTION public.authenticate_gestor_login(
