@@ -4,16 +4,16 @@ import GestorLogin from "@/components/GestorLogin";
 import { useGestor } from "@/contexts/GestorContext";
 
 const Login = () => {
-    const { isLoggedIn } = useGestor();
+    const { isLoggedIn, isAuthLoading } = useGestor();
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (isLoggedIn) {
+        if (!isAuthLoading && isLoggedIn) {
             navigate("/dashboard");
         }
-    }, [isLoggedIn, navigate]);
+    }, [isAuthLoading, isLoggedIn, navigate]);
 
-    if (isLoggedIn) {
+    if (isAuthLoading || isLoggedIn) {
         return null;
     }
 
