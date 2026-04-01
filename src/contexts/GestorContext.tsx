@@ -46,6 +46,7 @@ interface GestorContextType {
   sessionStartTime: Date | null;
   sessionDuration: number;
   isLoggedIn: boolean;
+  isAuthLoading: boolean;
   isFirstLogin: boolean;
   login: (gestorId: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
@@ -88,6 +89,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const [sessionDuration, setSessionDuration] = useState(0);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const lastSavedDurationRef = useRef<number>(0);
   const saveIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const oauthSyncInProgressRef = useRef(false);
@@ -245,6 +247,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       try {
         const currentLocalGestor = readLegacyAuthValue("vcd_gestor_id");
         if (currentLocalGestor === sessionUser.id && readLegacyAuthValue("vcd_session_id")) {
+          setIsAuthLoading(false);
           return;
         }
 
@@ -287,6 +290,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
 
           if (upsertError) {
             console.error("[Session] Failed to upsert new gestor:", upsertError);
+            setIsAuthLoading(false);
             return;
           }
           console.log("[Session] Successfully created gestor record");
@@ -303,6 +307,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
 
         if (finalFetchError || !finalGestor) {
           console.error("[Session] Error fetching gestor after sync:", finalFetchError);
+          setIsAuthLoading(false);
           return;
         }
 
@@ -314,6 +319,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
 
         if (localSessionError || !sessionData) {
           console.error("[Session] Failed to create local gestor session:", localSessionError);
+          setIsAuthLoading(false);
           return;
         }
 
@@ -342,6 +348,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         }
 
         if (shouldRedirectFromPublic) {
+          setIsAuthLoading(false);
           window.location.replace("/dashboard");
           return;
         }
@@ -362,12 +369,14 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         console.error("[Session] Error syncing Supabase Auth:", err);
       } finally {
         oauthSyncInProgressRef.current = false;
+        setIsAuthLoading(false);
       }
     };
 
     // Auth listener for Supabase Auth (Google OAuth)
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if ((event === "INITIAL_SESSION" || event === "SIGNED_IN") && session?.user) {
+        setIsAuthLoading(true);
         await syncSupabaseOAuthSession(session.user as unknown as { id: string; email?: string; user_metadata?: Record<string, unknown> });
       } else if (event === "SIGNED_OUT") {
         setGestor(null);
@@ -381,13 +390,17 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         sessionStorage.removeItem("vcd_unlocked");
         removeLegacyAuthValue(GESTOR_PROFILE_KEY);
         removeLegacyAuthValue(AGENCY_PROFILE_KEY);
+        setIsAuthLoading(false);
       }
     });
 
     // Also sync immediately in case the session is already present after redirect
     supabase.auth.getSession().then(({ data }) => {
       if (data.session?.user) {
+        setIsAuthLoading(true);
         syncSupabaseOAuthSession(data.session.user as unknown as { id: string; email?: string; user_metadata?: Record<string, unknown> });
+      } else {
+        setIsAuthLoading(false);
       }
     });
 
@@ -709,6 +722,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         sessionStartTime,
         sessionDuration,
         isLoggedIn: !!gestor,
+        isAuthLoading,
         isFirstLogin,
         login,
         logout,

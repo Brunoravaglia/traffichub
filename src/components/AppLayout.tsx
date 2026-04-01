@@ -27,7 +27,7 @@ interface AppLayoutProps {
 }
 
 const AppLayout = ({ children }: AppLayoutProps) => {
-  const { gestor, isLoggedIn, logout, refreshGestor, sessionId } = useGestor();
+  const { gestor, isLoggedIn, isAuthLoading, logout, refreshGestor, sessionId } = useGestor();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [showWelcome, setShowWelcome] = useState(false);
@@ -38,7 +38,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const [isPaused, setIsPaused] = useState(false);
   const [bootstrapDelayDone, setBootstrapDelayDone] = useState(false);
   const hasStoredGestor = typeof window !== "undefined" && !!readLegacyAuthValue("vcd_gestor_id");
-  const isAuthBootstrapping = !isLoggedIn && hasStoredGestor && !bootstrapDelayDone;
+  const isAuthBootstrapping = isAuthLoading || (!isLoggedIn && hasStoredGestor && !bootstrapDelayDone);
 
   // Achievements hook
   const { newlyUnlocked, dismissNewlyUnlocked } = useAchievements();
@@ -74,12 +74,12 @@ const AppLayout = ({ children }: AppLayoutProps) => {
     }
 
     await logout();
-    navigate("/");
+    navigate("/login");
   }, [logout, navigate, sessionId]);
 
   useEffect(() => {
     if (!isLoggedIn && !isAuthBootstrapping) {
-      navigate("/");
+      navigate("/login");
     }
   }, [isLoggedIn, isAuthBootstrapping, navigate]);
 
@@ -103,7 +103,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
   const handleLogout = async () => {
     await logout();
-    navigate("/");
+    navigate("/login");
   };
 
   const handleCloseWelcome = async (dontShowAgain: boolean) => {

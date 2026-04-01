@@ -4,7 +4,7 @@ import GestorLogin from "@/components/GestorLogin";
 import { useGestor } from "@/contexts/GestorContext";
 
 const Login = () => {
-    const { isLoggedIn, clearAgencySelection } = useGestor();
+    const { isLoggedIn, isAuthLoading, clearAgencySelection } = useGestor();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const shouldResetAgency = searchParams.get("resetAgency") === "1";
@@ -19,12 +19,12 @@ const Login = () => {
     }, [clearAgencySelection, navigate, shouldResetAgency]);
 
     useEffect(() => {
-        if (isLoggedIn) {
+        if (!isAuthLoading && isLoggedIn) {
             navigate("/dashboard");
         }
-    }, [isLoggedIn, navigate]);
+    }, [isAuthLoading, isLoggedIn, navigate]);
 
-    if (isLoggedIn) {
+    if (isAuthLoading || isLoggedIn) {
         return null;
     }
 
