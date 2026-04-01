@@ -4,6 +4,7 @@ import {
   BarChart3,
   Briefcase,
   Calendar,
+  CreditCard,
   ChevronDown,
   FileText,
   Flame,
@@ -134,6 +135,7 @@ const MobileDockNav = () => {
           ...(gestor?.is_admin
             ? [{ label: "Config. Agência", path: "/agencia/configuracoes", icon: Settings }]
             : []),
+          { label: "Pagamento e Plano", path: "/account/billing", icon: CreditCard },
           { label: "Configuração Pessoal", path: "/configuracoes", icon: Settings },
         ],
       },

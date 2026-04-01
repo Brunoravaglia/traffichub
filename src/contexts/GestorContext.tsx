@@ -331,6 +331,20 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         writeLegacyAuthValue("vcd_session_start", now.toISOString());
         sessionStorage.setItem("vcd_unlocked", "true");
 
+        const postAuthRedirect = sessionStorage.getItem("vurp_post_auth_redirect");
+        const currentPath = window.location.pathname;
+        const shouldRedirectFromPublic = ["/", "/login", "/signup"].includes(currentPath);
+        if (postAuthRedirect && currentPath !== postAuthRedirect) {
+          sessionStorage.removeItem("vurp_post_auth_redirect");
+          window.location.replace(postAuthRedirect);
+          return;
+        }
+
+        if (shouldRedirectFromPublic) {
+          window.location.replace("/dashboard");
+          return;
+        }
+
         if (finalGestor.agencia_id) {
           const { data: agencyData } = await supabase
             .from("agencias")
