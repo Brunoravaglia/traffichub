@@ -13,6 +13,20 @@ export interface PlanInfo {
   features: string[];
 }
 
+export interface BillingOverview {
+  subscription: {
+    planId: string;
+    status: string;
+  };
+  wallet: {
+    saldoCreditos: number;
+    totalComprados: number;
+    totalConsumidos: number;
+  };
+  freeReportsRemaining: number;
+  reportsGenerated: number;
+}
+
 export const PLANS: PlanInfo[] = [
   {
     id: "solo",
@@ -142,6 +156,74 @@ export async function getCreditWallet(): Promise<{
     saldoCreditos: data?.saldo_creditos ?? 0,
     totalComprados: data?.total_comprados ?? 0,
     totalConsumidos: data?.total_consumidos ?? 0,
+  };
+}
+
+export async function getBillingOverview(gestorId?: string | null): Promise<BillingOverview> {
+  const wallet = await getCreditWallet();
+
+  const { data: subscriptionData, error: subscriptionError } = await (supabase
+    .from("assinaturas" as never)
+    .select("plano_id, status")
+    .maybeSingle() as Promise<{
+      data: {
+        plano_id?: string | null;
+        status?: string | null;
+      } | null;
+      error: { message: string } | null;
+    }>);
+
+  if (subscriptionError) {
+    throw new Error(`Falha ao carregar assinatura: ${subscriptionError.message}`);
+  }
+
+  let reportsGenerated = 0;
+  if (gestorId) {
+    const { data: clients, error: clientsError } = await (supabase
+      .from("clientes" as never)
+      .select("id")
+      .eq("gestor_id", gestorId) as Promise<{
+        data: Array<{ id: string }> | null;
+        error: { message: string } | null;
+      }>);
+
+    if (clientsError) {
+      throw new Error(`Falha ao carregar clientes para billing: ${clientsError.message}`);
+    }
+
+    const clientIds = (clients ?? []).map((client) => client.id);
+    if (clientIds.length > 0) {
+      const [relatorios, legacyReports] = await Promise.all([
+        supabase
+          .from("relatorios" as never)
+          .select("id", { count: "exact", head: true })
+          .in("cliente_id", clientIds) as Promise<{ count: number | null; error: { message: string } | null }>,
+        supabase
+          .from("client_reports" as never)
+          .select("id", { count: "exact", head: true })
+          .in("cliente_id", clientIds) as Promise<{ count: number | null; error: { message: string } | null }>,
+      ]);
+
+      if (relatorios.error) {
+        throw new Error(`Falha ao contar relatórios: ${relatorios.error.message}`);
+      }
+
+      if (legacyReports.error) {
+        throw new Error(`Falha ao contar relatórios legados: ${legacyReports.error.message}`);
+      }
+
+      reportsGenerated = (relatorios.count ?? 0) + (legacyReports.count ?? 0);
+    }
+  }
+
+  return {
+    subscription: {
+      planId: subscriptionData?.plano_id ?? "free",
+      status: subscriptionData?.status ?? "active",
+    },
+    wallet,
+    freeReportsRemaining: Math.max(0, 3 - reportsGenerated),
+    reportsGenerated,
   };
 }
 

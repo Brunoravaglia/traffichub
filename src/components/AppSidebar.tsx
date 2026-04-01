@@ -17,6 +17,7 @@ import {
   Calendar,
   Sparkles,
   Link2,
+  CreditCard,
 } from "lucide-react";
 import { useGestor } from "@/contexts/GestorContext";
 import {
@@ -105,6 +106,7 @@ const AppSidebar = () => {
       ...(gestor?.is_admin
         ? [{ title: "Config. Agência", icon: Settings, path: "/agencia/configuracoes" }]
         : []),
+      { title: "Pagamento e Plano", icon: CreditCard, path: "/account/billing" },
       { title: "Configuração Pessoal", icon: Settings, path: "/configuracoes" },
     ],
   };

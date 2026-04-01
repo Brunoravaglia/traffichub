@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Users, BarChart3, Briefcase, TrendingUp, AlertCircle, FileText, DollarSign, Gauge, Target, ClipboardCheck, ShieldCheck, BookOpen } from "lucide-react";
+import { Plus, Users, BarChart3, Briefcase, TrendingUp, AlertCircle, FileText, DollarSign, Gauge, Target, ClipboardCheck, ShieldCheck, BookOpen, CreditCard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { endOfWeek, format, startOfMonth, endOfMonth, startOfWeek } from "date-fns";
@@ -11,6 +11,7 @@ import { useGestor } from "@/contexts/GestorContext";
 import { blogPosts } from "@/data/blogPosts";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { formatPrice, getBillingOverview, PLANS } from "@/lib/billing";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -52,6 +53,15 @@ const Dashboard = () => {
       })
       .slice(0, 5);
   }, []);
+
+  const { data: billingOverview } = useQuery({
+    queryKey: ["billing-overview", gestor?.id],
+    queryFn: () => getBillingOverview(gestor?.id),
+    enabled: !!gestor?.id,
+  });
+
+  const currentPlan = PLANS.find((plan) => plan.id === billingOverview?.subscription.planId);
+  const isFreePlan = (billingOverview?.subscription.planId ?? "free") === "free";
 
   // Fetch stats
   const { data: stats } = useQuery({
@@ -386,6 +396,62 @@ const Dashboard = () => {
         </motion.div>
 
         <div className="grid lg:grid-cols-2 gap-4">
+          <motion.div variants={itemVariants} className="vcd-card bg-gradient-to-br from-violet-500/10 to-transparent border-violet-500/20">
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-violet-400" />
+                  Pagamento e Plano
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {isFreePlan
+                    ? "Sua conta esta no plano gratis. Assine para liberar operacao sem limite de relatorios."
+                    : "Seu faturamento e plano agora ficam a um clique daqui."}
+                </p>
+              </div>
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full border bg-violet-500/10 text-violet-300 border-violet-400/20">
+                {isFreePlan ? "Free" : currentPlan?.name ?? "Pago"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="rounded-lg border border-border bg-background/70 p-3">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Plano atual</p>
+                <p className="text-lg font-bold text-foreground">{isFreePlan ? "Gratis" : currentPlan?.name ?? "Ativo"}</p>
+              </div>
+              <div className="rounded-lg border border-border bg-background/70 p-3">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Creditos</p>
+                <p className="text-lg font-bold text-foreground">{billingOverview?.wallet.saldoCreditos ?? 0}</p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-4 mb-4">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Contador visivel da conta gratis</p>
+              <p className="text-2xl font-bold text-foreground">
+                {isFreePlan ? `${billingOverview?.freeReportsRemaining ?? 3} relatorios gratis restantes` : "Relatorios ilimitados"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {isFreePlan
+                  ? `Ja foram gerados ${billingOverview?.reportsGenerated ?? 0} relatorios nessa conta. Depois dos 3 gratis, cada novo relatorio usa 1 credito.`
+                  : "Seu plano pago nao consome creditos para gerar relatorios."}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" onClick={() => navigate("/account/billing")}>
+                Abrir faturamento
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => navigate("/account/plan")}>
+                {isFreePlan ? "Assinar agora" : "Trocar de plano"}
+              </Button>
+              {isFreePlan ? (
+                <Button size="sm" variant="ghost" onClick={() => navigate("/pricing")}>
+                  Ver precos
+                </Button>
+              ) : null}
+            </div>
+          </motion.div>
+
           <motion.div variants={itemVariants} className="vcd-card bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
             <div className="flex items-start justify-between gap-3 mb-4">
               <div>
@@ -513,6 +579,24 @@ const Dashboard = () => {
             </div>
             <p className="text-2xl font-bold text-foreground">{stats?.totalRelatorios || 0}</p>
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Relatórios (Mês)</p>
+          </motion.div>
+
+          <motion.div
+            variants={itemVariants}
+            onClick={() => navigate("/account/billing")}
+            className="vcd-card group hover:border-violet-500/30 transition-all duration-300 cursor-pointer p-4 bg-gradient-to-br from-violet-500/5 to-transparent"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <CreditCard className="w-5 h-5 text-violet-400" />
+              </div>
+            </div>
+            <p className="text-xl font-bold text-foreground">
+              {isFreePlan ? `${billingOverview?.freeReportsRemaining ?? 3}` : formatPrice(currentPlan?.priceMonthly ?? 0)}
+            </p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
+              {isFreePlan ? "Relatórios Free Restantes" : "Plano Atual"}
+            </p>
           </motion.div>
 
           <motion.div

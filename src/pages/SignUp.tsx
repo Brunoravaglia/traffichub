@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
 import VCDLogo from "@/components/VCDLogo";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const benefits = [
     "7 dias grátis, sem cartão de crédito",
@@ -26,6 +27,7 @@ const SignUp = () => {
 
     const handleGoogleLogin = async () => {
         setGoogleLoading(true);
+        sessionStorage.setItem("vurp_post_auth_redirect", "/dashboard");
         const { error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
@@ -46,18 +48,34 @@ const SignUp = () => {
         }
 
         setLoading(true);
-        const { error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: { data: { name } },
+        const { data, error } = await supabase.functions.invoke("signup-with-rate-limit", {
+            body: {
+                name,
+                email,
+                password,
+            },
         });
-        if (error) {
-            console.error("SignUp error:", error.message);
+
+        if (error || data?.error) {
+            const message = data?.error || error?.message || "Não foi possível concluir o cadastro.";
+            console.error("SignUp error:", message);
+            toast({
+                title: "Erro no cadastro",
+                description: message,
+                variant: "destructive",
+            });
             setLoading(false);
             return;
         }
+
+        toast({
+            title: "Cadastro iniciado",
+            description: data?.needsEmailConfirmation
+                ? "Confirme seu email para continuar."
+                : "Conta criada com sucesso.",
+        });
         setLoading(false);
-        navigate("/pricing");
+        navigate(data?.needsEmailConfirmation ? "/login" : "/dashboard");
     };
 
     return (

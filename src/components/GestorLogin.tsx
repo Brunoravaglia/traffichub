@@ -14,6 +14,7 @@ import {
 import VCDLogo from "./VCDLogo";
 import { supabase } from "@/integrations/supabase/client";
 import { useGestor } from "@/contexts/GestorContext";
+import { removeLegacyAuthValue } from "@/lib/legacySessionStorage";
 
 interface GestorOption {
   id: string;
@@ -105,6 +106,7 @@ const GestorLogin = () => {
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
+    sessionStorage.setItem("vurp_post_auth_redirect", "/dashboard");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
@@ -205,7 +207,7 @@ const GestorLogin = () => {
                       size="sm"
                       className="text-xs text-zinc-400 hover:text-white h-auto p-0 transition-colors"
                       onClick={() => {
-                        sessionStorage.removeItem("vurp_agency_slug");
+                        removeLegacyAuthValue("vurp_agency_slug");
                         window.location.reload();
                       }}
                     >

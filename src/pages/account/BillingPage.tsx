@@ -2,19 +2,12 @@ import { motion } from "framer-motion";
 import { CreditCard, Calendar, FileText, ExternalLink, AlertCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AppLayout from "@/components/AppLayout";
-import { formatPrice, getCreditWallet, redirectToCreditCheckout } from "@/lib/billing";
+import { formatPrice, getBillingOverview, redirectToCreditCheckout, PLANS } from "@/lib/billing";
 import { toast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useGestor } from "@/contexts/GestorContext";
-
-const invoices = [
-    { date: "01/02/2026", amount: 97, status: "Pago", id: "INV-2026-0201" },
-    { date: "01/01/2026", amount: 97, status: "Pago", id: "INV-2026-0101" },
-    { date: "01/12/2025", amount: 97, status: "Pago", id: "INV-2025-1201" },
-    { date: "01/11/2025", amount: 27.9, status: "Pago", id: "INV-2025-1101" },
-];
 
 const BillingPage = () => {
     const [creditsToBuy, setCreditsToBuy] = useState(10);
@@ -22,10 +15,19 @@ const BillingPage = () => {
     const missingBillingDocument = gestor?.agencia_id ? !agencia?.cnpj : !gestor?.cpf;
     const missingPhone = !gestor?.telefone;
 
-    const { data: wallet, isLoading: walletLoading } = useQuery({
-        queryKey: ["credit-wallet"],
-        queryFn: getCreditWallet,
+    const { data: billingOverview, isLoading: billingLoading } = useQuery({
+        queryKey: ["billing-overview", gestor?.id],
+        queryFn: () => getBillingOverview(gestor?.id),
+        enabled: !!gestor?.id,
     });
+
+    const wallet = billingOverview?.wallet;
+    const planId = billingOverview?.subscription.planId ?? "free";
+    const plan = PLANS.find((item) => item.id === planId);
+    const isFreePlan = planId === "free";
+    const intervalLabel = isFreePlan ? "Plano gratuito" : "Pagamento avulso";
+    const headline = isFreePlan ? "Plano Free" : plan?.name ?? "Plano ativo";
+    const priceLabel = isFreePlan ? "R$0" : formatPrice(plan?.priceMonthly ?? 0);
 
     const buyCredits = async () => {
         try {
@@ -93,31 +95,33 @@ const BillingPage = () => {
                     <div>
                         <div className="flex items-center gap-2 mb-2">
                             <div className="px-2.5 py-0.5 rounded-full bg-primary/15 text-primary text-xs font-bold uppercase tracking-wider">
-                                Ativo
+                                {billingOverview?.subscription.status === "active" ? "Ativo" : "Pendente"}
                             </div>
-                            <span className="text-xs text-muted-foreground">Plano Mensal</span>
+                            <span className="text-xs text-muted-foreground">{intervalLabel}</span>
                         </div>
-                        <h2 className="text-xl font-bold text-foreground">Plano Agência</h2>
-                        <p className="text-sm text-muted-foreground mt-1">Até 50 contas · Até 3 gestores</p>
+                        <h2 className="text-xl font-bold text-foreground">{headline}</h2>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            {isFreePlan
+                                ? `${billingOverview?.freeReportsRemaining ?? 3} relatórios grátis restantes antes do consumo de créditos`
+                                : plan?.description ?? "Plano pago ativo"}
+                        </p>
                     </div>
                     <div className="text-right">
-                        <div className="text-3xl font-extrabold vcd-gradient-text">{formatPrice(97)}</div>
-                        <span className="text-xs text-muted-foreground">/mês</span>
+                        <div className="text-3xl font-extrabold vcd-gradient-text">{priceLabel}</div>
+                        <span className="text-xs text-muted-foreground">{isFreePlan ? "sem cobrança" : "a partir do mensal"}</span>
                     </div>
                     </div>
 
                 <div className="flex flex-wrap gap-3 mt-6">
                     <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium">
-                        <Link to="/support">
+                        <Link to="/account/plan">
                             <ExternalLink className="w-4 h-4 mr-2" />
-                            Falar com suporte
+                            {isFreePlan ? "Assinar agora" : "Trocar de Plano"}
                         </Link>
                     </Button>
-                    <a href="/account/plan">
-                        <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
-                            Trocar de Plano
-                        </Button>
-                    </a>
+                    <Button asChild variant="ghost" className="text-muted-foreground hover:text-foreground">
+                        <Link to="/support">Falar com suporte</Link>
+                    </Button>
                 </div>
             </motion.div>
 
@@ -132,10 +136,12 @@ const BillingPage = () => {
                     <div>
                         <p className="text-xs text-muted-foreground uppercase tracking-wider">Créditos de Relatório</p>
                         <h2 className="text-xl font-bold text-foreground">
-                            {walletLoading ? "Carregando..." : `${wallet?.saldoCreditos ?? 0} créditos`}
+                            {billingLoading ? "Carregando..." : `${wallet?.saldoCreditos ?? 0} créditos`}
                         </h2>
                         <p className="text-xs text-muted-foreground mt-1">
-                            Usuário Free: 3 relatórios grátis, depois 1 crédito por relatório.
+                            {isFreePlan
+                                ? `Conta grátis: ${billingOverview?.freeReportsRemaining ?? 3} relatórios restantes antes de consumir créditos.`
+                                : "Plano pago ativo: relatórios ilimitados, créditos continuam úteis para fluxos avulsos."}
                         </p>
                     </div>
                     <div className="text-right text-xs text-muted-foreground">
@@ -206,8 +212,12 @@ const BillingPage = () => {
                     <Calendar className="w-5 h-5 text-blue-400" />
                 </div>
                 <div>
-                    <p className="text-sm font-medium text-foreground">Próxima cobrança</p>
-                    <p className="text-xs text-muted-foreground">01 de março de 2026 - {formatPrice(97)}</p>
+                    <p className="text-sm font-medium text-foreground">{isFreePlan ? "Assinatura pendente" : "Seu próximo upgrade é manual"}</p>
+                    <p className="text-xs text-muted-foreground">
+                        {isFreePlan
+                            ? "Escolha um plano para liberar a área paga e relatórios sem limite."
+                            : "No Abacate Pay v1, novos ciclos são pagos por checkout avulso."}
+                    </p>
                 </div>
             </motion.div>
 
@@ -249,21 +259,23 @@ const BillingPage = () => {
                     <h3 className="font-semibold text-foreground">Histórico de Faturas</h3>
                 </div>
                 <div className="divide-y divide-border/20">
-                    {invoices.map((inv) => (
-                        <div key={inv.id} className="flex items-center justify-between px-5 py-4 hover:bg-card/40 transition-colors">
-                            <div className="flex items-center gap-3">
-                                <CheckCircle className="w-4 h-4 text-emerald-400" />
-                                <div>
-                                    <p className="text-sm text-foreground">{inv.id}</p>
-                                    <p className="text-xs text-muted-foreground">{inv.date}</p>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-sm font-medium text-foreground">{formatPrice(inv.amount)}</p>
-                                <p className="text-xs text-emerald-400">{inv.status}</p>
+                    <div className="flex items-center justify-between px-5 py-4 hover:bg-card/40 transition-colors">
+                        <div className="flex items-center gap-3">
+                            <CheckCircle className="w-4 h-4 text-emerald-400" />
+                            <div>
+                                <p className="text-sm text-foreground">{isFreePlan ? "Conta Free ativa" : `Plano ${headline}`}</p>
+                                <p className="text-xs text-muted-foreground">
+                                    {isFreePlan
+                                        ? `${billingOverview?.reportsGenerated ?? 0} relatórios gerados até agora`
+                                        : "Pagamentos confirmados via Abacate Pay aparecem após os eventos do webhook"}
+                                </p>
                             </div>
                         </div>
-                    ))}
+                        <div className="text-right">
+                            <p className="text-sm font-medium text-foreground">{isFreePlan ? "R$0" : priceLabel}</p>
+                            <p className="text-xs text-emerald-400">{billingOverview?.subscription.status === "active" ? "Ativo" : "Pendente"}</p>
+                        </div>
+                    </div>
                 </div>
             </motion.div>
 
@@ -281,12 +293,9 @@ const BillingPage = () => {
                         Você pode solicitar cancelamento a qualquer momento pelo suporte. Seu acesso continua até o final do período pago.
                         Sem multa ou fidelidade.
                     </p>
-                    <button
-                        onClick={openPortal}
-                        className="text-xs text-amber-400 hover:underline mt-2 inline-block"
-                    >
-                        Abrir portal de cancelamento →
-                    </button>
+                    <Link to="/support" className="text-xs text-amber-400 hover:underline mt-2 inline-block">
+                        Falar com suporte sobre cancelamento →
+                    </Link>
                 </div>
             </motion.div>
         </div>
