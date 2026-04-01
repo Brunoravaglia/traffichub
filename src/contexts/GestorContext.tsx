@@ -30,6 +30,7 @@ interface Gestor {
   foto_url: string | null;
   telefone: string | null;
   cpf: string | null;
+  account_type: "solo" | "agency_owner" | null;
   onboarding_completo: boolean;
   foto_preenchida: boolean;
   dados_completos: boolean;
@@ -54,6 +55,7 @@ interface GestorContextType {
   refreshGestor: () => Promise<void>;
   markWelcomeSeen: () => Promise<void>;
   setAgenciaBySlug: (slug: string) => Promise<{ success: boolean; agency?: Agencia; error?: string }>;
+  setAccountType: (accountType: "solo" | "agency_owner") => Promise<{ success: boolean; error?: string }>;
 }
 
 type AuthenticateGestorLoginRow = {
@@ -63,6 +65,7 @@ type AuthenticateGestorLoginRow = {
   foto_url: string | null;
   telefone: string | null;
   cpf: string | null;
+  account_type: "solo" | "agency_owner" | null;
   onboarding_completo: boolean;
   foto_preenchida: boolean;
   dados_completos: boolean;
@@ -179,6 +182,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         .from("gestores")
         .select(
           "id, nome, foto_url, telefone, cpf, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id"
+          + ", account_type"
         )
         .eq("id", storedGestorId)
         .single()
@@ -277,6 +281,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
               foto_url: avatarUrl,
               senha: "google-oauth",
               cpf: null,
+              account_type: null,
               dados_completos: false,
               foto_preenchida: !!avatarUrl,
               onboarding_completo: false,
@@ -340,6 +345,13 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         const postAuthRedirect = sessionStorage.getItem("vurp_post_auth_redirect");
         const currentPath = window.location.pathname;
         const shouldRedirectFromPublic = ["/", "/login", "/signup"].includes(currentPath);
+        if (!finalGestor.account_type && currentPath !== "/welcome/account-type") {
+          sessionStorage.removeItem("vurp_post_auth_redirect");
+          setIsAuthLoading(false);
+          window.location.replace("/welcome/account-type");
+          return;
+        }
+
         if (postAuthRedirect && currentPath !== postAuthRedirect) {
           sessionStorage.removeItem("vurp_post_auth_redirect");
           window.location.replace(postAuthRedirect);
@@ -533,6 +545,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         foto_url: gestorData.foto_url,
         telefone: gestorData.telefone,
         cpf: gestorData.cpf,
+        account_type: gestorData.account_type,
         onboarding_completo: gestorData.onboarding_completo,
         foto_preenchida: gestorData.foto_preenchida,
         dados_completos: gestorData.dados_completos,
@@ -547,6 +560,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         foto_url: gestorData.foto_url,
         telefone: gestorData.telefone,
         cpf: gestorData.cpf,
+        account_type: gestorData.account_type,
         onboarding_completo: gestorData.onboarding_completo,
         foto_preenchida: gestorData.foto_preenchida,
         dados_completos: gestorData.dados_completos,
@@ -695,6 +709,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       .from("gestores")
         .select(
         "id, nome, foto_url, telefone, cpf, onboarding_completo, foto_preenchida, dados_completos, first_login_at, welcome_modal_dismissed, agencia_id"
+        + ", account_type"
       )
       .eq("id", gestor.id)
       .single();
@@ -704,6 +719,26 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
       setGestor(hydratedGestor);
       persistGestorProfile(hydratedGestor);
     }
+  }, [gestor]);
+
+  const setAccountType = useCallback(async (accountType: "solo" | "agency_owner") => {
+    if (!gestor) {
+      return { success: false, error: "Sessão inválida." };
+    }
+
+    const { error } = await supabase
+      .from("gestores")
+      .update({ account_type: accountType })
+      .eq("id", gestor.id);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    const updatedGestor = { ...gestor, account_type: accountType };
+    setGestor(updatedGestor);
+    persistGestorProfile(updatedGestor);
+    return { success: true };
   }, [gestor]);
 
   return (
@@ -723,6 +758,7 @@ export const GestorProvider = ({ children }: { children: ReactNode }) => {
         refreshGestor,
         markWelcomeSeen,
         setAgenciaBySlug,
+        setAccountType,
       }}
     >
       {children}

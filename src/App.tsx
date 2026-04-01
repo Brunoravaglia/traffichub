@@ -96,6 +96,7 @@ const ForgotPassword = lazyWithRetry(() => import("./pages/ForgotPassword"));
 
 // Account pages
 const AccountPage = lazyWithRetry(() => import("./pages/account/AccountPage"));
+const AccountTypeSelectionPage = lazyWithRetry(() => import("./pages/account/AccountTypeSelectionPage"));
 const BillingPage = lazyWithRetry(() => import("./pages/account/BillingPage"));
 const PlanSelectionPage = lazyWithRetry(() => import("./pages/account/PlanSelectionPage"));
 const EmbeddedCheckoutPage = lazyWithRetry(() => import("./pages/account/EmbeddedCheckoutPage"));
@@ -186,6 +187,7 @@ const App = () => (
 
                   {/* Account pages (protected, wrapped in AppLayout internally) */}
                   <Route path="/account" element={<AccountPage />} />
+                  <Route path="/welcome/account-type" element={<AccountTypeSelectionPage />} />
                   <Route path="/account/billing" element={<BillingPage />} />
                   <Route path="/account/plan" element={<PlanSelectionPage />} />
                   <Route path="/account/checkout" element={<EmbeddedCheckoutPage />} />

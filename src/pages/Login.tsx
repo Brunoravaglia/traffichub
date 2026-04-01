@@ -4,14 +4,19 @@ import GestorLogin from "@/components/GestorLogin";
 import { useGestor } from "@/contexts/GestorContext";
 
 const Login = () => {
-    const { isLoggedIn, isAuthLoading } = useGestor();
+    const { gestor, isLoggedIn, isAuthLoading } = useGestor();
     const navigate = useNavigate();
 
     useEffect(() => {
+        if (!isAuthLoading && isLoggedIn && gestor?.account_type == null) {
+            navigate("/welcome/account-type");
+            return;
+        }
+
         if (!isAuthLoading && isLoggedIn) {
             navigate("/dashboard");
         }
-    }, [isAuthLoading, isLoggedIn, navigate]);
+    }, [gestor?.account_type, isAuthLoading, isLoggedIn, navigate]);
 
     if (isAuthLoading || isLoggedIn) {
         return null;
