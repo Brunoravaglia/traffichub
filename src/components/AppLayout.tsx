@@ -80,8 +80,13 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   useEffect(() => {
     if (!isLoggedIn && !isAuthBootstrapping) {
       navigate("/login");
+      return;
     }
-  }, [isLoggedIn, isAuthBootstrapping, navigate]);
+
+    if (isLoggedIn && gestor && !gestor.account_type) {
+      navigate("/welcome/account-type");
+    }
+  }, [gestor, isLoggedIn, isAuthBootstrapping, navigate]);
 
   useEffect(() => {
     const timer = setTimeout(() => setBootstrapDelayDone(true), 1800);

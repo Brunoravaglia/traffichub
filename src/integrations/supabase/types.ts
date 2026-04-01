@@ -574,6 +574,7 @@ export type Database = {
       }
       clientes: {
         Row: {
+          account_type: string | null
           agencia_id: string | null
           created_at: string
           data_inicio: string
@@ -589,6 +590,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_type?: string | null
           agencia_id?: string | null
           created_at?: string
           data_inicio?: string
@@ -604,6 +606,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_type?: string | null
           agencia_id?: string | null
           created_at?: string
           data_inicio?: string
