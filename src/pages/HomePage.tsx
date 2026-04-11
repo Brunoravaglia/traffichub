@@ -8,6 +8,11 @@ import FAQSection from "@/components/home/FAQSection";
 import FooterSection from "@/components/home/FooterSection";
 import SEOHead from "@/components/SEOHead";
 
+const BELOW_THE_FOLD_STYLE = {
+    contentVisibility: "auto" as const,
+    containIntrinsicSize: "900px",
+};
+
 const HomePage = () => {
     const homeJsonLd = {
         "@context": "https://schema.org",
@@ -43,12 +48,24 @@ const HomePage = () => {
             />
             <HomeNavbar />
             <HeroSection />
-            <FeaturesSection />
-            <ShowcaseSection />
-            <PricingSection />
-            <TestimonialsSection />
-            <FAQSection />
-            <FooterSection />
+            <div style={BELOW_THE_FOLD_STYLE}>
+                <FeaturesSection />
+            </div>
+            <div style={BELOW_THE_FOLD_STYLE}>
+                <ShowcaseSection />
+            </div>
+            <div style={BELOW_THE_FOLD_STYLE}>
+                <PricingSection />
+            </div>
+            <div style={BELOW_THE_FOLD_STYLE}>
+                <TestimonialsSection />
+            </div>
+            <div style={BELOW_THE_FOLD_STYLE}>
+                <FAQSection />
+            </div>
+            <div style={BELOW_THE_FOLD_STYLE}>
+                <FooterSection />
+            </div>
         </main>
     );
 };

@@ -50,13 +50,22 @@ const HeroSection = () => {
         </div>
 
         <div className="relative overflow-hidden rounded-xl border border-border/55 bg-card/25 p-1 shadow-[0_18px_44px_hsl(var(--background)/0.38)] ring-1 ring-border/25 sm:rounded-t-2xl sm:border-b-0 sm:p-2">
-          <img
-            src="/hero-dashboard-vurp.png"
-            alt="Painel Vurp"
-            className="aspect-[16/10] w-full rounded-lg object-cover object-left-top sm:aspect-[15/8] sm:rounded-xl sm:object-top"
-            loading="eager"
-            decoding="async"
-          />
+          <picture>
+            <source
+              srcSet="/hero-dashboard-vurp-820.jpg 820w, /hero-dashboard-vurp-1440.jpg 1440w"
+              sizes="(max-width: 640px) 92vw, (max-width: 1280px) 94vw, 1220px"
+            />
+            <img
+              src="/hero-dashboard-vurp-1440.jpg"
+              alt="Painel Vurp"
+              width="1440"
+              height="712"
+              className="aspect-[16/10] w-full rounded-lg object-cover object-left-top sm:aspect-[15/8] sm:rounded-xl sm:object-top"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+            />
+          </picture>
         </div>
       </div>
     </section>
