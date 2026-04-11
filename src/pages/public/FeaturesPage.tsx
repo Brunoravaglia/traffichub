@@ -31,7 +31,7 @@ const showcaseCards = [
   {
     title: "Dashboard gerencial real",
     copy: "Cliente, verba, produtividade, relatórios e operação em uma visão única.",
-    image: "/hero-dashboard-vurp.png",
+    image: "/hero-dashboard-vurp-1440.jpg",
     tone: "from-emerald-500/20 via-emerald-500/5 to-transparent",
   },
   {

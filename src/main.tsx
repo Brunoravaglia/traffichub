@@ -1,8 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/react";
 import App from "./App.tsx";
+import DeferredMonitoring from "./components/DeferredMonitoring";
 import "./index.css";
 
 const CHUNK_ERROR_PATTERNS = [
@@ -20,6 +19,17 @@ const MAX_RELOADS_PER_PATH = 2;
 const CHUNK_RELOAD_WINDOW_MS = 30_000;
 const GLOBAL_RESET_VERSION = "2026-03-30-client-recovery-1";
 const GLOBAL_RESET_KEY = "__vurp_global_reset_version__";
+const SUPABASE_AUTH_SEARCH_KEYS = ["code", "error", "error_code", "error_description"];
+const SUPABASE_AUTH_HASH_KEYS = [
+  "access_token",
+  "refresh_token",
+  "expires_in",
+  "token_type",
+  "type",
+  "error",
+  "error_code",
+  "error_description",
+];
 
 const getErrorMessage = (value: unknown): string => {
   if (typeof value === "string") return value;
@@ -67,13 +77,37 @@ const clearChunkReloadState = () => {
   }
 };
 
-const applyGlobalResetIfNeeded = (): boolean => {
+const hasAnyUrlParam = (params: URLSearchParams, keys: string[]) =>
+  keys.some((key) => params.has(key));
+
+const isSupabaseAuthCallback = () => {
+  const searchParams = new URLSearchParams(window.location.search);
+  const hash = window.location.hash.startsWith("#")
+    ? window.location.hash.slice(1)
+    : window.location.hash;
+  const hashParams = new URLSearchParams(hash);
+
+  return (
+    hasAnyUrlParam(searchParams, SUPABASE_AUTH_SEARCH_KEYS) ||
+    hasAnyUrlParam(hashParams, SUPABASE_AUTH_HASH_KEYS)
+  );
+};
+
+const hardResetForChunkError = () => {
   try {
-    const alreadyApplied = localStorage.getItem(GLOBAL_RESET_KEY) === GLOBAL_RESET_VERSION;
-    if (alreadyApplied) return false;
+    if (isSupabaseAuthCallback()) {
+      localStorage.setItem(GLOBAL_RESET_KEY, GLOBAL_RESET_VERSION);
+      window.location.reload();
+      return;
+    }
+
+    const theme = localStorage.getItem("vurp-theme");
 
     localStorage.clear();
     sessionStorage.clear();
+    if (theme) {
+      localStorage.setItem("vurp-theme", theme);
+    }
     localStorage.setItem(GLOBAL_RESET_KEY, GLOBAL_RESET_VERSION);
   } catch {
     // no-op
@@ -95,12 +129,7 @@ const applyGlobalResetIfNeeded = (): boolean => {
     });
   }
 
-  if (window.location.pathname !== "/") {
-    window.location.replace("/");
-    return true;
-  }
-
-  return false;
+  window.location.reload();
 };
 
 const reloadOnceForChunkError = () => {
@@ -114,6 +143,7 @@ const reloadOnceForChunkError = () => {
     now - previousState.lastAttemptAt < CHUNK_RELOAD_WINDOW_MS;
 
   const nextAttempts = isSamePathWithinWindow ? previousState.attempts + 1 : 1;
+
   if (nextAttempts > MAX_RELOADS_PER_PATH) return;
 
   setChunkReloadState({
@@ -121,6 +151,11 @@ const reloadOnceForChunkError = () => {
     attempts: nextAttempts,
     lastAttemptAt: now,
   });
+
+  if (nextAttempts >= MAX_RELOADS_PER_PATH) {
+    hardResetForChunkError();
+    return;
+  }
 
   window.location.reload();
 };
@@ -144,14 +179,9 @@ window.addEventListener("unhandledrejection", (event) => {
   }
 });
 
-const isRedirectingAfterReset = applyGlobalResetIfNeeded();
-
-if (!isRedirectingAfterReset) {
-  createRoot(document.getElementById("root")!).render(
-    <HelmetProvider>
-      <App />
-      <Analytics />
-      <SpeedInsights />
-    </HelmetProvider>
-  );
-}
+createRoot(document.getElementById("root")!).render(
+  <HelmetProvider>
+    <App />
+    <DeferredMonitoring />
+  </HelmetProvider>
+);

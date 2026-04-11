@@ -57,9 +57,20 @@
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap"
     media="print" onload="this.media='all'" />
-  <link rel="preload" as="image" href="/hero-dashboard-mobile.webp"
-    imagesrcset="/hero-dashboard-mobile.webp 600w, /hero-dashboard.webp 1080w"
-    imagesizes="(max-width: 639px) 600px, 1080px" fetchpriority="high" />
+  <script>
+    (function () {
+      if (window.location.pathname !== "/") return;
+
+      var preload = document.createElement("link");
+      preload.rel = "preload";
+      preload.as = "image";
+      preload.href = "/hero-dashboard-vurp-1440.jpg";
+      preload.setAttribute("imagesrcset", "/hero-dashboard-vurp-820.jpg 820w, /hero-dashboard-vurp-1440.jpg 1440w");
+      preload.setAttribute("imagesizes", "(max-width: 640px) 92vw, (max-width: 1280px) 94vw, 1220px");
+      preload.setAttribute("fetchpriority", "high");
+      document.head.appendChild(preload);
+    })();
+  </script>
 
   <!-- JSON-LD Structured Data -->
   <script type="application/ld+json">
