@@ -17,6 +17,7 @@ export interface BillingOverview {
   subscription: {
     planId: string;
     status: string;
+    interval: BillingInterval | null;
   };
   wallet: {
     saldoCreditos: number;
@@ -25,6 +26,27 @@ export interface BillingOverview {
   };
   freeReportsRemaining: number;
   reportsGenerated: number;
+}
+
+export interface AgencyAccessLike {
+  slug?: string | null;
+  nome?: string | null;
+}
+
+export const FOUNDER_ACCESS_BADGE = "Founder Access";
+
+const normalizeAgencyAccessValue = (value?: string | null) =>
+  (value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+export function isFounderPartnerAgency(agency?: AgencyAccessLike | null): boolean {
+  const slug = normalizeAgencyAccessValue(agency?.slug);
+  const nome = normalizeAgencyAccessValue(agency?.nome);
+
+  return slug === "vcd" || nome.includes("voce digital");
 }
 
 export const PLANS: PlanInfo[] = [
@@ -159,16 +181,20 @@ export async function getCreditWallet(): Promise<{
   };
 }
 
-export async function getBillingOverview(gestorId?: string | null): Promise<BillingOverview> {
+export async function getBillingOverview(
+  gestorId?: string | null,
+  agency?: AgencyAccessLike | null,
+): Promise<BillingOverview> {
   const wallet = await getCreditWallet();
 
   const { data: subscriptionData, error: subscriptionError } = await (supabase
     .from("assinaturas" as never)
-    .select("plano_id, status")
+    .select("plano_id, status, billing_interval")
     .maybeSingle() as Promise<{
       data: {
         plano_id?: string | null;
         status?: string | null;
+        billing_interval?: BillingInterval | null;
       } | null;
       error: { message: string } | null;
     }>);
@@ -216,10 +242,24 @@ export async function getBillingOverview(gestorId?: string | null): Promise<Bill
     }
   }
 
+  if (isFounderPartnerAgency(agency)) {
+    return {
+      subscription: {
+        planId: "agency-pro",
+        status: "active",
+        interval: null,
+      },
+      wallet,
+      freeReportsRemaining: 999999,
+      reportsGenerated,
+    };
+  }
+
   return {
     subscription: {
       planId: subscriptionData?.plano_id ?? "free",
       status: subscriptionData?.status ?? "active",
+      interval: subscriptionData?.billing_interval ?? null,
     },
     wallet,
     freeReportsRemaining: Math.max(0, 3 - reportsGenerated),

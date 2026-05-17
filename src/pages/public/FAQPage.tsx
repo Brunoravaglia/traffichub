@@ -19,13 +19,13 @@ const faqs: FAQ[] = [
     { category: "Geral", question: "O Vurp funciona em dispositivos móveis?", answer: "Sim, a plataforma é totalmente responsiva e funciona perfeitamente em smartphones e tablets." },
     // Planos
     { category: "Planos", question: "O que conta como uma 'conta' no plano?", answer: "Cada plataforma de anúncios de um cliente conta como uma conta separada. Por exemplo, se o cliente João usa Google Ads e Meta Ads, isso equivale a 2 contas no sistema." },
-    { category: "Planos", question: "Posso mudar de plano a qualquer momento?", answer: "Sim! Você pode fazer upgrade ou downgrade do seu plano a qualquer momento. A mudança entra em vigor imediatamente e o valor é ajustado proporcionalmente." },
+    { category: "Planos", question: "Posso mudar de plano a qualquer momento?", answer: "Sim. Você pode iniciar upgrade ou troca de plano quando quiser pelo painel. O novo ciclo passa a valer assim que o checkout do Abacate Pay confirma o pagamento da nova assinatura." },
     { category: "Planos", question: "Existe um período de teste grátis?", answer: "Sim, oferecemos 7 dias grátis para testar todas as funcionalidades sem compromisso. Não pedimos cartão de crédito no cadastro." },
     { category: "Planos", question: "Qual a diferença entre Agência e Agência Pro?", answer: "O plano Agência suporta até 3 gestores, enquanto o Pro suporta até 5 gestores e inclui monitoramento de tempo e controle de acessos da equipe." },
     { category: "Planos", question: "Existe desconto para plano anual?", answer: "Sim! No plano anual você economiza 20% comparado ao pagamento mensal. O desconto é aplicado automaticamente na página de preços." },
     // Pagamento
-    { category: "Pagamento", question: "Quais formas de pagamento são aceitas?", answer: "Aceitamos cartão de crédito e PIX. Os pagamentos são processados de forma segura via Abacate Pay." },
-    { category: "Pagamento", question: "Como funciona o cancelamento?", answer: "Você pode cancelar a qualquer momento diretamente pelo painel de configurações da sua conta. Não há fidelidade ou multa por cancelamento. Seu acesso continua até o fim do período pago." },
+    { category: "Pagamento", question: "Quais formas de pagamento são aceitas?", answer: "Os planos pagos usam cartao em recorrencia segura via Abacate Pay. Compras avulsas de creditos podem ser feitas por PIX ou cartao." },
+    { category: "Pagamento", question: "Como funciona o cancelamento?", answer: "Você pode solicitar o cancelamento da renovacao a qualquer momento pelo suporte. Nao ha fidelidade ou multa, e o acesso continua ate o fim do periodo ja pago." },
     { category: "Pagamento", question: "Emitem nota fiscal?", answer: "Sim, emitimos nota fiscal para todos os planos. A nota é enviada automaticamente para o email cadastrado após a confirmação do pagamento." },
     // Técnico
     { category: "Técnico", question: "Como funciona o controle de gestores?", answer: "No plano Agência, você pode ter até 3 gestores com acesso ao sistema, cada um com login próprio, checklist e métricas. No Pro, são até 5 gestores com monitoramento de tempo." },

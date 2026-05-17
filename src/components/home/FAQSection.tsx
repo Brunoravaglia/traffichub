@@ -11,7 +11,7 @@ const faqs = [
     {
         question: "Posso mudar de plano a qualquer momento?",
         answer:
-            "Sim! Você pode fazer upgrade ou downgrade do seu plano a qualquer momento. A mudança entra em vigor imediatamente e o valor é ajustado proporcionalmente no próximo ciclo de cobrança.",
+            "Sim. Você pode iniciar upgrade ou troca de plano quando quiser. O novo ciclo passa a valer assim que o checkout do Abacate Pay confirma o pagamento da nova assinatura.",
     },
     {
         question: "Existe um período de teste grátis?",

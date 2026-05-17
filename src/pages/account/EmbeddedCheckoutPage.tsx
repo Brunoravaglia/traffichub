@@ -62,7 +62,7 @@ const EmbeddedCheckoutPage = () => {
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Checkout seguro</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Estamos preparando sua cobranca no Abacate Pay.
+          Estamos preparando sua assinatura segura no Abacate Pay.
         </p>
       </div>
 

@@ -1,4 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  mapAbacateFrequencyToInterval,
+  verifyAbacateSignature,
+} from "../_shared/abacatepay.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import {
   buildCreditsPurchasedEmail,
@@ -23,28 +27,30 @@ type CheckoutWebhookData = {
   status?: string;
 };
 
-type EventPayload = {
+type LegacyEventPayload = {
   event?: string;
   data?: CheckoutWebhookData;
 };
 
-async function computeSignature(payload: string) {
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(abacateWebhookSecret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-
-  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
-  return btoa(String.fromCharCode(...new Uint8Array(signature)));
-}
-
-async function isValidSignature(rawBody: string, signature: string) {
-  const expected = await computeSignature(rawBody);
-  return expected === signature;
-}
+type V2EventPayload = {
+  id?: string;
+  event?: string;
+  data?: {
+    checkout?: {
+      id?: string;
+      externalId?: string | null;
+      status?: string | null;
+    };
+    subscription?: {
+      id?: string;
+      status?: string | null;
+      frequency?: string | null;
+    };
+    customer?: {
+      id?: string | null;
+    };
+  };
+};
 
 function parseExternalId(externalId?: string | null) {
   if (!externalId) return null;
@@ -117,6 +123,58 @@ async function getGestorContact(gestorId: string) {
   };
 }
 
+function normalizeWebhook(rawPayload: string) {
+  const parsed = JSON.parse(rawPayload) as LegacyEventPayload | V2EventPayload;
+  const legacyData = (parsed as LegacyEventPayload).data;
+  const v2Data = (parsed as V2EventPayload).data;
+  const checkout = v2Data?.checkout;
+  const subscription = v2Data?.subscription;
+
+  return {
+    raw: parsed,
+    eventId: (parsed as V2EventPayload).id ?? null,
+    eventType: parsed.event ?? "",
+    checkoutId: checkout?.id ?? legacyData?.id ?? null,
+    checkoutStatus: checkout?.status ?? legacyData?.status ?? null,
+    externalId: checkout?.externalId ?? legacyData?.externalId ?? null,
+    customerId: v2Data?.customer?.id ?? null,
+    subscriptionId: subscription?.id ?? null,
+    subscriptionStatus: subscription?.status ?? null,
+    subscriptionFrequency: subscription?.frequency ?? null,
+  };
+}
+
+async function registerWebhookEvent(
+  eventId: string | null,
+  eventType: string,
+  externalId: string | null,
+  rawPayload: unknown,
+) {
+  if (!eventId) {
+    return { duplicate: false };
+  }
+
+  const { error } = await adminClient
+    .from("payment_webhook_events")
+    .insert({
+      provider: "abacatepay",
+      event_id: eventId,
+      event_type: eventType || "unknown",
+      external_id: externalId,
+      payload: rawPayload as Record<string, unknown>,
+    });
+
+  if (!error) {
+    return { duplicate: false };
+  }
+
+  if (error.message.toLowerCase().includes("duplicate")) {
+    return { duplicate: true };
+  }
+
+  throw error;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -132,7 +190,7 @@ Deno.serve(async (req) => {
   const rawBody = await req.text();
   const signature = req.headers.get("X-Webhook-Signature") ?? req.headers.get("x-webhook-signature");
 
-  if (!signature || !(await isValidSignature(rawBody, signature))) {
+  if (!signature || !(await verifyAbacateSignature(rawBody, abacateWebhookSecret, signature))) {
     return new Response(JSON.stringify({ error: "Invalid webhook signature" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -140,12 +198,24 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const payload = JSON.parse(rawBody) as EventPayload;
-    const event = payload.event ?? "";
-    const data = payload.data ?? {};
-    const parsed = parseExternalId(data.externalId);
+    const normalized = normalizeWebhook(rawBody);
+    const registration = await registerWebhookEvent(
+      normalized.eventId,
+      normalized.eventType,
+      normalized.externalId,
+      normalized.raw,
+    );
 
-    if (!parsed || !data.id) {
+    if (registration.duplicate) {
+      return new Response(JSON.stringify({ received: true, duplicate: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const parsed = parseExternalId(normalized.externalId);
+
+    if (!parsed || !normalized.checkoutId) {
       return new Response(JSON.stringify({ received: true }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -155,38 +225,58 @@ Deno.serve(async (req) => {
     if (parsed.kind === "plan") {
       const { data: existingSubscription } = await adminClient
         .from("assinaturas")
-        .select("status, abacate_checkout_id")
+        .select("status, abacate_checkout_id, abacate_subscription_id")
         .eq("gestor_id", parsed.gestorId)
         .maybeSingle();
 
-      const status = data.status?.toUpperCase() === "PAID" || event === "billing.paid"
+      const isCompleted = normalized.eventType === "subscription.completed";
+      const isRenewed = normalized.eventType === "subscription.renewed";
+      const isCancelled = normalized.eventType === "subscription.cancelled";
+      const status = isCancelled
+        ? "canceled"
+        : isCompleted || isRenewed || normalized.subscriptionStatus?.toUpperCase() === "ACTIVE"
+        ? "active"
+        : normalized.checkoutStatus?.toUpperCase() === "PAID"
         ? "active"
         : "pending";
+      const billingInterval =
+        parsed.interval ?? mapAbacateFrequencyToInterval(normalized.subscriptionFrequency);
 
       await adminClient.from("assinaturas").upsert(
         {
           gestor_id: parsed.gestorId,
           plano_id: parsed.planId,
           status,
-          abacate_checkout_id: data.id,
+          billing_interval: billingInterval,
+          payment_provider: "abacatepay",
+          abacate_customer_id: normalized.customerId,
+          abacate_subscription_id: normalized.subscriptionId,
+          abacate_checkout_id: normalized.checkoutId,
           updated_at: new Date().toISOString(),
         },
         { onConflict: "gestor_id" },
       );
 
-      const shouldSendPlanEmail = status === "active" &&
-        (existingSubscription?.status !== "active" || existingSubscription?.abacate_checkout_id !== data.id);
+      const shouldSendPlanEmail = isCompleted && status === "active" && (
+        existingSubscription?.status !== "active" ||
+        existingSubscription?.abacate_checkout_id !== normalized.checkoutId ||
+        existingSubscription?.abacate_subscription_id !== normalized.subscriptionId
+      );
 
       if (shouldSendPlanEmail) {
         const contact = await getGestorContact(parsed.gestorId);
         if (contact) {
-          const intervalLabel = parsed.interval === "yearly" ? "anual" : "mensal";
+          const intervalLabel = billingInterval === "yearly" ? "anual" : "mensal";
           const planNameMap: Record<string, string> = {
             solo: "Solo",
             agency: "Agencia",
             "agency-pro": "Agencia Pro",
           };
-          const email = buildPlanActivatedEmail(contact.name, planNameMap[parsed.planId] ?? parsed.planId, intervalLabel);
+          const email = buildPlanActivatedEmail(
+            contact.name,
+            planNameMap[parsed.planId] ?? parsed.planId,
+            intervalLabel,
+          );
           await sendTransactionalEmail({
             to: contact.email,
             subject: email.subject,
@@ -201,8 +291,8 @@ Deno.serve(async (req) => {
     }
 
     if (parsed.kind === "credits" && Number.isInteger(parsed.creditsQty) && parsed.creditsQty > 0) {
-      if (event === "checkout.paid" || data.status?.toUpperCase() === "PAID") {
-        const creditsAdded = await addCredits(parsed.gestorId, parsed.creditsQty, data.id);
+      if (normalized.eventType === "checkout.completed" || normalized.checkoutStatus?.toUpperCase() === "PAID") {
+        const creditsAdded = await addCredits(parsed.gestorId, parsed.creditsQty, normalized.checkoutId);
         if (creditsAdded) {
           const contact = await getGestorContact(parsed.gestorId);
           if (contact) {

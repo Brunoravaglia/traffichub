@@ -1,4 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  createCheckout,
+  getOrCreateCustomer,
+  getOrCreateProduct,
+} from "../_shared/abacatepay.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
 const abacateApiKey = Deno.env.get("ABACATEPAY_API_KEY");
@@ -127,45 +132,41 @@ Deno.serve(async (req) => {
 
     const externalId = `credits:${gestor.id}:${creditsQty}:${Date.now()}`;
 
-    const response = await fetch("https://api.abacatepay.com/v1/billing/create", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${abacateApiKey}`,
-        "Content-Type": "application/json",
+    const customer = await getOrCreateCustomer(abacateApiKey, {
+      email: billingEmail,
+      name: gestor.agencia_id ? agencyDocument?.data?.nome ?? gestor.nome ?? "Agencia Vurp" : gestor.nome ?? "Gestor Vurp",
+      cellphone: gestor.telefone,
+      taxId,
+      metadata: {
+        gestorId: gestor.id,
+        agencyId: gestor.agencia_id,
+        source: "vurp-credit-checkout",
       },
-      body: JSON.stringify({
-        frequency: "ONE_TIME",
-        methods: ["PIX", "CARD"],
-        products: [
-          {
-            externalId: "vurp-report-credit",
-            name: "Credito de Relatorio Vurp",
-            description: "Credito avulso para geracao de relatorios",
-            quantity: creditsQty,
-            price: 100,
-          },
-        ],
-        returnUrl: `${appUrl}/account/billing?credits=cancel`,
-        completionUrl: `${appUrl}/account/billing?credits=success`,
-        customer: {
-          name: gestor.agencia_id ? agencyDocument?.data?.nome ?? gestor.nome ?? "Agencia Vurp" : gestor.nome ?? "Gestor Vurp",
-          cellphone: gestor.telefone,
-          email: billingEmail,
-          taxId,
-        },
-        allowCoupons: false,
-        externalId,
-        metadata: {
-          gestorId: gestor.id,
-          creditsQty,
-          purchaseType: "report_credits",
-        },
-      }),
     });
 
-    const payload = await response.json();
-    if (!response.ok || !payload?.success || !payload?.data?.url) {
-      return new Response(JSON.stringify({ error: payload?.error ?? "Falha ao criar checkout de créditos no Abacate Pay." }), {
+    const product = await getOrCreateProduct(abacateApiKey, {
+      externalId: "vurp-report-credit-unit",
+      name: "Credito de Relatorio Vurp",
+      description: "Credito avulso para geracao de relatorios no Vurp.",
+      price: 100,
+    });
+
+    const checkout = await createCheckout(abacateApiKey, {
+      items: [{ id: product.id, quantity: creditsQty }],
+      customerId: customer.id,
+      externalId,
+      returnUrl: `${appUrl}/account/billing?credits=cancel`,
+      completionUrl: `${appUrl}/account/billing?credits=success`,
+      methods: ["PIX", "CARD"],
+      metadata: {
+        gestorId: gestor.id,
+        creditsQty,
+        purchaseType: "report_credits",
+      },
+    });
+
+    if (!checkout.url || !checkout.id) {
+      return new Response(JSON.stringify({ error: "Falha ao criar checkout de créditos no Abacate Pay." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -173,8 +174,8 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        url: payload.data.url,
-        checkoutId: payload.data.id,
+        url: checkout.url,
+        checkoutId: checkout.id,
       }),
       {
         status: 200,

@@ -1,4 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  createSubscriptionCheckout,
+  getOrCreateCustomer,
+  getOrCreateProduct,
+} from "../_shared/abacatepay.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
 const abacateApiKey = Deno.env.get("ABACATEPAY_API_KEY");
@@ -11,21 +16,27 @@ if (!abacateApiKey || !supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKe
   throw new Error("Missing required environment variables for Abacate Pay checkout function.");
 }
 
-const planCatalog: Record<string, { name: string; monthly: number; yearly: number }> = {
+const planCatalog: Record<
+  string,
+  { name: string; monthly: number; yearly: number; description: string }
+> = {
   solo: {
     name: "Plano Solo",
     monthly: 2790,
     yearly: 26784,
+    description: "Plano recorrente para gestores independentes no Vurp.",
   },
   agency: {
     name: "Plano Agencia",
     monthly: 9700,
     yearly: 93120,
+    description: "Plano recorrente para operação de agência no Vurp.",
   },
   "agency-pro": {
     name: "Plano Agencia Pro",
     monthly: 19700,
     yearly: 189120,
+    description: "Plano recorrente premium para agências no Vurp.",
   },
 };
 
@@ -126,7 +137,6 @@ Deno.serve(async (req) => {
     }
 
     const plan = planCatalog[planId];
-    const amount = interval === "monthly" ? plan.monthly : plan.yearly;
     const externalId = `plan:${gestor.id}:${planId}:${interval}:${Date.now()}`;
     const agencyDocument = gestor.agencia_id
       ? await adminClient.from("agencias").select("nome, cnpj").eq("id", gestor.agencia_id).maybeSingle()
@@ -151,46 +161,42 @@ Deno.serve(async (req) => {
       });
     }
 
-    const response = await fetch("https://api.abacatepay.com/v1/billing/create", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${abacateApiKey}`,
-        "Content-Type": "application/json",
+    const customer = await getOrCreateCustomer(abacateApiKey, {
+      email: billingEmail,
+      name: gestor.agencia_id ? agencyDocument?.data?.nome ?? gestor.nome ?? "Agencia Vurp" : gestor.nome ?? "Gestor Vurp",
+      cellphone: gestor.telefone,
+      taxId,
+      metadata: {
+        gestorId: gestor.id,
+        agencyId: gestor.agencia_id,
+        source: "vurp-plan-checkout",
       },
-      body: JSON.stringify({
-        frequency: "ONE_TIME",
-        methods: ["PIX", "CARD"],
-        products: [
-          {
-            externalId: `vurp-${planId}-${interval}`,
-            name: `${plan.name} ${interval === "monthly" ? "Mensal" : "Anual"}`,
-            description: `Pagamento avulso do ${plan.name} no ciclo ${interval === "monthly" ? "mensal" : "anual"}`,
-            quantity: 1,
-            price: amount,
-          },
-        ],
-        returnUrl: `${appUrl}/pricing?abacate=cancel`,
-        completionUrl: `${appUrl}/account/billing?abacate=success`,
-        customer: {
-          name: gestor.agencia_id ? agencyDocument?.data?.nome ?? gestor.nome ?? "Agencia Vurp" : gestor.nome ?? "Gestor Vurp",
-          cellphone: gestor.telefone,
-          email: billingEmail,
-          taxId,
-        },
-        allowCoupons: true,
-        externalId,
-        metadata: {
-          gestorId: gestor.id,
-          planId,
-          interval,
-          purchaseType: "plan",
-        },
-      }),
     });
 
-    const payload = await response.json();
-    if (!response.ok || !payload?.success || !payload?.data?.url) {
-      return new Response(JSON.stringify({ error: payload?.error ?? "Falha ao criar checkout no Abacate Pay." }), {
+    const product = await getOrCreateProduct(abacateApiKey, {
+      externalId: `vurp-plan-${planId}-${interval}`,
+      name: `${plan.name} ${interval === "monthly" ? "Mensal" : "Anual"}`,
+      description: plan.description,
+      price: interval === "monthly" ? plan.monthly : plan.yearly,
+      cycle: interval === "monthly" ? "MONTHLY" : "ANNUALLY",
+    });
+
+    const checkout = await createSubscriptionCheckout(abacateApiKey, {
+      productId: product.id,
+      customerId: customer.id,
+      externalId,
+      returnUrl: `${appUrl}/pricing?abacate=cancel`,
+      completionUrl: `${appUrl}/account/billing?abacate=success`,
+      metadata: {
+        gestorId: gestor.id,
+        planId,
+        interval,
+        purchaseType: "plan_subscription",
+      },
+    });
+
+    if (!checkout.url || !checkout.id) {
+      return new Response(JSON.stringify({ error: "Falha ao criar checkout recorrente no Abacate Pay." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -201,13 +207,16 @@ Deno.serve(async (req) => {
         gestor_id: gestor.id,
         plano_id: planId,
         status: "pending",
-        abacate_checkout_id: payload.data.id ?? null,
+        billing_interval: interval,
+        payment_provider: "abacatepay",
+        abacate_customer_id: customer.id,
+        abacate_checkout_id: checkout.id,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "gestor_id" },
     );
 
-    return new Response(JSON.stringify({ url: payload.data.url, checkoutId: payload.data.id }), {
+    return new Response(JSON.stringify({ url: checkout.url, checkoutId: checkout.id }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

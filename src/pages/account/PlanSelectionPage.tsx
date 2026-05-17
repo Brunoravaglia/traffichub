@@ -3,14 +3,30 @@ import { motion } from "framer-motion";
 import { Check, ArrowRight, Zap, Star, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AppLayout from "@/components/AppLayout";
-import { PLANS, formatPrice, redirectToSubscriptionCheckout } from "@/lib/billing";
+import {
+    PLANS,
+    formatPrice,
+    getBillingOverview,
+    isFounderPartnerAgency,
+    redirectToSubscriptionCheckout,
+} from "@/lib/billing";
 import { toast } from "@/hooks/use-toast";
+import { useGestor } from "@/contexts/GestorContext";
+import { useQuery } from "@tanstack/react-query";
 
 const icons = [Zap, Star, Crown];
 
 const PlanSelectionPage = () => {
     const [annual, setAnnual] = useState(false);
-    const currentPlanId = "agency"; // TODO: get from user context
+    const { gestor, agencia } = useGestor();
+    const isFounderPartner = isFounderPartnerAgency(agencia);
+    const { data: billingOverview } = useQuery({
+        queryKey: ["billing-overview", gestor?.id],
+        queryFn: () => getBillingOverview(gestor?.id, agencia),
+        enabled: !!gestor?.id,
+    });
+    const currentPlanId = billingOverview?.subscription.planId ?? "free";
+    const currentPlanIndex = PLANS.findIndex((plan) => plan.id === currentPlanId);
 
     return (
         <div className="max-w-5xl mx-auto py-8 px-4 space-y-8">
@@ -23,6 +39,9 @@ const PlanSelectionPage = () => {
             >
                 <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1">Trocar de Plano</h1>
                 <p className="text-sm text-muted-foreground">Compare os planos e escolha o ideal para você.</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                    Planos pagos usam cobranca recorrente no cartao via Abacate Pay. Creditos avulsos continuam aceitando PIX ou cartao.
+                </p>
 
                 {/* Toggle */}
                 <div className="flex items-center justify-center gap-4 mt-6">
@@ -45,13 +64,19 @@ const PlanSelectionPage = () => {
                 </div>
             </motion.div>
 
+            {isFounderPartner ? (
+                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5 text-sm text-muted-foreground">
+                    A conta da Você Digital tem acesso institucional liberado. Esse fluxo de assinatura fica apenas como referência e não deve ser usado nessa agência.
+                </div>
+            ) : null}
+
             {/* Plan Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {PLANS.map((plan, i) => {
                     const Icon = icons[i];
                     const price = annual ? plan.priceYearly / 12 : plan.priceMonthly;
                     const isCurrent = plan.id === currentPlanId;
-                    const isUpgrade = PLANS.findIndex(p => p.id === currentPlanId) < i;
+                    const isUpgrade = currentPlanIndex === -1 || currentPlanIndex < i;
 
                     return (
                         <motion.div
@@ -112,6 +137,10 @@ const PlanSelectionPage = () => {
                                 <Button disabled className="w-full h-11 bg-card border border-border text-muted-foreground cursor-default">
                                     Plano Atual
                                 </Button>
+                            ) : isFounderPartner ? (
+                                <Button disabled className="w-full h-11 bg-card border border-border text-muted-foreground cursor-default">
+                                    Acesso institucional
+                                </Button>
                             ) : (
                                 <Button
                                     onClick={async () => {
@@ -130,7 +159,7 @@ const PlanSelectionPage = () => {
                                             : "bg-card hover:bg-secondary text-foreground border border-border"
                                         }`}
                                 >
-                                    {isUpgrade ? "Fazer Upgrade" : "Downgrade"}
+                                    {currentPlanIndex === -1 ? "Assinar plano" : isUpgrade ? "Fazer upgrade" : "Trocar para este plano"}
                                     <ArrowRight className="ml-2 w-4 h-4" />
                                 </Button>
                             )}
@@ -146,7 +175,7 @@ const PlanSelectionPage = () => {
                 transition={{ delay: 0.5 }}
                 className="text-center text-sm text-muted-foreground"
             >
-                Mudanças de plano entram em vigor imediatamente. O valor é ajustado proporcionalmente.
+                A assinatura comeca assim que o Abacate Pay confirma o primeiro pagamento. Mudancas de plano podem ser iniciadas a qualquer momento pelo painel.
             </motion.p>
         </div>
     );
